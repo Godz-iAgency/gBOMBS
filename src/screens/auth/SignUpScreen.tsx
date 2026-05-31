@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { supabase } from '@/lib/supabase';
+import PasswordInput from '@/components/PasswordInput';
 import type { AuthStackParamList } from '@/navigation/AuthStack';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
@@ -111,27 +112,21 @@ export default function SignUpScreen({ navigation }: Props) {
           <Text className="text-content-muted mb-2 text-sm font-medium">
             Password
           </Text>
-          <TextInput
+          <PasswordInput
             value={password}
             onChangeText={setPassword}
             placeholder="At least 6 characters"
-            placeholderTextColor="#6B7280"
-            secureTextEntry
-            autoCapitalize="none"
-            className="mb-4 rounded-xl border border-surface-border bg-surface-card px-4 py-3.5 text-base text-content"
+            containerClassName="mb-4"
           />
 
           <Text className="text-content-muted mb-2 text-sm font-medium">
             Confirm password
           </Text>
-          <TextInput
+          <PasswordInput
             value={confirm}
             onChangeText={setConfirm}
             placeholder="Re-enter password"
-            placeholderTextColor="#6B7280"
-            secureTextEntry
-            autoCapitalize="none"
-            className="mb-6 rounded-xl border border-surface-border bg-surface-card px-4 py-3.5 text-base text-content"
+            containerClassName="mb-6"
           />
 
           <TouchableOpacity
