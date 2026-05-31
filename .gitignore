@@ -33,6 +33,11 @@ yarn-error.*
 # local env files
 .env*.local
 
+# env files with secrets (gBOMBS) — never commit
+.env
+.env.*
+!.env.example
+
 # typescript
 *.tsbuildinfo
 
