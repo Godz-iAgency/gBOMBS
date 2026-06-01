@@ -2,34 +2,40 @@
  * Curated preset food lists per gBOMBS category. These populate the chip grid on
  * the FoodPreferenceScreen. All preset foods are pre-validated (is_validated=TRUE,
  * source='preset') when saved to Supabase.
+ *
+ * Rules: whole foods only, nothing processed. Dr. Sebi alkaline diet informed.
+ * Tofu and tempeh removed (processed). Edamame stays (whole soybean = whole food).
  */
 export const GBOMBS_PRESETS = {
   greens: [
-    'Kale', 'Spinach', 'Arugula', 'Swiss chard',
-    'Collard greens', 'Bok choy', 'Romaine',
-    'Watercress', 'Mustard greens', 'Beet greens',
+    'Kale', 'Spinach', 'Arugula', 'Collard greens',
+    'Watercress', 'Dandelion greens', 'Amaranth greens',
+    'Romaine', 'Mustard greens', 'Swiss chard', 'Beet greens',
   ],
   beans: [
     'Black beans', 'Lentils', 'Chickpeas', 'Edamame',
-    'Kidney beans', 'Tofu', 'Tempeh', 'Pinto beans',
-    'Navy beans', 'Split peas', 'Mung beans',
+    'Kidney beans', 'Pinto beans', 'Navy beans',
+    'Split peas', 'Mung beans', 'Black-eyed peas',
   ],
   onion: [
-    'Garlic', 'Red onion', 'Yellow onion', 'Leeks',
-    'Shallots', 'Chives', 'Scallions', 'White onion',
+    'Garlic', 'Red onion', 'Yellow onion', 'Escallion',
+    'Leeks', 'Shallots', 'Chives', 'Spring onions',
+    'White onion', 'Ramps',
   ],
   mushroom: [
     'Portobello', 'Shiitake', 'Cremini', 'Oyster',
-    'Button', 'Maitake', "Lion's mane", 'Reishi',
+    'Maitake', "Lion's mane", 'Chanterelle',
+    'Button', 'Reishi', 'Porcini',
   ],
   berries: [
-    'Blueberries', 'Raspberries', 'Strawberries', 'Blackberries',
-    'Goji berries', 'Acai', 'Cranberries', 'Mulberries',
+    'Blueberries', 'Raspberries', 'Blackberries', 'Elderberries',
+    'Mulberries', 'Goji berries', 'Strawberries',
+    'Acai', 'Currants', 'Cherries',
   ],
   seeds: [
-    'Chia seeds', 'Flaxseeds', 'Walnuts', 'Pumpkin seeds',
-    'Sunflower seeds', 'Almonds', 'Hemp seeds', 'Brazil nuts',
-    'Cashews', 'Pecans', 'Sesame seeds', 'Pine nuts',
+    'Walnuts', 'Chia seeds', 'Flaxseeds', 'Hemp seeds',
+    'Brazil nuts', 'Pumpkin seeds', 'Sunflower seeds',
+    'Almonds', 'Sesame seeds', 'Quinoa',
   ],
 } as const;
 
@@ -40,7 +46,7 @@ export const GBOMBS_CATEGORIES = [
   { key: 'onion', letter: 'O', label: 'ONION', color: '#7C3AED', addPlaceholder: 'Add your own allium…' },
   { key: 'mushroom', letter: 'M', label: 'MUSHROOM', color: '#B45309', addPlaceholder: 'Add your own mushroom…' },
   { key: 'berries', letter: 'B', label: 'BERRIES', color: '#BE185D', addPlaceholder: 'Add your own berry…' },
-  { key: 'seeds', letter: 'S', label: 'SEEDS & NUTS', color: '#CA8A04', addPlaceholder: 'Add your own seed…' },
+  { key: 'seeds', letter: 'S', label: 'SEEDS & NUTS', color: '#CA8A04', addPlaceholder: 'Add your own seed or nut…' },
 ] as const;
 
 export type GBombsCategoryKey = keyof typeof GBOMBS_PRESETS;
