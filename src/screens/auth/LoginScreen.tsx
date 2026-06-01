@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -57,9 +58,11 @@ export default function LoginScreen({ navigation }: Props) {
         >
           {/* Brand */}
           <View className="mb-10 items-center">
-            <Text className="text-brand-green text-4xl font-extrabold tracking-tight">
-              gBOMBS
-            </Text>
+            <Image
+              source={require('../../../assets/images/logo/G-bombs logo with background.png')}
+              style={{ width: '100%', height: 90 }}
+              resizeMode="contain"
+            />
             <Text className="text-content-muted mt-2 text-base">
               Healthy Eating Made Simple
             </Text>

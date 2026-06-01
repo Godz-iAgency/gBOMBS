@@ -80,6 +80,7 @@ export interface Database {
           onboarding_completed?: boolean;
         };
         Update: Partial<Database['public']['Tables']['users']['Row']>;
+        Relationships: [];
       };
       streaks: {
         Row: {
@@ -98,6 +99,7 @@ export interface Database {
         };
         Insert: { user_id: string };
         Update: Partial<Database['public']['Tables']['streaks']['Row']>;
+        Relationships: [];
       };
       food_preferences: {
         Row: {
@@ -127,6 +129,7 @@ export interface Database {
           display_order?: number;
         };
         Update: Partial<Database['public']['Tables']['food_preferences']['Row']>;
+        Relationships: [];
       };
       food_preference_history: {
         Row: {
@@ -150,6 +153,7 @@ export interface Database {
         Update: Partial<
           Database['public']['Tables']['food_preference_history']['Row']
         >;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

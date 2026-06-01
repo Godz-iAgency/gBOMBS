@@ -4,14 +4,25 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
+/** Minimal profile shape the navigator needs to gate routing. */
+type Profile = {
+  onboarding_completed: boolean;
+  subscription_tier: string;
+  subscription_status: string;
+};
+
 type AuthContextValue = {
   session: Session | null;
   user: User | null;
-  loading: boolean;
+  profile: Profile | null;
+  loading: boolean; // session bootstrap
+  profileLoading: boolean; // profile fetch in flight
+  refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -19,7 +30,24 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    setProfileLoading(true);
+    const { data, error } = await supabase
+      .from('users')
+      .select('onboarding_completed, subscription_tier, subscription_status')
+      .eq('id', userId)
+      .single();
+    if (!error && data) setProfile(data as Profile);
+    setProfileLoading(false);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (session?.user) await fetchProfile(session.user.id);
+  }, [session, fetchProfile]);
 
   useEffect(() => {
     // Restore any persisted session on launch.
@@ -36,16 +64,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Load (or clear) the profile whenever the signed-in user changes.
+  useEffect(() => {
+    if (session?.user) {
+      fetchProfile(session.user.id);
+    } else {
+      setProfile(null);
+    }
+  }, [session?.user?.id, fetchProfile]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user: session?.user ?? null,
+      profile,
       loading,
+      profileLoading,
+      refreshProfile,
       signOut: async () => {
         await supabase.auth.signOut();
       },
     }),
-    [session, loading]
+    [session, profile, loading, profileLoading, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
