@@ -22,6 +22,16 @@ type CategoryState = {
   selected: Set<string>;
 };
 
+// category key -> on-dark "chip" color, so the summary sheet can color-code
+// each selected food to match its gBOMBS group (same look as step 5).
+const CATEGORY_CHIP_COLOR = GBOMBS_CATEGORIES.reduce(
+  (acc, c) => {
+    acc[c.key] = c.chip;
+    return acc;
+  },
+  {} as Record<GBombsCategoryKey, string>
+);
+
 function initialState(): Record<GBombsCategoryKey, CategoryState> {
   const out = {} as Record<GBombsCategoryKey, CategoryState>;
   (Object.keys(GBOMBS_PRESETS) as GBombsCategoryKey[]).forEach((key) => {
@@ -50,9 +60,11 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
   );
 
   const allSelectedFoods = useMemo(() => {
-    const list: string[] = [];
+    const list: { label: string; color: string }[] = [];
     (Object.keys(cats) as GBombsCategoryKey[]).forEach((key) => {
-      cats[key].selected.forEach((f) => list.push(f));
+      cats[key].selected.forEach((f) =>
+        list.push({ label: f, color: CATEGORY_CHIP_COLOR[key] })
+      );
     });
     return list;
   }, [cats]);
@@ -149,6 +161,7 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
         }
         buttonDisabled={selectedCount === 0}
         onPressButton={() => setSheetOpen(true)}
+        onBack={() => navigation.goBack()}
         footer={
           <Text className="text-content-muted mb-3 text-center text-sm">
             {selectedCount} food{selectedCount === 1 ? '' : 's'} selected

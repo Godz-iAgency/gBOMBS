@@ -50,7 +50,17 @@ export default function WelcomeScreen({ navigation }: Props) {
                 backgroundColor: g.color + '14',
               }}
             >
-              <LetterTile image={g.image} color={g.color} glow={g.glow} size={58} />
+              <LetterTile
+                image={g.image}
+                color={g.color}
+                glow={g.glow}
+                // Berries/Seeds (landscape) stay larger + cover. Portrait letters
+                // shrink 4px and use contain so the whole letter shows.
+                size={g.key === 'berries' || g.key === 'seeds' ? 66 : 50}
+                resizeMode={
+                  g.key === 'berries' || g.key === 'seeds' ? 'cover' : 'contain'
+                }
+              />
               <View className="ml-4 flex-1">
                 <Text
                   className="text-lg font-extrabold"

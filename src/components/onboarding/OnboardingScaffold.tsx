@@ -7,15 +7,16 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import ProgressDots from './ProgressDots';
 
 /**
- * Shared layout for onboarding steps: progress dots + "Step X of 7" + title +
+ * Shared layout for onboarding steps: progress dots + "Step X of 6" + title +
  * subtitle + scrollable content + a fixed bottom primary button.
  */
 export default function OnboardingScaffold({
   step,
-  totalSteps = 7,
+  totalSteps = 6,
   title,
   subtitle,
   children,
@@ -24,6 +25,7 @@ export default function OnboardingScaffold({
   buttonDisabled = false,
   buttonLoading = false,
   footer,
+  onBack,
 }: {
   step: number;
   totalSteps?: number;
@@ -35,11 +37,25 @@ export default function OnboardingScaffold({
   buttonDisabled?: boolean;
   buttonLoading?: boolean;
   footer?: React.ReactNode;
+  onBack?: () => void;
 }) {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
       {/* Header */}
       <View className="px-6 pb-2 pt-4">
+        {/* Back arrow row */}
+        <View className="mb-2 h-8 justify-center">
+          {onBack ? (
+            <TouchableOpacity
+              onPress={onBack}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              className="w-8 items-center justify-center"
+            >
+              <Ionicons name="chevron-back" size={26} color="#9CA3AF" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
         <ProgressDots total={totalSteps} current={step} />
         <Text className="text-content-muted mt-4 text-xs font-medium uppercase tracking-wider">
           Step {step} of {totalSteps}

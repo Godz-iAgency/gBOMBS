@@ -6,7 +6,6 @@ import HealthGoalScreen from '@/screens/onboarding/HealthGoalScreen';
 import CookingStyleScreen from '@/screens/onboarding/CookingStyleScreen';
 import FoodPreferenceScreen from '@/screens/onboarding/FoodPreferenceScreen';
 import AllergiesScreen from '@/screens/onboarding/AllergiesScreen';
-import PantryStarterScreen from '@/screens/onboarding/PantryStarterScreen';
 
 export type OnboardingStackParamList = {
   Welcome: undefined;
@@ -15,7 +14,6 @@ export type OnboardingStackParamList = {
   CookingStyle: undefined;
   FoodPreference: undefined;
   Allergies: undefined;
-  PantryStarter: undefined;
 };
 
 const Stack = createNativeStackNavigator<OnboardingStackParamList>();
@@ -36,7 +34,6 @@ export default function OnboardingStack() {
         <Stack.Screen name="CookingStyle" component={CookingStyleScreen} />
         <Stack.Screen name="FoodPreference" component={FoodPreferenceScreen} />
         <Stack.Screen name="Allergies" component={AllergiesScreen} />
-        <Stack.Screen name="PantryStarter" component={PantryStarterScreen} />
       </Stack.Navigator>
     </OnboardingProvider>
   );

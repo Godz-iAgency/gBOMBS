@@ -28,8 +28,6 @@ const COMMON_ALLERGENS = [
   'Gluten',
   'Wheat',
   'Sesame',
-  'Mushrooms',
-  'Shellfish',
   'Eggs',
   'Dairy',
   'Coconut',
@@ -38,7 +36,7 @@ const COMMON_ALLERGENS = [
 ];
 
 export default function AllergiesScreen({ navigation }: Props) {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
 
   const [chips, setChips] = useState<string[]>([...COMMON_ALLERGENS]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -73,11 +71,23 @@ export default function AllergiesScreen({ navigation }: Props) {
     setInput('');
   }
 
-  async function persistAndContinue() {
-    if (!user) {
-      navigation.navigate('PantryStarter');
-      return;
+  /** Mark onboarding complete + refresh so AppNavigator routes into the app. */
+  async function completeOnboarding(): Promise<boolean> {
+    if (!user) return false;
+    const { error } = await supabase
+      .from('users')
+      .update({ onboarding_completed: true })
+      .eq('id', user.id);
+    if (error) {
+      Alert.alert('Could not finish', error.message);
+      return false;
     }
+    await refreshProfile();
+    return true;
+  }
+
+  async function persistAndContinue() {
+    if (!user) return;
     setSaving(true);
 
     if (selected.size > 0) {
@@ -105,8 +115,16 @@ export default function AllergiesScreen({ navigation }: Props) {
       }
     }
 
-    setSaving(false);
-    navigation.navigate('PantryStarter');
+    const ok = await completeOnboarding();
+    if (!ok) setSaving(false);
+    // On success, AppNavigator swaps to MainStack — no further nav needed.
+  }
+
+  async function handleSkip() {
+    if (saving) return;
+    setSaving(true);
+    const ok = await completeOnboarding();
+    if (!ok) setSaving(false);
   }
 
   return (
@@ -115,13 +133,17 @@ export default function AllergiesScreen({ navigation }: Props) {
       title="Anything to avoid?"
       subtitle="Allergies, intolerances, or foods you just hate"
       buttonLabel={
-        selectedCount > 0 ? `Continue with ${selectedCount} excluded` : 'Continue'
+        selectedCount > 0
+          ? `Finish setup · ${selectedCount} excluded`
+          : 'Finish setup'
       }
       buttonLoading={saving}
       onPressButton={persistAndContinue}
+      onBack={() => navigation.goBack()}
       footer={
         <TouchableOpacity
-          onPress={() => navigation.navigate('PantryStarter')}
+          onPress={handleSkip}
+          disabled={saving}
           className="mb-3 self-center"
         >
           <Text className="text-content-muted text-sm underline">
@@ -142,6 +164,9 @@ export default function AllergiesScreen({ navigation }: Props) {
             label={label}
             selected={selected.has(label)}
             onPress={() => toggle(label)}
+            accentColor="#EF4444"
+            mark="✕"
+            strikethrough
           />
         ))}
       </View>

@@ -56,6 +56,7 @@ export default function CookingStyleScreen({ navigation }: Props) {
       buttonDisabled={!cookingStyle}
       buttonLoading={saving}
       onPressButton={handleContinue}
+      onBack={() => navigation.goBack()}
     >
       {STYLES.map((s) => (
         <OptionCard

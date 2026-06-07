@@ -23,7 +23,7 @@ export default function DietModeBottomSheet({
   onClose,
 }: {
   visible: boolean;
-  selectedFoods: string[];
+  selectedFoods: { label: string; color: string }[];
   dietMode: DietMode;
   saving: boolean;
   onChangeDietMode: (m: DietMode) => void;
@@ -62,11 +62,24 @@ export default function DietModeBottomSheet({
             <View className="flex-row flex-wrap">
               {selectedFoods.map((f) => (
                 <View
-                  key={f}
-                  className="mb-2 mr-2 rounded-full border border-brand-green bg-brand-green/10 px-3 py-1"
+                  key={f.label}
+                  style={{
+                    borderColor: f.color,
+                    backgroundColor: f.color + '26', // ~15% alpha, matches step 5
+                  }}
+                  className="mb-2 mr-2 flex-row items-center rounded-full border px-3 py-1"
                 >
-                  <Text className="text-xs font-semibold text-brand-green">
-                    {f}
+                  <Text
+                    className="mr-1 text-xs font-bold"
+                    style={{ color: f.color }}
+                  >
+                    ✓
+                  </Text>
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: f.color }}
+                  >
+                    {f.label}
                   </Text>
                 </View>
               ))}

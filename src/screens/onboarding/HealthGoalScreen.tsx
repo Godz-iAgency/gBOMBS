@@ -57,6 +57,7 @@ export default function HealthGoalScreen({ navigation }: Props) {
       buttonDisabled={!healthGoal}
       buttonLoading={saving}
       onPressButton={handleContinue}
+      onBack={() => navigation.goBack()}
     >
       {GOALS.map((g) => (
         <OptionCard

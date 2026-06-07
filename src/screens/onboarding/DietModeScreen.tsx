@@ -17,6 +17,7 @@ export default function DietModeScreen({ navigation }: Props) {
       subtitle="You'll confirm this again when you save your foods."
       buttonLabel="Continue"
       onPressButton={() => navigation.navigate('HealthGoal')}
+      onBack={() => navigation.goBack()}
     >
       <OptionCard
         icon="leaf"

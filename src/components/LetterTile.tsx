@@ -11,11 +11,14 @@ export default function LetterTile({
   color,
   glow,
   size = 64,
+  resizeMode = 'cover',
 }: {
   image: ImageSourcePropType;
   color: string;
   glow: string;
   size?: number;
+  /** 'cover' fills the tile (may crop edges); 'contain' shows the whole letter. */
+  resizeMode?: 'cover' | 'contain';
 }) {
   return (
     <View
@@ -39,7 +42,7 @@ export default function LetterTile({
       <Image
         source={image}
         style={{ width: '100%', height: '100%' }}
-        resizeMode="cover"
+        resizeMode={resizeMode}
       />
     </View>
   );

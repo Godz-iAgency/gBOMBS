@@ -14,11 +14,17 @@ export default function FoodChip({
   selected,
   onPress,
   accentColor = '#3A6B2A',
+  mark = '✓',
+  strikethrough = false,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
   accentColor?: string;
+  /** Leading glyph when selected. '✓' for include, '✕' for exclude. */
+  mark?: string;
+  /** Strike through the label when selected (used for "avoid" chips). */
+  strikethrough?: boolean;
 }) {
   return (
     <TouchableOpacity
@@ -37,12 +43,19 @@ export default function FoodChip({
     >
       {selected ? (
         <Text className="mr-1 text-sm font-bold" style={{ color: accentColor }}>
-          ✓
+          {mark}
         </Text>
       ) : null}
       <Text
         className={selected ? 'text-sm font-semibold' : 'text-sm text-content-muted'}
-        style={selected ? { color: accentColor } : undefined}
+        style={
+          selected
+            ? {
+                color: accentColor,
+                textDecorationLine: strikethrough ? 'line-through' : 'none',
+              }
+            : undefined
+        }
       >
         {label}
       </Text>

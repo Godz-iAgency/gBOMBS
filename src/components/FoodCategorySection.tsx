@@ -114,12 +114,21 @@ export default function FoodCategorySection({
     >
       {/* Header */}
       <View className="mb-3 flex-row items-center">
-        <LetterTile
-          image={meta.image}
-          color={config.color}
-          glow={config.chip}
-          size={44}
-        />
+        {(() => {
+          const isLandscape =
+            config.key === 'berries' || config.key === 'seeds';
+          return (
+            <LetterTile
+              image={meta.image}
+              color={config.color}
+              glow={config.chip}
+              // Berries/Seeds (landscape) stay larger + cover. The portrait
+              // letters shrink 4px and use contain so the whole letter shows.
+              size={isLandscape ? 52 : 36}
+              resizeMode={isLandscape ? 'cover' : 'contain'}
+            />
+          );
+        })()}
         <Text
           className="ml-3 text-base font-extrabold tracking-wide"
           style={{ color: config.chip }}
