@@ -1,6 +1,7 @@
 import { Alert } from 'react-native';
 import { useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import OnboardingScaffold from '@/components/onboarding/OnboardingScaffold';
 import OptionCard from '@/components/onboarding/OptionCard';
 import { useOnboarding } from '@/store/onboardingStore';
@@ -11,12 +12,20 @@ import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'HealthGoal'>;
 
-const GOALS: { key: HealthGoal; emoji: string; title: string; desc: string }[] = [
-  { key: 'weight_loss', emoji: '⚖️', title: 'Weight loss', desc: 'Lower-calorie, high-satiety meals' },
-  { key: 'gut_health', emoji: '🌱', title: 'Gut health', desc: 'Fiber-rich, fermented, microbiome-friendly' },
-  { key: 'energy', emoji: '⚡', title: 'Energy', desc: 'Steady fuel through the day' },
-  { key: 'anti_inflammatory', emoji: '🛡️', title: 'Anti-inflammatory', desc: 'Antioxidant-dense, healing foods' },
-  { key: 'general_wellness', emoji: '✨', title: 'General wellness', desc: 'A balanced, everyday approach' },
+type GoalDef = {
+  key: HealthGoal;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  title: string;
+  desc: string;
+};
+
+const GOALS: GoalDef[] = [
+  { key: 'weight_loss', icon: 'trending-down', color: '#6FBF4A', title: 'Weight loss', desc: 'Lower-calorie, high-satiety meals' },
+  { key: 'gut_health', icon: 'leaf', color: '#3A6B2A', title: 'Gut health', desc: 'Fiber-rich, fermented, microbiome-friendly' },
+  { key: 'energy', icon: 'flash', color: '#D4A84E', title: 'Energy', desc: 'Steady fuel through the day' },
+  { key: 'anti_inflammatory', icon: 'shield-checkmark', color: '#8A7BD8', title: 'Anti-inflammatory', desc: 'Antioxidant-dense, healing foods' },
+  { key: 'general_wellness', icon: 'sparkles', color: '#D85A8E', title: 'General wellness', desc: 'A balanced, everyday approach' },
 ];
 
 export default function HealthGoalScreen({ navigation }: Props) {
@@ -52,7 +61,8 @@ export default function HealthGoalScreen({ navigation }: Props) {
       {GOALS.map((g) => (
         <OptionCard
           key={g.key}
-          emoji={g.emoji}
+          icon={g.icon}
+          iconColor={g.color}
           title={g.title}
           description={g.desc}
           selected={healthGoal === g.key}

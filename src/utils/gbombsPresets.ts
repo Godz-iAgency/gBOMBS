@@ -41,12 +41,14 @@ export const GBOMBS_PRESETS = {
 
 /** The six gBOMBS categories in display order, with labels + brand colors. */
 export const GBOMBS_CATEGORIES = [
-  { key: 'greens', letter: 'G', label: 'GREENS', color: '#16A34A', addPlaceholder: 'Add your own green…' },
-  { key: 'beans', letter: 'B', label: 'BEANS', color: '#92400E', addPlaceholder: 'Add your own bean…' },
-  { key: 'onion', letter: 'O', label: 'ONION', color: '#7C3AED', addPlaceholder: 'Add your own allium…' },
-  { key: 'mushroom', letter: 'M', label: 'MUSHROOM', color: '#B45309', addPlaceholder: 'Add your own mushroom…' },
-  { key: 'berries', letter: 'B', label: 'BERRIES', color: '#BE185D', addPlaceholder: 'Add your own berry…' },
-  { key: 'seeds', letter: 'S', label: 'SEEDS & NUTS', color: '#CA8A04', addPlaceholder: 'Add your own seed or nut…' },
+  // `color` = solid badge color (logo-true). `chip` = brighter on-dark variant
+  // used for selected chip text/border so it stays readable on the black bg.
+  { key: 'greens', letter: 'G', label: 'GREENS', color: '#3A6B2A', chip: '#6FBF4A', addPlaceholder: 'Add your own green…' },
+  { key: 'beans', letter: 'B', label: 'BEANS', color: '#6B4423', chip: '#C08B4F', addPlaceholder: 'Add your own bean…' },
+  { key: 'onion', letter: 'O', label: 'ONION', color: '#8B2252', chip: '#D85A8E', addPlaceholder: 'Add your own allium…' },
+  { key: 'mushroom', letter: 'M', label: 'MUSHROOM', color: '#9B7232', chip: '#D4A84E', addPlaceholder: 'Add your own mushroom…' },
+  { key: 'berries', letter: 'B', label: 'BERRIES', color: '#3D2F7A', chip: '#8A7BD8', addPlaceholder: 'Add your own berry…' },
+  { key: 'seeds', letter: 'S', label: 'SEEDS & NUTS', color: '#9B8C3A', chip: '#D4C24E', addPlaceholder: 'Add your own seed or nut…' },
 ] as const;
 
 export type GBombsCategoryKey = keyof typeof GBOMBS_PRESETS;

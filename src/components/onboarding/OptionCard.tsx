@@ -1,14 +1,21 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-/** Selectable card with an emoji/icon, title, and description. */
+/**
+ * Selectable card with a professional Ionicon in a colored rounded tile, a
+ * title, a description, and a check indicator. The icon tile glows in its
+ * accent color when selected.
+ */
 export default function OptionCard({
-  emoji,
+  icon,
+  iconColor,
   title,
   description,
   selected,
   onPress,
 }: {
-  emoji: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
   title: string;
   description?: string;
   selected: boolean;
@@ -18,20 +25,29 @@ export default function OptionCard({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
+      style={selected ? { borderColor: iconColor } : undefined}
       className={
         selected
-          ? 'mb-3 flex-row items-center rounded-2xl border-2 border-brand-green bg-brand-green/10 p-4'
+          ? 'mb-3 flex-row items-center rounded-2xl border-2 bg-surface-card p-4'
           : 'mb-3 flex-row items-center rounded-2xl border-2 border-surface-border bg-surface-card p-4'
       }
     >
-      <Text className="mr-4 text-3xl">{emoji}</Text>
+      {/* Icon tile */}
+      <View
+        className="mr-4 h-12 w-12 items-center justify-center rounded-xl"
+        style={{
+          backgroundColor: iconColor + '24',
+          borderWidth: 1,
+          borderColor: iconColor + '59',
+        }}
+      >
+        <Ionicons name={icon} size={24} color={iconColor} />
+      </View>
+
       <View className="flex-1">
         <Text
-          className={
-            selected
-              ? 'text-base font-bold text-brand-green'
-              : 'text-base font-bold text-content'
-          }
+          className={selected ? 'text-base font-bold' : 'text-base font-bold text-content'}
+          style={selected ? { color: iconColor } : undefined}
         >
           {title}
         </Text>
@@ -39,15 +55,18 @@ export default function OptionCard({
           <Text className="text-content-muted mt-0.5 text-sm">{description}</Text>
         ) : null}
       </View>
+
+      {/* Check indicator */}
       <View
-        className={
+        className="h-6 w-6 items-center justify-center rounded-full"
+        style={
           selected
-            ? 'h-5 w-5 items-center justify-center rounded-full bg-brand-green'
-            : 'h-5 w-5 rounded-full border-2 border-surface-border'
+            ? { backgroundColor: iconColor }
+            : { borderWidth: 2, borderColor: '#2D2D2D' }
         }
       >
         {selected ? (
-          <Text className="text-xs font-bold text-surface">✓</Text>
+          <Ionicons name="checkmark" size={15} color="#FFFFFF" />
         ) : null}
       </View>
     </TouchableOpacity>

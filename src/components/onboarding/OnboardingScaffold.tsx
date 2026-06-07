@@ -74,13 +74,13 @@ export default function OnboardingScaffold({
           }
         >
           {buttonLoading ? (
-            <ActivityIndicator color="#0A0A0A" />
+            <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text
               className={
                 buttonDisabled
                   ? 'text-center text-base font-bold text-content-muted'
-                  : 'text-center text-base font-bold text-surface'
+                  : 'text-center text-base font-bold text-white'
               }
             >
               {buttonLabel}

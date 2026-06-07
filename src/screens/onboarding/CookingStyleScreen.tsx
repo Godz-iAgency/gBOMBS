@@ -1,6 +1,7 @@
 import { Alert } from 'react-native';
 import { useState } from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import OnboardingScaffold from '@/components/onboarding/OnboardingScaffold';
 import OptionCard from '@/components/onboarding/OptionCard';
 import { useOnboarding } from '@/store/onboardingStore';
@@ -11,11 +12,19 @@ import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'CookingStyle'>;
 
-const STYLES: { key: CookingStyle; emoji: string; title: string; desc: string }[] = [
-  { key: 'quick_simple', emoji: '⚡', title: 'Quick & simple', desc: '15–20 min meals, minimal steps' },
-  { key: 'balanced_everyday', emoji: '🍽️', title: 'Balanced everyday', desc: 'A practical mix for weeknights' },
-  { key: 'gourmet_weekend', emoji: '👨‍🍳', title: 'Gourmet weekend', desc: 'More involved, restaurant-style' },
-  { key: 'batch_cooking', emoji: '🍱', title: 'Batch cooking', desc: 'Cook once, eat all week' },
+type StyleDef = {
+  key: CookingStyle;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  title: string;
+  desc: string;
+};
+
+const STYLES: StyleDef[] = [
+  { key: 'quick_simple', icon: 'flash', color: '#D4A84E', title: 'Quick & simple', desc: '15–20 min meals, minimal steps' },
+  { key: 'balanced_everyday', icon: 'restaurant', color: '#6FBF4A', title: 'Balanced everyday', desc: 'A practical mix for weeknights' },
+  { key: 'gourmet_weekend', icon: 'wine', color: '#D85A8E', title: 'Gourmet weekend', desc: 'More involved, restaurant-style' },
+  { key: 'batch_cooking', icon: 'layers', color: '#8A7BD8', title: 'Batch cooking', desc: 'Cook once, eat all week' },
 ];
 
 export default function CookingStyleScreen({ navigation }: Props) {
@@ -51,7 +60,8 @@ export default function CookingStyleScreen({ navigation }: Props) {
       {STYLES.map((s) => (
         <OptionCard
           key={s.key}
-          emoji={s.emoji}
+          icon={s.icon}
+          iconColor={s.color}
           title={s.title}
           description={s.desc}
           selected={cookingStyle === s.key}

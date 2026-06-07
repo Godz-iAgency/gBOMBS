@@ -11,8 +11,8 @@ const navTheme = {
     ...DefaultTheme.colors,
     background: '#0A0A0A',
     card: '#0A0A0A',
-    text: '#FFFFFF',
-    primary: '#22C55E',
+    text: '#F5F5F0',
+    primary: '#2D6A4F',
     border: '#2D2D2D',
   },
 };
@@ -20,7 +20,7 @@ const navTheme = {
 function Splash() {
   return (
     <View className="flex-1 items-center justify-center bg-surface">
-      <ActivityIndicator size="large" color="#22C55E" />
+      <ActivityIndicator size="large" color="#2D6A4F" />
     </View>
   );
 }

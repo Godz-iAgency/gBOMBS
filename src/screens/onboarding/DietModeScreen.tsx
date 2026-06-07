@@ -19,14 +19,16 @@ export default function DietModeScreen({ navigation }: Props) {
       onPressButton={() => navigation.navigate('HealthGoal')}
     >
       <OptionCard
-        emoji="🌱"
+        icon="leaf"
+        iconColor="#3A6B2A"
         title="Vegan"
         description="100% plant-based. No eggs, dairy, meat, or fish."
         selected={dietMode === 'vegan'}
         onPress={() => setDietMode('vegan')}
       />
       <OptionCard
-        emoji="🥚"
+        icon="egg"
+        iconColor="#D4A84E"
         title="Vegetarian"
         description="Plant-based, but eggs and cheese are allowed. No meat or fish."
         selected={dietMode === 'vegetarian'}

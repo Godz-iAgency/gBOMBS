@@ -57,13 +57,13 @@ export default function LoginScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           {/* Brand */}
-          <View className="mb-10 items-center">
+          <View className="mb-14 mt-6 items-center">
             <Image
               source={require('../../../assets/images/logo/G-bombs logo with background.png')}
-              style={{ width: '100%', height: 90 }}
+              style={{ width: '100%', height: 126 }}
               resizeMode="contain"
             />
-            <Text className="text-content-muted mt-2 text-base">
+            <Text className="text-content-muted mt-4 text-base">
               Healthy Eating Made Simple
             </Text>
           </View>
@@ -102,9 +102,9 @@ export default function LoginScreen({ navigation }: Props) {
             className="rounded-xl bg-brand-green py-4 active:opacity-90"
           >
             {loading ? (
-              <ActivityIndicator color="#0A0A0A" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text className="text-center text-base font-bold text-surface">
+              <Text className="text-center text-base font-bold text-white">
                 Sign in
               </Text>
             )}
@@ -121,7 +121,7 @@ export default function LoginScreen({ navigation }: Props) {
           <TouchableOpacity
             onPress={handleGoogle}
             activeOpacity={0.85}
-            className="rounded-xl border border-surface-border bg-surface-card py-4"
+            className="rounded-xl border border-brand-green bg-surface-card py-4"
           >
             <Text className="text-center text-base font-semibold text-content">
               Continue with Google

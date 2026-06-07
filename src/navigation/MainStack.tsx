@@ -1,6 +1,7 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { LOGO_WITH_BG } from '@/utils/gbombsImages';
 
 /**
  * Placeholder authenticated area. The real bottom-tab navigator (Home, Meal
@@ -13,7 +14,11 @@ export default function MainStack() {
   return (
     <SafeAreaView className="flex-1 bg-surface">
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-brand-green text-3xl font-extrabold">gBOMBS</Text>
+        <Image
+          source={LOGO_WITH_BG}
+          style={{ width: '100%', height: 110 }}
+          resizeMode="contain"
+        />
         <Text className="text-content mt-3 text-lg font-semibold">
           You're signed in
         </Text>

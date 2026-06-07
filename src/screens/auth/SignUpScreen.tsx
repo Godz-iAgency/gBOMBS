@@ -74,13 +74,13 @@ export default function SignUpScreen({ navigation }: Props) {
           contentContainerClassName="flex-grow justify-center px-6 py-10"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="mb-8 items-center">
+          <View className="mb-12 mt-4 items-center">
             <Image
               source={require('../../../assets/images/logo/G-bombs logo with background.png')}
-              style={{ width: '100%', height: 90 }}
+              style={{ width: '100%', height: 126 }}
               resizeMode="contain"
             />
-            <Text className="text-content-muted mt-2 text-base">
+            <Text className="text-content-muted mt-4 text-base">
               Start your 7-day free trial
             </Text>
           </View>
@@ -139,9 +139,9 @@ export default function SignUpScreen({ navigation }: Props) {
             className="rounded-xl bg-brand-green py-4"
           >
             {loading ? (
-              <ActivityIndicator color="#0A0A0A" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text className="text-center text-base font-bold text-surface">
+              <Text className="text-center text-base font-bold text-white">
                 Create account
               </Text>
             )}
