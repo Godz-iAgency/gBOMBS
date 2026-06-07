@@ -23,6 +23,7 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleLogin() {
     if (!email.trim() || !password) {
@@ -39,11 +40,30 @@ export default function LoginScreen({ navigation }: Props) {
     // On success, the auth listener swaps the navigator automatically.
   }
 
-  function handleGoogle() {
-    Alert.alert(
-      'Google Sign-In',
-      'Google OAuth turns on once we finish the Google Cloud Console setup. Email sign-in works now.'
-    );
+  async function handleGoogle() {
+    // Native (iOS/Android) OAuth needs deep-link plumbing built in a later task.
+    if (Platform.OS !== 'web') {
+      Alert.alert(
+        'Google Sign-In',
+        'Google sign-in on iOS/Android arrives in a later build. Email sign-in works now.'
+      );
+      return;
+    }
+
+    setGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Supabase sends the user back here with the session in the URL hash;
+        // detectSessionInUrl (web) then completes sign-in automatically.
+        redirectTo: window.location.origin,
+      },
+    });
+    // On success the browser redirects to Google, so code below only runs on error.
+    if (error) {
+      setGoogleLoading(false);
+      Alert.alert('Google sign-in failed', error.message);
+    }
   }
 
   return (
@@ -120,12 +140,17 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Google */}
           <TouchableOpacity
             onPress={handleGoogle}
+            disabled={googleLoading}
             activeOpacity={0.85}
             className="rounded-xl border border-brand-green bg-surface-card py-4"
           >
-            <Text className="text-center text-base font-semibold text-content">
-              Continue with Google
-            </Text>
+            {googleLoading ? (
+              <ActivityIndicator color="#6FBF4A" />
+            ) : (
+              <Text className="text-center text-base font-semibold text-content">
+                Continue with Google
+              </Text>
+            )}
           </TouchableOpacity>
 
           {/* To sign up */}

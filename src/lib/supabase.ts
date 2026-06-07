@@ -84,7 +84,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     storage: new LargeSecureStore(),
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // React Native, not web
+    detectSessionInUrl: isWeb, // web: parse OAuth redirect hash; native: deep links
   },
 });
 
