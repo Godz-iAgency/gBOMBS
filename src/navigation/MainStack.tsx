@@ -1,41 +1,26 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/contexts/AuthContext';
-import { LOGO_WITH_BG } from '@/utils/gbombsImages';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import MainTabNavigator from './MainTabNavigator';
 
 /**
- * Placeholder authenticated area. The real bottom-tab navigator (Home, Meal
- * Plan, Grocery, Profile) gets built in Step 7. For now this confirms the auth
- * gate works end-to-end and lets you sign out.
+ * Authenticated app shell. The bottom tabs (Home, Meal Plan, Grocery, Profile)
+ * are the root; this native stack wraps them so detail screens (recipe cards,
+ * etc.) can be pushed OVER the tabs in later phases.
  */
+export type MainStackParamList = {
+  Tabs: undefined;
+};
+
+const Stack = createNativeStackNavigator<MainStackParamList>();
+
 export default function MainStack() {
-  const { user, signOut } = useAuth();
-
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <View className="flex-1 items-center justify-center px-6">
-        <Image
-          source={LOGO_WITH_BG}
-          style={{ width: '100%', height: 110 }}
-          resizeMode="contain"
-        />
-        <Text className="text-content mt-3 text-lg font-semibold">
-          You're signed in
-        </Text>
-        <Text className="text-content-muted mt-1 text-sm">{user?.email}</Text>
-
-        <TouchableOpacity
-          onPress={signOut}
-          activeOpacity={0.85}
-          className="mt-10 rounded-xl border border-surface-border bg-surface-card px-8 py-3"
-        >
-          <Text className="text-base font-semibold text-content">Sign out</Text>
-        </TouchableOpacity>
-
-        <Text className="text-content-muted mt-12 text-center text-xs">
-          Main app (tabs, meal plan, grocery, profile) arrives in Step 7.
-        </Text>
-      </View>
-    </SafeAreaView>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#0A0A0A' },
+      }}
+    >
+      <Stack.Screen name="Tabs" component={MainTabNavigator} />
+    </Stack.Navigator>
   );
 }
