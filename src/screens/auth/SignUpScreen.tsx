@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { supabase } from '@/lib/supabase';
 import PasswordInput from '@/components/PasswordInput';
@@ -25,6 +26,7 @@ export default function SignUpScreen({ navigation }: Props) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSignUp() {
     if (!email.trim() || !password) {
@@ -64,8 +66,43 @@ export default function SignUpScreen({ navigation }: Props) {
     // If confirmation is OFF, the auth listener logs them straight in.
   }
 
+  async function handleGoogle() {
+    // Native (iOS/Android) OAuth needs deep-link plumbing built in a later task.
+    if (Platform.OS !== 'web') {
+      Alert.alert(
+        'Google Sign-Up',
+        'Google sign-up on iOS/Android arrives in a later build. Email sign-up works now.'
+      );
+      return;
+    }
+
+    setGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Supabase sends the user back here with the session in the URL hash;
+        // detectSessionInUrl (web) then completes sign-in automatically.
+        redirectTo: window.location.origin,
+      },
+    });
+    // On success the browser redirects to Google, so code below only runs on error.
+    if (error) {
+      setGoogleLoading(false);
+      Alert.alert('Google sign-up failed', error.message);
+    }
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-surface">
+      {/* Back to landing page */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Landing')}
+        activeOpacity={0.7}
+        className="absolute left-3 top-2 z-10 h-10 w-10 items-center justify-center rounded-full"
+      >
+        <Ionicons name="chevron-back" size={28} color="#E5E7EB" />
+      </TouchableOpacity>
+
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -143,6 +180,29 @@ export default function SignUpScreen({ navigation }: Props) {
             ) : (
               <Text className="text-center text-base font-bold text-white">
                 Create account
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View className="my-6 flex-row items-center">
+            <View className="h-px flex-1 bg-surface-border" />
+            <Text className="mx-3 text-xs text-content-muted">OR</Text>
+            <View className="h-px flex-1 bg-surface-border" />
+          </View>
+
+          {/* Google */}
+          <TouchableOpacity
+            onPress={handleGoogle}
+            disabled={googleLoading}
+            activeOpacity={0.85}
+            className="rounded-xl border border-brand-green bg-surface-card py-4"
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#6FBF4A" />
+            ) : (
+              <Text className="text-center text-base font-semibold text-content">
+                Continue with Google
               </Text>
             )}
           </TouchableOpacity>

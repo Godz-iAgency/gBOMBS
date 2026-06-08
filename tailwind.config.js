@@ -4,6 +4,16 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: {
+        // Default + per-weight Poppins families. Pairing each weight class with
+        // its real font file gives true Poppins weights on iOS/Android (not
+        // synthetic bold). Loaded in App.tsx via @expo-google-fonts/poppins.
+        sans: ['Poppins_400Regular'],
+        medium: ['Poppins_500Medium'],
+        semibold: ['Poppins_600SemiBold'],
+        bold: ['Poppins_700Bold'],
+        extrabold: ['Poppins_800ExtraBold'],
+      },
       colors: {
         // ---- gBOMBS brand (colors pulled from the food-letter logo) ----
         brand: {

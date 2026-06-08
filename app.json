@@ -30,7 +30,9 @@
           "merchantIdentifier": "merchant.com.gbombs",
           "enableGooglePay": true
         }
-      ]
+      ],
+      "expo-video",
+      "expo-font"
     ]
   }
 }

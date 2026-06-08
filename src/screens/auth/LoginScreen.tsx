@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { supabase } from '@/lib/supabase';
 import PasswordInput from '@/components/PasswordInput';
@@ -68,6 +69,15 @@ export default function LoginScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
+      {/* Back to landing page */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Landing')}
+        activeOpacity={0.7}
+        className="absolute left-3 top-2 z-10 h-10 w-10 items-center justify-center rounded-full"
+      >
+        <Ionicons name="chevron-back" size={28} color="#E5E7EB" />
+      </TouchableOpacity>
+
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
