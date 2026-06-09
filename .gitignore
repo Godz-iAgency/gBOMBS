@@ -45,3 +45,6 @@ yarn-error.*
 /ios
 /android
 .expo-web.log
+
+# Supabase CLI scratch (project ref, pooler url, version cache)
+supabase/.temp/

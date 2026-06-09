@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthStack from './AuthStack';
 import OnboardingStack from './OnboardingStack';
 import MainStack from './MainStack';
+import PaywallGate from './PaywallGate';
+import { hasActiveSubscription } from '@/lib/access';
 
 const navTheme = {
   ...DefaultTheme,
@@ -41,8 +43,13 @@ export default function AppNavigator() {
   } else if (profile && !profile.onboarding_completed) {
     // 4. Signed in but hasn't finished onboarding.
     content = <OnboardingStack />;
+  } else if (profile && !hasActiveSubscription(profile)) {
+    // 5. Onboarded but no active subscription → card-required paywall.
+    content = <PaywallGate />;
   } else {
-    // 5. Signed in + onboarded (or profile unavailable — fail open to app).
+    // 6. Signed in + onboarded + subscribed (or profile unavailable — fail
+    //    open to the app so a transient profile-fetch error can't lock out a
+    //    paying user).
     content = <MainStack />;
   }
 

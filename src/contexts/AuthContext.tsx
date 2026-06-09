@@ -14,6 +14,9 @@ type Profile = {
   onboarding_completed: boolean;
   subscription_tier: string;
   subscription_status: string;
+  // Real Stripe subscription id. Null for the free DB-default trial, so the
+  // gate uses this to tell a paid/trialing subscriber from a brand-new user.
+  subscription_id: string | null;
 };
 
 type AuthContextValue = {
@@ -38,7 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfileLoading(true);
     const { data, error } = await supabase
       .from('users')
-      .select('onboarding_completed, subscription_tier, subscription_status')
+      .select(
+        'onboarding_completed, subscription_tier, subscription_status, subscription_id'
+      )
       .eq('id', userId)
       .single();
     if (!error && data) setProfile(data as Profile);
