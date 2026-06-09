@@ -31,18 +31,16 @@ const admin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-// plan (from checkout metadata) -> DB tier. NOTE: 'premium' maps to the
-// existing 'chef_premium' tier value because the CHECK constraint has not yet
-// been migrated to 'wellness_pro'. Update both when that migration lands.
+// plan (from checkout metadata) -> DB tier.
 const PLAN_TO_TIER: Record<string, string> = {
   starter: 'standard',
-  premium: 'chef_premium',
+  premium: 'wellness_pro',
 };
 
 // Fallback: map by price id if metadata.plan is somehow missing.
 const PRICE_TO_TIER: Record<string, string> = {
   [Deno.env.get('STRIPE_PRICE_ID_STARTER') ?? 'x']: 'standard',
-  [Deno.env.get('STRIPE_PRICE_ID_PREMIUM') ?? 'y']: 'chef_premium',
+  [Deno.env.get('STRIPE_PRICE_ID_PREMIUM') ?? 'y']: 'wellness_pro',
 };
 
 const corsHeaders = {

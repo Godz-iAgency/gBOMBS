@@ -20,7 +20,7 @@ export type CookingStyle =
   | 'balanced_everyday'
   | 'gourmet_weekend'
   | 'batch_cooking';
-export type SubscriptionTier = 'trial' | 'standard' | 'chef_premium' | 'canceled';
+export type SubscriptionTier = 'trial' | 'standard' | 'wellness_pro' | 'canceled';
 export type SubscriptionStatus =
   | 'active'
   | 'trialing'

@@ -28,7 +28,7 @@ CREATE TABLE public.users (
     'quick_simple', 'balanced_everyday', 'gourmet_weekend', 'batch_cooking'
   )) DEFAULT 'balanced_everyday',
   subscription_tier TEXT CHECK (subscription_tier IN (
-    'trial', 'standard', 'chef_premium', 'canceled'
+    'trial', 'standard', 'wellness_pro', 'canceled'
   )) DEFAULT 'trial',
   subscription_status TEXT CHECK (subscription_status IN (
     'active', 'trialing', 'past_due', 'canceled', 'incomplete'
@@ -491,7 +491,7 @@ CREATE TABLE public.subscriptions (
   stripe_customer_id TEXT UNIQUE,
   stripe_subscription_id TEXT UNIQUE,
   revenuecat_id TEXT,
-  tier TEXT CHECK (tier IN ('trial', 'standard', 'chef_premium', 'canceled')) DEFAULT 'trial',
+  tier TEXT CHECK (tier IN ('trial', 'standard', 'wellness_pro', 'canceled')) DEFAULT 'trial',
   status TEXT CHECK (status IN (
     'active', 'trialing', 'past_due', 'canceled', 'incomplete', 'unpaid'
   )) DEFAULT 'trialing',
