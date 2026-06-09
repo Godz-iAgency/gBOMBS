@@ -1,35 +1,50 @@
 /**
- * Gemini AI service. For now this only implements Prompt 8 (custom food
- * validation) used by the FoodPreferenceScreen. Other prompts (meal plan,
- * grocery list, scoring, etc.) get added in later build steps.
+ * gBOMBS Gemini AI service — public entry point.
+ * ------------------------------------------------------------------
+ * Re-exports the client, types, and prompt helpers, and hosts the food
+ * validation prompt (Prompt 8). Future prompts (meal plan, recipe, grocery,
+ * smoothie, swap, check-in) live in sibling files and are re-exported here so
+ * everything is reachable from `@/services/gemini`.
  */
 
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+export * from './types';
+export * from './client';
+export { FUHRMAN_SYSTEM_PROMPT, renderUserContext } from './prompts';
+export {
+  generateWeeklyMealPlan,
+  computeWeeklyScore,
+  computeDayScore,
+} from './mealPlan';
+export {
+  generateRecipe,
+  computeRecipeScore,
+  type RecipeRequest,
+} from './recipe';
+
+import { callGeminiJson, getModel, isAiConfigured } from './client';
 
 export type FoodValidationResult = {
   valid: boolean;
   reason: string;
   suggested_alternative: string;
-  /** True when we skipped the API (no key configured) and accepted by default. */
+  /** True when we skipped the API (no key / failure) and accepted by default. */
   skipped?: boolean;
 };
 
 /**
  * Validate a custom food against a gBOMBS category using Gemini (Prompt 8).
  *
- * IMPORTANT: This runs AFTER the local isBlockedFood() check. If no Gemini API
- * key is configured, we DO NOT block the user — we accept the food and flag
- * `skipped: true` so the caller can mark it unvalidated. Wire the key in .env
- * (EXPO_PUBLIC_GEMINI_API_KEY) to turn on real validation; no code change needed.
+ * Always runs on Flash (validation is a flash-only task — cheap + deterministic),
+ * so tier is irrelevant here. Runs AFTER the local isBlockedFood() check. If no
+ * key is configured or the call fails, we DO NOT block the user — we accept the
+ * food and flag `skipped: true` so the caller can mark it unvalidated.
  */
 export async function validateCustomFood(
   foodItem: string,
   category: string,
   dietMode: string
 ): Promise<FoodValidationResult> {
-  // No key yet → accept gracefully so onboarding still works.
-  if (!GEMINI_API_KEY) {
+  if (!isAiConfigured()) {
     return { valid: true, reason: '', suggested_alternative: '', skipped: true };
   }
 
@@ -66,29 +81,22 @@ Return ONLY valid JSON. No explanation. No markdown.
 }`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 150 },
-        }),
-      }
-    );
+    const parsed = await callGeminiJson<{
+      valid: boolean;
+      reason?: string;
+      suggested_alternative?: string;
+    }>(getModel('validation', 'standard'), prompt, {
+      temperature: 0.1,
+      maxOutputTokens: 150,
+    });
 
-    const data = await response.json();
-    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    const cleaned = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
     return {
       valid: Boolean(parsed.valid),
       reason: parsed.reason ?? '',
       suggested_alternative: parsed.suggested_alternative ?? '',
     };
   } catch {
-    // Network/parse failure → don't hard-block the user; accept but mark skipped.
+    // Network/parse/no-key failure → don't hard-block the user.
     return { valid: true, reason: '', suggested_alternative: '', skipped: true };
   }
 }
