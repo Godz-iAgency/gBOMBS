@@ -2,15 +2,22 @@ import { useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Platform,
   ScrollView,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { startCheckout, type Plan } from '@/lib/subscription';
+import {
+  createCheckout,
+  openCheckoutUrl,
+  openBillingPortal,
+  type Plan,
+} from '@/lib/subscription';
 import { LOGO_WITH_BG } from '@/utils/gbombsImages';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -53,15 +60,78 @@ const PLANS: PlanCard[] = [
   },
 ];
 
+/** At least 10 digits = a usable phone number. */
+function isValidPhone(raw: string): boolean {
+  return raw.replace(/\D/g, '').length >= 10;
+}
+
+/** Blocking, cross-platform notice that resolves once acknowledged. */
+function confirmNotice(title: string, message: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (Platform.OS === 'web') {
+      // window.alert is synchronous on web.
+      window.alert(`${title}\n\n${message}`);
+      resolve();
+    } else {
+      Alert.alert(title, message, [
+        { text: 'Continue', onPress: () => resolve() },
+      ]);
+    }
+  });
+}
+
 export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
   const [loadingPlan, setLoadingPlan] = useState<Plan | null>(null);
-  const { signOut } = useAuth();
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [phone, setPhone] = useState('');
+  const { profile, signOut } = useAuth();
+
+  // A user who lands here with a real subscription that needs attention
+  // (payment failed) should fix it in the portal, not start a new checkout.
+  const needsBillingFix =
+    !!profile?.subscription_id &&
+    (profile.subscription_status === 'past_due' ||
+      profile.subscription_status === 'incomplete');
+
+  async function handlePortal() {
+    setPortalLoading(true);
+    try {
+      await openBillingPortal();
+    } catch (e) {
+      Alert.alert('Could not open billing', (e as Error).message);
+    } finally {
+      setPortalLoading(false);
+    }
+  }
 
   async function handleChoose(plan: Plan) {
+    if (!isValidPhone(phone)) {
+      Alert.alert(
+        'Phone number needed',
+        'Please enter a valid phone number to continue.'
+      );
+      return;
+    }
+
     setLoadingPlan(plan);
     try {
-      await startCheckout(plan);
-      // On web the browser redirects to Stripe, so this line rarely runs.
+      const res = await createCheckout(plan, phone);
+
+      if (res.kind === 'already_subscribed') {
+        await confirmNotice(
+          'You already have a subscription',
+          "We'll open your billing portal so you can manage it."
+        );
+        await openBillingPortal();
+        return;
+      }
+
+      // Trial withheld (this phone/email already used one) → tell them first.
+      if (res.trialBlocked && res.message) {
+        await confirmNotice('Heads up', res.message);
+      }
+      await openCheckoutUrl(res.url);
+      // On web the browser redirects to Stripe, so code after rarely runs.
     } catch (e) {
       Alert.alert('Checkout failed', (e as Error).message);
     } finally {
@@ -73,6 +143,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
       <ScrollView
         contentContainerClassName="px-5 py-8"
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -88,6 +159,50 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
           <Text className="text-content-muted mt-2 text-center text-sm">
             Start with a 7-day free trial. Cancel anytime before it ends and you
             won't be charged.
+          </Text>
+        </View>
+
+        {/* Payment-needs-fixing banner → portal, not a new checkout */}
+        {needsBillingFix && (
+          <View className="mb-5 rounded-2xl border border-brand-greenBright bg-surface-cardAlt p-4">
+            <Text className="text-content text-base font-bold">
+              Your payment needs attention
+            </Text>
+            <Text className="text-content-muted mt-1 text-sm">
+              Update your payment method to keep your subscription active.
+            </Text>
+            <TouchableOpacity
+              onPress={handlePortal}
+              disabled={portalLoading}
+              activeOpacity={0.85}
+              className="mt-3 rounded-xl bg-brand-greenBright py-3"
+            >
+              {portalLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text className="text-center text-base font-bold text-white">
+                  Update payment method
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Phone number — required, kept on record + used to guard the trial */}
+        <View className="mb-5">
+          <Text className="text-content mb-1.5 text-sm font-semibold">
+            Phone number
+          </Text>
+          <TextInput
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="(555) 123-4567"
+            placeholderTextColor="#6B7280"
+            keyboardType="phone-pad"
+            className="text-content rounded-xl border border-surface-border bg-surface-card px-4 py-3 text-base"
+          />
+          <Text className="text-content-muted mt-1.5 text-xs">
+            Used to secure your account and your free trial.
           </Text>
         </View>
 

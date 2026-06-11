@@ -58,6 +58,7 @@ export interface Database {
           subscription_id: string | null;
           customer_id: string | null;
           revenuecat_id: string | null;
+          phone_number: string | null;
           onboarding_completed: boolean;
           chef_access_enabled: boolean;
           auto_order_enabled: boolean;
@@ -77,6 +78,7 @@ export interface Database {
           diet_mode?: DietMode;
           health_goal?: HealthGoal;
           cooking_style?: CookingStyle;
+          phone_number?: string | null;
           onboarding_completed?: boolean;
         };
         Update: Partial<Database['public']['Tables']['users']['Row']>;
@@ -190,6 +192,25 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['daily_scores']['Row']>;
+        Relationships: [];
+      };
+      trial_fingerprints: {
+        Row: {
+          id: string;
+          email_normalized: string | null;
+          phone_normalized: string | null;
+          last_user_id: string | null;
+          first_trial_at: string;
+          created_at: string;
+        };
+        Insert: {
+          email_normalized?: string | null;
+          phone_normalized?: string | null;
+          last_user_id?: string | null;
+        };
+        Update: Partial<
+          Database['public']['Tables']['trial_fingerprints']['Row']
+        >;
         Relationships: [];
       };
     };

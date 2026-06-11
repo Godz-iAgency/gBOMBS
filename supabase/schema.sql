@@ -37,6 +37,7 @@ CREATE TABLE public.users (
   subscription_id TEXT,
   customer_id TEXT,
   revenuecat_id TEXT,
+  phone_number TEXT,
   onboarding_completed BOOLEAN DEFAULT FALSE,
   chef_access_enabled BOOLEAN DEFAULT FALSE,
   auto_order_enabled BOOLEAN DEFAULT FALSE,
@@ -548,5 +549,49 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================================================
--- DONE. 15 tables + auto-provisioning trigger. RLS enabled on all.
+-- 17. TRIAL_FINGERPRINTS  (free-trial abuse guard)
+-- ============================================================================
+-- One row per person who has EVER started a free trial, keyed by their
+-- normalized phone and email. This table is the single source of truth for
+-- "has this person already used their one free trial?".
+--
+-- IMPORTANT: it deliberately does NOT reference public.users with a cascade —
+-- if a user deletes their account and signs up again (even with a new email),
+-- their phone fingerprint remains here and blocks a second free trial.
+--
+-- Only the service_role (the create-checkout-session Edge Function) reads or
+-- writes this table. RLS is enabled with NO policies, so end users — who only
+-- ever hold the anon/authenticated role — can never see or touch it.
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.trial_fingerprints (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email_normalized TEXT,
+  phone_normalized TEXT,
+  last_user_id UUID,  -- audit only; intentionally NO foreign key / cascade
+  first_trial_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- A phone (or email) may appear at most once, so the eligibility check is exact.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_trial_fp_phone
+  ON public.trial_fingerprints(phone_normalized)
+  WHERE phone_normalized IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_trial_fp_email
+  ON public.trial_fingerprints(email_normalized)
+  WHERE email_normalized IS NOT NULL;
+
+ALTER TABLE public.trial_fingerprints ENABLE ROW LEVEL SECURITY;
+-- No policies on purpose: service_role bypasses RLS; everyone else is denied.
+
+-- ============================================================================
+-- 18. IDEMPOTENT MIGRATION  (safe to run on an EXISTING database)
+-- ============================================================================
+-- If your tables already exist (you ran an earlier version of this file), run
+-- JUST this block to add the phone column. Sections 17 above are already
+-- guarded with IF NOT EXISTS, so re-running them is safe too.
+-- ============================================================================
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS phone_number TEXT;
+
+-- ============================================================================
+-- DONE. 16 tables + auto-provisioning trigger. RLS enabled on all.
 -- ============================================================================
