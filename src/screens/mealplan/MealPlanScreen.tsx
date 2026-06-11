@@ -19,6 +19,7 @@ import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedPlan, saveCachedPlan } from '@/lib/mealPlanCache';
 import { GBOMBS_LETTERS, LETTER_BY_KEY } from '@/utils/gbombsImages';
 import RecipeModal from './RecipeModal';
+import GroceryScreen from './GroceryScreen';
 
 const SHORT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const SLOT_LABEL: Record<string, string> = {
@@ -138,6 +139,7 @@ export default function MealPlanScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState(0);
   const [recipeMeal, setRecipeMeal] = useState<MealSummary | null>(null);
+  const [groceryOpen, setGroceryOpen] = useState(false);
 
   // Load any cached plan on mount / user change.
   useEffect(() => {
@@ -248,12 +250,20 @@ export default function MealPlanScreen() {
         {/* Header */}
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="text-content text-3xl font-extrabold">Your Week</Text>
-          <TouchableOpacity
-            onPress={handleGenerate}
-            className="h-11 w-11 items-center justify-center rounded-full bg-surface-card"
-          >
-            <Ionicons name="refresh" size={20} color="#5A9A3A" />
-          </TouchableOpacity>
+          <View className="flex-row">
+            <TouchableOpacity
+              onPress={() => setGroceryOpen(true)}
+              className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-surface-card"
+            >
+              <Ionicons name="cart-outline" size={20} color="#5A9A3A" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleGenerate}
+              className="h-11 w-11 items-center justify-center rounded-full bg-surface-card"
+            >
+              <Ionicons name="refresh" size={20} color="#5A9A3A" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Weekly score */}
@@ -305,6 +315,14 @@ export default function MealPlanScreen() {
         userId={user?.id ?? ''}
         tier={tier}
         onClose={() => setRecipeMeal(null)}
+      />
+
+      <GroceryScreen
+        visible={groceryOpen}
+        plan={plan}
+        userId={user?.id ?? ''}
+        tier={tier}
+        onClose={() => setGroceryOpen(false)}
       />
     </SafeAreaView>
   );

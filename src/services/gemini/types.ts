@@ -98,6 +98,47 @@ export interface Recipe {
   tips?: string;
 }
 
+/** Canonical store sections, in shopping-path order (Prompt 4). */
+export const GROCERY_SECTION_TITLES = [
+  'Produce',
+  'Beans & Proteins',
+  'Whole Grains',
+  'Nuts & Seeds',
+  'Frozen',
+  'Pantry',
+  'Spices & Herbs',
+  'Dairy Alternatives',
+] as const;
+
+export type GrocerySectionTitle = (typeof GROCERY_SECTION_TITLES)[number];
+
+/** One line on the shopping list. `checked` is local UI state we persist. */
+export interface GroceryItem {
+  item: string;
+  /** Real shopping units ("2 large bags", "3 cans (15 oz)"), not recipe units. */
+  quantity: string;
+  /** gBOMBS category if this item is one of the six, else null. */
+  category: GBombsCategory | null;
+  checked: boolean;
+}
+
+/** A store section of the list (empty sections are omitted). */
+export interface GrocerySection {
+  title: GrocerySectionTitle;
+  items: GroceryItem[];
+}
+
+/** The consolidated weekly shopping list (Prompt 4 output). */
+export interface GroceryList {
+  /** ISO timestamp the list was generated. */
+  generatedAt: string;
+  /** `generatedAt` of the plan this list was built from (staleness check). */
+  planGeneratedAt: string;
+  /** Which model produced it (for debugging/telemetry). */
+  modelUsed: string;
+  sections: GrocerySection[];
+}
+
 /** Inputs that personalize generation, taken from the user's profile. */
 export interface UserMealContext {
   dietMode: string; // 'vegan' | 'vegetarian'

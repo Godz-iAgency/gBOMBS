@@ -20,6 +20,7 @@ export {
   computeRecipeScore,
   type RecipeRequest,
 } from './recipe';
+export { generateGroceryList } from './grocery';
 
 import { callGeminiJson, getModel, isAiConfigured } from './client';
 
