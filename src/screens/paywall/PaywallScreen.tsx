@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -84,7 +84,15 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
   const [loadingPlan, setLoadingPlan] = useState<Plan | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState(false);
   const { profile, signOut } = useAuth();
+
+  // Used to scroll the phone field into view and focus it when a user taps a
+  // plan before entering a number (the field sits at the top and is easy to
+  // miss after scrolling down to the plan cards).
+  const scrollRef = useRef<ScrollView>(null);
+  const phoneInputRef = useRef<TextInput>(null);
+  const phoneY = useRef(0);
 
   // A user who lands here with a real subscription that needs attention
   // (payment failed) should fix it in the portal, not start a new checkout.
@@ -106,9 +114,16 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
 
   async function handleChoose(plan: Plan) {
     if (!isValidPhone(phone)) {
+      // Pull the phone field into view, highlight it, focus it, then tell them.
+      setPhoneError(true);
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, phoneY.current - 20),
+        animated: true,
+      });
+      phoneInputRef.current?.focus();
       Alert.alert(
         'Phone number needed',
-        'Please enter a valid phone number to continue.'
+        'Please enter your phone number to continue.'
       );
       return;
     }
@@ -142,6 +157,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
       <ScrollView
+        ref={scrollRef}
         contentContainerClassName="px-5 py-8"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -189,21 +205,45 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
         )}
 
         {/* Phone number — required, kept on record + used to guard the trial */}
-        <View className="mb-5">
-          <Text className="text-content mb-1.5 text-sm font-semibold">
+        <View
+          className="mb-5"
+          onLayout={(e) => {
+            phoneY.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <Text
+            className={`mb-1.5 text-sm font-semibold ${
+              phoneError ? 'text-red-400' : 'text-content'
+            }`}
+          >
             Phone number
           </Text>
           <TextInput
+            ref={phoneInputRef}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(t) => {
+              setPhone(t);
+              if (phoneError) setPhoneError(false);
+            }}
             placeholder="(555) 123-4567"
             placeholderTextColor="#6B7280"
             keyboardType="phone-pad"
-            className="text-content rounded-xl border border-surface-border bg-surface-card px-4 py-3 text-base"
+            className="text-content rounded-xl border bg-surface-card px-4 py-3 text-base"
+            style={
+              phoneError
+                ? { borderColor: '#EF4444', borderWidth: 2 }
+                : { borderColor: '#2D2D2D' }
+            }
           />
-          <Text className="text-content-muted mt-1.5 text-xs">
-            Used to secure your account and your free trial.
-          </Text>
+          {phoneError ? (
+            <Text className="mt-1.5 text-xs font-semibold text-red-400">
+              Please enter your phone number to continue.
+            </Text>
+          ) : (
+            <Text className="text-content-muted mt-1.5 text-xs">
+              Used to secure your account and your free trial.
+            </Text>
+          )}
         </View>
 
         {/* Plan cards */}
