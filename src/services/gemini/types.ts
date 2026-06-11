@@ -37,7 +37,12 @@ export interface GBombsScore {
 }
 
 /** Where a meal sits in the day. */
-export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'smoothie';
+export type MealSlot =
+  | 'breakfast'
+  | 'lunch'
+  | 'dinner'
+  | 'smoothie'
+  | 'dessert';
 
 /** Lightweight meal used in the weekly plan grid (no full recipe yet). */
 export interface MealSummary {

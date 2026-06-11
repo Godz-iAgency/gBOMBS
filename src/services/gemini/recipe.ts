@@ -69,7 +69,8 @@ export interface RecipeRequest {
   id: string;
   name: string;
   description?: string;
-  /** Drives prompt selection — smoothies get a blend-only recipe. */
+  /** Drives prompt selection — smoothies get a blend-only recipe, desserts a
+   *  whole-food-sweetened (dates/fruit) dessert recipe, everything else a dish. */
   slot?: MealSlot;
 }
 
@@ -83,6 +84,7 @@ export async function generateRecipe(
   tier: string
 ): Promise<Recipe> {
   const isSmoothie = meal.slot === 'smoothie';
+  const isDessert = meal.slot === 'dessert';
   const model = getModel(isSmoothie ? 'smoothie' : 'recipe', tier);
   const userBlock = renderUserContext(ctx);
 
@@ -158,9 +160,58 @@ Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 
 Use ONLY these category values (or null): greens, beans, onion, mushroom, berries, seeds.`;
 
+  const dessertPrompt = `Write a complete, original Nutritarian dessert recipe.
+
+DESSERT: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}` : ''}
+
+${userBlock}
+
+REQUIREMENTS:
+- Stay true to the dessert name above. This is a HEALTHY, Nutritarian treat — a
+  reward that still follows whole-food principles, not a cheat.
+- Sweeten ONLY with whole foods: Medjool dates, bananas, berries, or other ripe
+  fruit. NEVER use refined sugar, brown sugar, maple syrup, honey, agave, coconut
+  sugar, or any bottled/packaged sweetener of any kind.
+- Whole foods only: no added oil, no refined/white flour, no protein powders.
+  Use whole-food fats (raw nuts, seeds, nut/seed butters, avocado) for richness
+  and creaminess.
+- NO-BAKE is strongly preferred (mix, blend, process, chill, or freeze). Only call
+  for baking when the dish genuinely needs it (e.g. bean-based brownies), and keep
+  it simple.
+- Build the dessert around at least one gBOMBS category — favor berries and seeds;
+  beans (black beans, chickpeas) make an excellent creative base.
+- Tag each ingredient with its gBOMBS category if it is one of the six, else null.
+- Steps should be clear and numbered in order.
+- "prepMinutes" = hands-on time only. "cookMinutes" = active baking time, or 0 for
+  a no-bake dessert. NEVER count chilling or freezing time in either field.
+- "tips" = one short Nutritarian insight about why this treat is genuinely healthful.
+
+Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+{
+  "name": "${meal.name}",
+  "description": "one appetizing sentence",
+  "servings": 2,
+  "prepMinutes": 10,
+  "cookMinutes": 0,
+  "ingredients": [
+    { "item": "Medjool dates", "quantity": "10 pitted", "category": null },
+    { "item": "raw walnuts", "quantity": "1 cup", "category": "seeds" },
+    { "item": "frozen blueberries", "quantity": "1 cup", "category": "berries" },
+    { "item": "raw cacao powder", "quantity": "2 tbsp", "category": null }
+  ],
+  "steps": [
+    "Pulse the dates and walnuts in a food processor into a sticky crumb.",
+    "Add the cacao and pulse again, then fold in the blueberries.",
+    "Press into a lined dish, chill until firm, slice, and serve."
+  ],
+  "tips": "short nutrition note"
+}
+
+Use ONLY these category values (or null): greens, beans, onion, mushroom, berries, seeds.`;
+
   const raw = await callGeminiJson<RawRecipe>(
     model,
-    isSmoothie ? smoothiePrompt : dishPrompt,
+    isSmoothie ? smoothiePrompt : isDessert ? dessertPrompt : dishPrompt,
     {
       systemPrompt: FUHRMAN_SYSTEM_PROMPT,
       temperature: 0.6,
@@ -192,12 +243,15 @@ Use ONLY these category values (or null): greens, beans, onion, mushroom, berrie
         : isSmoothie
           ? 5
           : 10,
-    // Smoothies never cook — force 0 regardless of what the model returns.
+    // Smoothies never cook — force 0. Desserts trust the model (baked bean
+    // brownies have a real cook time) but default to 0 since most are no-bake.
     cookMinutes: isSmoothie
       ? 0
       : typeof raw.cookMinutes === 'number' && raw.cookMinutes >= 0
         ? Math.round(raw.cookMinutes)
-        : 20,
+        : isDessert
+          ? 0
+          : 20,
     ingredients,
     steps,
     gbombs: computeRecipeScore(ingredients),

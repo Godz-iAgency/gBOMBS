@@ -17,6 +17,7 @@ const SLOT_LABEL: Record<string, string> = {
   lunch: 'LUNCH',
   dinner: 'DINNER',
   smoothie: 'SMOOTHIE',
+  dessert: 'DESSERT',
 };
 
 // Two equal-width actions (Swap, Delete) sit behind the card.

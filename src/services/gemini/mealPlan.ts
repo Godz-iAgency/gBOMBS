@@ -1,10 +1,11 @@
 /**
  * Prompt 1 — Weekly Meal Plan Generator.
  * ------------------------------------------------------------------
- * Produces an original, Fuhrman-inspired 7-day plan (28 meals: a morning
- * smoothie plus breakfast, lunch, dinner each day). Runs on Pro for Wellness
- * Pro subscribers and Flash for Starter (see getModel). The smoothie always
- * sorts to the top of each day (morning slot, before breakfast).
+ * Produces an original, Fuhrman-inspired 7-day plan (35 meals: a morning
+ * smoothie, breakfast, lunch, dinner, and a Nutritarian dessert each day). Runs
+ * on Pro for Wellness Pro subscribers and Flash for Starter (see getModel). The
+ * smoothie always sorts to the top of each day (morning slot) and the dessert
+ * always closes it.
  */
 
 import { callGeminiJson, getModel } from './client';
@@ -38,12 +39,13 @@ const DAY_LABELS = [
   'Sunday',
 ];
 
-/** Display order within a day — smoothie sits at the top (morning). */
+/** Display order within a day — smoothie leads, dessert closes the day. */
 const SLOT_ORDER: Record<MealSlot, number> = {
   smoothie: 0,
   breakfast: 1,
   lunch: 2,
   dinner: 3,
+  dessert: 4,
 };
 
 /** Shape we ask Gemini to return (we add ids + scores ourselves). */
@@ -83,7 +85,13 @@ function normalizeCategories(input: unknown): GBombsCategory[] {
 
 function normalizeSlot(input: unknown): MealSlot {
   const v = String(input ?? '').toLowerCase();
-  if (v === 'breakfast' || v === 'lunch' || v === 'dinner' || v === 'smoothie') {
+  if (
+    v === 'breakfast' ||
+    v === 'lunch' ||
+    v === 'dinner' ||
+    v === 'smoothie' ||
+    v === 'dessert'
+  ) {
     return v;
   }
   return 'breakfast';
@@ -124,11 +132,26 @@ export async function generateWeeklyMealPlan(
 ${userBlock}
 
 REQUIREMENTS:
-- Each day has EXACTLY four items in this order: smoothie, breakfast, lunch, dinner.
+- Each day has EXACTLY five items in this order:
+  smoothie, breakfast, lunch, dinner, dessert.
 - The smoothie is a morning drink (blended) and should lead with berries, greens,
   and seeds where possible — a nutrient-dense start to the day.
+- The dessert is a Nutritarian sweet — naturally sweetened with whole fruits
+  (dates, bananas, berries, ripe mango) ONLY. NO refined sugar, NO white flour,
+  NO maple syrup/honey/agave, NO added oil. Build it from whole foods such as:
+    • Date-based: date-nut energy balls, raw cacao-date-walnut bites, date-oat bars
+    • Berry-based: frozen-berry "nice cream", warm berry compote, berry-chia parfait
+    • Banana-based: banana soft-serve, banana-date pudding, banana-oat bites
+    • Chia-based: chia pudding in oat/almond milk, topped with berries or a nut drizzle
+    • Bean-based (encouraged ~2–3×/week — a strong gBOMBS opportunity):
+      black bean brownies sweetened with dates, chickpea cookie-dough bites, lentil-date fudge
+    • Cacao-based: avocado-cacao mousse sweetened with dates, raw cacao-almond truffles
+  Every dessert MUST hit at least one gBOMBS category (favor berries and seeds;
+  beans are the creative wildcard). Desserts should feel genuinely satisfying —
+  rewards, not penalties. Keep prepMinutes 5–20 (no-bake preferred; chilling or
+  freezing time is NOT counted in prepMinutes).
 - Maximize gBOMBS coverage across the week (greens, beans, onion, mushroom, berries, seeds).
-- Vary the meals — do NOT repeat any meal name across the week (smoothies included).
+- Vary the meals — do NOT repeat any meal name across the week (smoothies and desserts included).
 - Strictly respect the diet mode, exclusions, and favored foods above.
 - Keep prepMinutes realistic and matched to the user's cooking style (smoothies are quick, ~5 min).
 - Names must be original (never copy a published recipe title).
@@ -153,6 +176,13 @@ Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
           "description": "one short appetizing sentence",
           "prepMinutes": 10,
           "gbombs": ["greens","beans"]
+        },
+        {
+          "slot": "dessert",
+          "name": "original dessert name",
+          "description": "one short appetizing sentence",
+          "prepMinutes": 10,
+          "gbombs": ["berries","seeds"]
         }
       ]
     }

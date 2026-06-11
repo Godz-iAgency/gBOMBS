@@ -57,7 +57,7 @@ function normalizeQuantity(quantity: string, item: string): string {
   const name = item.toLowerCase();
   let unit = 'whole';
   if (/\bgarlic\b/.test(name)) unit = 'heads';
-  else if (/onion|shallot|leek|scallion|avocado|pepper|lemon|lime|apple|tomato|cucumber/.test(name)) {
+  else if (/onion|shallot|leek|scallion|avocado|pepper|lemon|lime|apple|tomato|cucumber|banana/.test(name)) {
     unit = 'medium';
   }
   return `${q} ${unit}`;
@@ -133,6 +133,17 @@ CONSOLIDATION EXAMPLES (follow this pattern exactly):
   RIGHT: { "item": "garlic", "quantity": "2 heads", "category": "onion" }
 - Several smoothies use frozen berries.
   RIGHT (in Frozen): { "item": "frozen mixed berries", "quantity": "2 bags (12 oz)", "category": "berries" }
+- Several desserts are sweetened with dates (sold in pantry bags, never by count).
+  RIGHT (in Pantry): { "item": "Medjool dates", "quantity": "1 lb bag", "category": null }
+- Bananas appear in a smoothie AND a banana-date dessert — merge into ONE entry.
+  WRONG: { "item": "bananas", "quantity": "8" }  ← bare number, no unit.
+  RIGHT (in Produce): { "item": "bananas", "quantity": "8 medium", "category": null }
+- Chia seeds appear in a smoothie AND a chia-pudding dessert — ONE combined entry.
+  RIGHT (in Nuts & Seeds): { "item": "chia seeds", "quantity": "1 bag (12 oz)", "category": "seeds" }
+- A dessert uses black beans (e.g. black bean brownies) and a dinner also uses them.
+  RIGHT (in Beans & Proteins): { "item": "black beans", "quantity": "4 cans (15 oz)", "category": "beans" }
+- A chocolate dessert uses raw cacao powder.
+  RIGHT (in Pantry): { "item": "raw cacao powder", "quantity": "1 bag (8 oz)", "category": null }
 
 SECTIONS — use ONLY these titles, in this order, omitting any empty section:
 "Produce", "Beans & Proteins", "Whole Grains", "Nuts & Seeds", "Frozen", "Pantry", "Spices & Herbs", "Dairy Alternatives"
@@ -150,6 +161,15 @@ HARD RULES:
 - Quantities must be generous enough to actually cook all ${mealCount} meals (2 servings each).
 - Tag each item's "category" with its gBOMBS group (greens, beans, onion, mushroom,
   berries, seeds) or null if it is none of the six.
+- DESSERT SWEETENERS: desserts are sweetened ONLY with whole foods (Medjool dates,
+  bananas, berries, ripe fruit). NEVER list refined sugar, brown sugar, maple syrup,
+  honey, agave, coconut sugar, or any packaged sweetener — they must not appear anywhere.
+- DESSERT INGREDIENT ROUTING: dates, raw cacao powder, unsweetened coconut flakes,
+  nut/seed butters, vanilla, and rolled oats → "Pantry" (oats may go in "Whole Grains").
+  Fresh bananas → "Produce". Pre-frozen fruit used for "nice cream" → "Frozen".
+- CROSS-MEAL CONSOLIDATION: ingredients shared between desserts and other meals
+  (chia seeds, black beans, oats, nut butters, berries, bananas) appear EXACTLY ONCE
+  with a combined quantity — never as separate dessert vs. meal lines.
 
 Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 {
