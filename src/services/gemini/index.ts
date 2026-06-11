@@ -22,6 +22,7 @@ export {
 } from './recipe';
 export { generateGroceryList } from './grocery';
 export { swapMeal } from './swap';
+export { scoreCheckIn } from './checkin';
 
 import { callGeminiJson, getModel, isAiConfigured } from './client';
 

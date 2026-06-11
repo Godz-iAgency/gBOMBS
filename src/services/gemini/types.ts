@@ -139,6 +139,26 @@ export interface GroceryList {
   sections: GrocerySection[];
 }
 
+/** Result of scoring a daily check-in (Prompt 6). */
+export interface CheckInResult {
+  /** ISO timestamp the check-in was scored. */
+  scoredAt: string;
+  /** Local calendar day (YYYY-MM-DD) this check-in counts for. */
+  scoreDate: string;
+  /** 0–6 — how many of the six gBOMBS categories were hit. */
+  score: number;
+  /** The categories detected in what the user ate. */
+  categoriesHit: GBombsCategory[];
+  /** How many distinct meals/items the user described. */
+  mealsLogged: number;
+  /** Warm, specific coaching summary of the day. */
+  feedback: string;
+  /** One concrete tip to hit a missed category tomorrow. */
+  missedTip: string;
+  /** The raw text the user logged (kept so we can show/edit it). */
+  mealsText: string;
+}
+
 /** Inputs that personalize generation, taken from the user's profile. */
 export interface UserMealContext {
   dietMode: string; // 'vegan' | 'vegetarian'

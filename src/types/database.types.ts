@@ -155,6 +155,43 @@ export interface Database {
         >;
         Relationships: [];
       };
+      daily_scores: {
+        Row: {
+          id: string;
+          user_id: string;
+          score_date: string;
+          gbombs_score: number;
+          greens_hit: boolean;
+          beans_hit: boolean;
+          onion_hit: boolean;
+          mushroom_hit: boolean;
+          berries_hit: boolean;
+          seeds_hit: boolean;
+          meals_logged: number;
+          total_calories: number;
+          total_protein_grams: number;
+          total_fiber_grams: number;
+          total_carbs_grams: number;
+          total_fats_grams: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          score_date: string;
+          gbombs_score?: number;
+          greens_hit?: boolean;
+          beans_hit?: boolean;
+          onion_hit?: boolean;
+          mushroom_hit?: boolean;
+          berries_hit?: boolean;
+          seeds_hit?: boolean;
+          meals_logged?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['daily_scores']['Row']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
