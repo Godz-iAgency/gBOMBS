@@ -5,54 +5,36 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   generateWeeklyMealPlan,
+  computeWeeklyScore,
   type WeeklyMealPlan,
   type GBombsCategory,
   type MealSummary,
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedPlan, saveCachedPlan } from '@/lib/mealPlanCache';
-import { GBOMBS_LETTERS, LETTER_BY_KEY } from '@/utils/gbombsImages';
+import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 import RecipeModal from './RecipeModal';
 import GroceryScreen from './GroceryScreen';
+import SwipeableMealCard from './SwipeableMealCard';
+
+/** Cross-platform alert — react-native-web's Alert is a no-op, so fall back. */
+function notify(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
 
 const SHORT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const SLOT_LABEL: Record<string, string> = {
-  breakfast: 'BREAKFAST',
-  lunch: 'LUNCH',
-  dinner: 'DINNER',
-  smoothie: 'SMOOTHIE',
-};
-
-/** Row of small colored letter dots for the gBOMBS a meal hits. */
-function CategoryDots({ cats }: { cats: GBombsCategory[] }) {
-  if (cats.length === 0) {
-    return <Text className="text-content-muted text-xs">—</Text>;
-  }
-  return (
-    <View className="flex-row">
-      {cats.map((c) => {
-        const meta = LETTER_BY_KEY[c];
-        return (
-          <View
-            key={c}
-            className="mr-1 h-5 w-5 items-center justify-center rounded-full"
-            style={{ backgroundColor: meta.glow }}
-          >
-            <Text className="text-[10px] font-bold text-black">
-              {meta.letter}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
 
 /** Weekly coverage bar: all six letters, lit if hit this week. */
 function WeeklyScoreBar({
@@ -93,39 +75,6 @@ function WeeklyScoreBar({
         <Text className="text-content text-sm font-bold">{score}/6 {score >= 5 ? '🔥' : ''}</Text>
       </View>
     </View>
-  );
-}
-
-/** A single tappable meal card — opens the full recipe. */
-function MealCard({ meal, onPress }: { meal: MealSummary; onPress: () => void }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      className="mb-3 rounded-2xl bg-surface-card p-4"
-    >
-      <Text className="text-content-muted mb-1 text-[11px] font-bold tracking-wider">
-        {SLOT_LABEL[meal.slot] ?? meal.slot.toUpperCase()}
-      </Text>
-      <View className="flex-row items-center justify-between">
-        <Text className="text-content flex-1 text-lg font-bold">{meal.name}</Text>
-        <Ionicons name="chevron-forward" size={18} color="#A8A29E" />
-      </View>
-      {meal.description ? (
-        <Text className="text-content-muted mt-1 text-sm">
-          {meal.description}
-        </Text>
-      ) : null}
-      <View className="mt-3 flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Ionicons name="time-outline" size={14} color="#A8A29E" />
-          <Text className="text-content-muted ml-1 text-xs">
-            {meal.prepMinutes} min
-          </Text>
-        </View>
-        <CategoryDots cats={meal.gbombs} />
-      </View>
-    </TouchableOpacity>
   );
 }
 
@@ -179,6 +128,36 @@ export default function MealPlanScreen() {
       setGenerating(false);
     }
   }, [user?.id, tier]);
+
+  // Remove one meal from the selected day, recompute the weekly score, persist.
+  const handleDeleteMeal = useCallback(
+    (mealId: string) => {
+      setPlan((prev) => {
+        if (!prev) return prev;
+        const days = prev.days.map((d, i) =>
+          i !== selectedDay
+            ? d
+            : { ...d, meals: d.meals.filter((m) => m.id !== mealId) }
+        );
+        const next: WeeklyMealPlan = {
+          ...prev,
+          days,
+          weeklyScore: computeWeeklyScore(days),
+        };
+        if (user?.id) saveCachedPlan(user.id, next); // fire-and-forget
+        return next;
+      });
+    },
+    [selectedDay, user?.id]
+  );
+
+  // Placeholder until Prompt 5 (AI meal swap) lands in the next sprint.
+  const handleSwapMeal = useCallback((meal: MealSummary) => {
+    notify(
+      'Swap coming soon',
+      `AI meal swapping for "${meal.name}" arrives in the next update.`
+    );
+  }, []);
 
   // ---- Loading cache ----
   if (booting) {
@@ -306,7 +285,13 @@ export default function MealPlanScreen() {
           {day.label}
         </Text>
         {day.meals.map((m) => (
-          <MealCard key={m.id} meal={m} onPress={() => setRecipeMeal(m)} />
+          <SwipeableMealCard
+            key={m.id}
+            meal={m}
+            onPress={() => setRecipeMeal(m)}
+            onSwap={() => handleSwapMeal(m)}
+            onDelete={() => handleDeleteMeal(m.id)}
+          />
         ))}
       </ScrollView>
 
