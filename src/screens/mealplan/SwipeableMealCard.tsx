@@ -6,6 +6,7 @@ import {
   Animated,
   PanResponder,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { MealSummary, GBombsCategory } from '@/services/gemini';
@@ -53,11 +54,13 @@ function CategoryDots({ cats }: { cats: GBombsCategory[] }) {
  */
 export default function SwipeableMealCard({
   meal,
+  swapping = false,
   onPress,
   onSwap,
   onDelete,
 }: {
   meal: MealSummary;
+  swapping?: boolean;
   onPress: () => void;
   onSwap: () => void;
   onDelete: () => void;
@@ -96,6 +99,7 @@ export default function SwipeableMealCard({
   ).current;
 
   const handlePress = () => {
+    if (swapping) return; // ignore taps while a swap is in flight
     if (openRef.current) {
       snapTo(0); // first tap on an open card just closes it
     } else {
@@ -159,6 +163,15 @@ export default function SwipeableMealCard({
           </View>
         </TouchableOpacity>
       </Animated.View>
+
+      {/* Dim overlay + spinner while the AI swaps this meal. Sits above the
+          card AND the actions so it blocks all interaction mid-swap. */}
+      {swapping ? (
+        <View style={styles.swapOverlay}>
+          <ActivityIndicator color="#5A9A3A" />
+          <Text style={styles.swapText}>Finding a fresh meal…</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -194,6 +207,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#161616',
     borderRadius: 16,
     padding: 16,
+  },
+  swapOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+    backgroundColor: 'rgba(10,10,10,0.78)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swapText: {
+    color: '#F5F5F0',
+    marginLeft: 10,
+    fontSize: 14,
+    fontWeight: '600',
   },
   slot: {
     color: '#A8A29E',

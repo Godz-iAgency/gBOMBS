@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   generateWeeklyMealPlan,
   computeWeeklyScore,
+  swapMeal,
   type WeeklyMealPlan,
   type GBombsCategory,
   type MealSummary,
@@ -89,6 +90,7 @@ export default function MealPlanScreen() {
   const [selectedDay, setSelectedDay] = useState(0);
   const [recipeMeal, setRecipeMeal] = useState<MealSummary | null>(null);
   const [groceryOpen, setGroceryOpen] = useState(false);
+  const [swappingId, setSwappingId] = useState<string | null>(null);
 
   // Load any cached plan on mount / user change.
   useEffect(() => {
@@ -151,13 +153,47 @@ export default function MealPlanScreen() {
     [selectedDay, user?.id]
   );
 
-  // Placeholder until Prompt 5 (AI meal swap) lands in the next sprint.
-  const handleSwapMeal = useCallback((meal: MealSummary) => {
-    notify(
-      'Swap coming soon',
-      `AI meal swapping for "${meal.name}" arrives in the next update.`
-    );
-  }, []);
+  // Swap one meal for a fresh AI-generated one in the same slot (Prompt 5),
+  // then recompute the weekly score and persist. Errors surface via notify.
+  const handleSwapMeal = useCallback(
+    async (meal: MealSummary) => {
+      if (!user?.id || !plan) return;
+      setSwappingId(meal.id);
+      try {
+        const ctx = await buildUserMealContext(user.id);
+        const replacement = await swapMeal(plan, selectedDay, meal, ctx, tier);
+        setPlan((prev) => {
+          if (!prev) return prev;
+          const days = prev.days.map((d, i) =>
+            i !== selectedDay
+              ? d
+              : {
+                  ...d,
+                  meals: d.meals.map((m) =>
+                    m.id === meal.id ? replacement : m
+                  ),
+                }
+          );
+          const next: WeeklyMealPlan = {
+            ...prev,
+            days,
+            weeklyScore: computeWeeklyScore(days),
+          };
+          if (user?.id) saveCachedPlan(user.id, next); // fire-and-forget
+          return next;
+        });
+      } catch (e) {
+        notify(
+          'Swap failed',
+          (e as Error).message ||
+            'Could not swap this meal. Please try again.'
+        );
+      } finally {
+        setSwappingId(null);
+      }
+    },
+    [user?.id, tier, selectedDay, plan]
+  );
 
   // ---- Loading cache ----
   if (booting) {
@@ -288,6 +324,7 @@ export default function MealPlanScreen() {
           <SwipeableMealCard
             key={m.id}
             meal={m}
+            swapping={swappingId === m.id}
             onPress={() => setRecipeMeal(m)}
             onSwap={() => handleSwapMeal(m)}
             onDelete={() => handleDeleteMeal(m.id)}

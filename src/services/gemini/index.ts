@@ -21,6 +21,7 @@ export {
   type RecipeRequest,
 } from './recipe';
 export { generateGroceryList } from './grocery';
+export { swapMeal } from './swap';
 
 import { callGeminiJson, getModel, isAiConfigured } from './client';
 
