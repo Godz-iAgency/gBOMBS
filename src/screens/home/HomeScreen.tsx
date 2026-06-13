@@ -12,6 +12,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { loadDashboard, type DashboardData } from '@/lib/dashboard';
+import { getPlanState, PLAN_BADGE_LABEL } from '@/lib/subscriptionPlan';
 import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 import type { GBombsCategory } from '@/services/gemini';
 import type { MainTabParamList } from '@/navigation/MainTabNavigator';
@@ -54,19 +55,6 @@ function todayLabel(): string {
   const d = new Date();
   return `${DAY_NAMES[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
 }
-
-/** Whole days until `iso` (clamped at 0) — for the trial countdown. */
-function daysUntil(iso: string): number {
-  const ms = new Date(iso).getTime() - Date.now();
-  return Math.max(0, Math.ceil(ms / 86_400_000));
-}
-
-const TIER_LABELS: Record<string, string> = {
-  standard: 'gBOMBS Starter',
-  wellness_pro: 'gBOMBS Premium',
-  trial: 'Free trial',
-  canceled: 'Canceled',
-};
 
 /** The six gBOMBS letters, lit when hit — same look as the meal plan bar. */
 function BadgeRow({ hit }: { hit: GBombsCategory[] }) {
@@ -121,7 +109,7 @@ export default function HomeScreen() {
   const { user, profile } = useAuth();
   const navigation = useNavigation<Nav>();
   const tier = profile?.subscription_tier ?? 'standard';
-  const status = profile?.subscription_status ?? '';
+  const planBadge = PLAN_BADGE_LABEL[getPlanState(profile)];
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [booting, setBooting] = useState(true);
@@ -160,18 +148,6 @@ export default function HomeScreen() {
   const streak = data?.streak ?? 0;
   const weekDays = data?.daysLoggedThisWeek ?? 0;
 
-  const tierLabel = TIER_LABELS[tier] ?? tier;
-  const trialDays =
-    status === 'trialing' && data?.trialEndsAt
-      ? daysUntil(data.trialEndsAt)
-      : null;
-  const statusDot =
-    status === 'active' || status === 'trialing'
-      ? '#5A9A3A'
-      : status === 'past_due'
-        ? '#F97316'
-        : '#6B7280';
-
   if (booting) {
     return (
       <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
@@ -188,11 +164,30 @@ export default function HomeScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Greeting */}
-        <Text className="text-content text-3xl font-extrabold">
-          {greeting()}
-        </Text>
-        <Text className="text-content-muted mt-1 text-sm">{todayLabel()}</Text>
+        {/* Greeting + plan badge (badge taps through to Profile) */}
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1">
+            <Text className="text-content text-3xl font-extrabold">
+              {greeting()}
+            </Text>
+            <Text className="text-content-muted mt-1 text-sm">
+              {todayLabel()}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Profile')}
+            activeOpacity={0.85}
+            className="ml-3 mt-1.5 flex-row items-center rounded-full border border-surface-border bg-surface-card px-3 py-1.5"
+          >
+            <View
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: '#5A9A3A' }}
+            />
+            <Text className="text-content ml-1.5 text-xs font-semibold">
+              {planBadge}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Today's gBOMBS — hero card, opens the check-in overlay */}
         <TouchableOpacity
@@ -321,30 +316,6 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('Grocery')}
           />
         </View>
-
-        {/* Subscription pill */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Profile')}
-          activeOpacity={0.85}
-          className="mt-6 flex-row items-center justify-between rounded-2xl border border-surface-border bg-surface-card px-4 py-3"
-        >
-          <View className="flex-row items-center">
-            <View
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: statusDot }}
-            />
-            <Text className="text-content ml-2 text-sm font-semibold">
-              {tierLabel}
-            </Text>
-          </View>
-          <Text className="text-content-muted text-xs">
-            {trialDays !== null
-              ? trialDays === 0
-                ? 'Trial ends today'
-                : `${trialDays} ${trialDays === 1 ? 'day' : 'days'} left in trial`
-              : 'Manage →'}
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
 
       <CheckInScreen

@@ -16,9 +16,13 @@ export type CheckoutResult =
   | { kind: 'checkout'; url: string; trialBlocked: boolean; message?: string };
 
 function currentOrigin(): string {
-  return Platform.OS === 'web' && typeof window !== 'undefined'
-    ? window.location.origin
-    : 'https://gbombs.app'; // native return flow handled later
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  // Native: a custom-scheme deep link so Stripe's "return" sends the user back
+  // INTO the app instead of a dead website. Requires `scheme: "gbombs"` in
+  // app.json and a dev/standalone build (Expo Go doesn't honor custom schemes).
+  return 'gbombs://';
 }
 
 /** Send the user to a Stripe-hosted URL (checkout or billing portal). */

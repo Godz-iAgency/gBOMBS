@@ -97,7 +97,7 @@ async function fetchScoreDates(userId: string): Promise<string[]> {
   }
 }
 
-async function fetchTrialEnd(userId: string): Promise<string | null> {
+export async function fetchTrialEnd(userId: string): Promise<string | null> {
   try {
     const { data, error } = await supabase
       .from('users')
