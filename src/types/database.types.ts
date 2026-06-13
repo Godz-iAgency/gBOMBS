@@ -99,7 +99,19 @@ export interface Database {
           total_days_logged: number;
           updated_at: string;
         };
-        Insert: { user_id: string };
+        Insert: {
+          user_id: string;
+          current_daily_streak?: number;
+          longest_daily_streak?: number;
+          current_perfect_day_streak?: number;
+          longest_perfect_day_streak?: number;
+          current_weekly_streak?: number;
+          longest_weekly_streak?: number;
+          last_logged_date?: string | null;
+          total_perfect_days?: number;
+          total_days_logged?: number;
+          updated_at?: string;
+        };
         Update: Partial<Database['public']['Tables']['streaks']['Row']>;
         Relationships: [];
       };
@@ -211,6 +223,42 @@ export interface Database {
         Update: Partial<
           Database['public']['Tables']['trial_fingerprints']['Row']
         >;
+        Relationships: [];
+      };
+      badges: {
+        Row: {
+          id: string;
+          badge_key: string;
+          badge_name: string;
+          badge_description: string;
+          badge_icon: string;
+          badge_category: 'streak' | 'nutrition' | 'social' | 'shopping' | 'engagement';
+          unlock_criteria: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          badge_key: string;
+          badge_name: string;
+          badge_description: string;
+          badge_icon: string;
+          badge_category: 'streak' | 'nutrition' | 'social' | 'shopping' | 'engagement';
+          unlock_criteria: Record<string, unknown>;
+        };
+        Update: Partial<Database['public']['Tables']['badges']['Row']>;
+        Relationships: [];
+      };
+      user_badges: {
+        Row: {
+          id: string;
+          user_id: string;
+          badge_id: string;
+          unlocked_at: string;
+        };
+        Insert: {
+          user_id: string;
+          badge_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['user_badges']['Row']>;
         Relationships: [];
       };
     };

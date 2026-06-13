@@ -42,6 +42,7 @@ import { LOGO_WITH_BG } from '@/utils/gbombsImages';
 import EditPlanModal from './EditPlanModal';
 import EditFavoritesModal from './EditFavoritesModal';
 import EditAvoidModal from './EditAvoidModal';
+import BadgeTrophyModal from './BadgeTrophyModal';
 
 /** Whole days until `iso` (clamped at 0) — for the trial countdown. */
 function daysUntil(iso: string): number {
@@ -49,7 +50,14 @@ function daysUntil(iso: string): number {
   return Math.max(0, Math.ceil(ms / 86_400_000));
 }
 
-type ModalKind = 'diet' | 'goal' | 'cooking' | 'favorites' | 'avoid' | null;
+type ModalKind =
+  | 'diet'
+  | 'goal'
+  | 'cooking'
+  | 'favorites'
+  | 'avoid'
+  | 'badges'
+  | null;
 
 /** A tappable settings row: icon + label on the left, value + chevron right. */
 function SettingRow({
@@ -249,6 +257,17 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* ACHIEVEMENTS */}
+        <SectionLabel>Achievements</SectionLabel>
+        <View className="overflow-hidden rounded-2xl bg-surface-card">
+          <SettingRow
+            icon="trophy-outline"
+            label="Badges & streaks"
+            value="View"
+            onPress={() => setModal('badges')}
+          />
+        </View>
+
         {/* SUBSCRIPTION */}
         <SectionLabel>Subscription</SectionLabel>
         <View className="rounded-2xl border border-surface-border bg-surface-card p-5">
@@ -313,6 +332,11 @@ export default function ProfileScreen() {
         userId={user?.id ?? ''}
         onClose={() => setModal(null)}
         onSaved={reload}
+      />
+      <BadgeTrophyModal
+        visible={modal === 'badges'}
+        userId={user?.id ?? ''}
+        onClose={() => setModal(null)}
       />
     </SafeAreaView>
   );

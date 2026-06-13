@@ -18,6 +18,9 @@ import {
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadTodayCheckIn, saveCheckIn } from '@/lib/dailyCheckIn';
+import { updateStreaksAndBadges } from '@/lib/streaks';
+import type { BadgeDef } from '@/lib/badgeCatalog';
+import BadgeUnlockModal from '@/components/BadgeUnlockModal';
 import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 
 // Manual safe-area top pad — avoids react-native-safe-area-context on web.
@@ -70,6 +73,7 @@ export default function CheckInScreen({
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unlocked, setUnlocked] = useState<BadgeDef[]>([]);
 
   // On open: restore today's check-in if one was already logged.
   useEffect(() => {
@@ -95,6 +99,18 @@ export default function CheckInScreen({
       const next = await scoreCheckIn(text, ctx, tier);
       setResult(next);
       await saveCheckIn(userId, next);
+
+      // Update streaks + award badges. Best-effort — a failure here must never
+      // break the check-in the user just completed.
+      try {
+        const { newBadges } = await updateStreaksAndBadges(userId, {
+          date: next.scoreDate,
+          score: next.score,
+        });
+        if (newBadges.length) setUnlocked(newBadges);
+      } catch (streakErr) {
+        console.warn('streak/badge update failed:', streakErr);
+      }
     } catch (e) {
       setError(
         (e as Error).message || 'Could not score your day. Please try again.'
@@ -201,6 +217,8 @@ export default function CheckInScreen({
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <BadgeUnlockModal badges={unlocked} onClose={() => setUnlocked([])} />
     </View>
   );
 }
