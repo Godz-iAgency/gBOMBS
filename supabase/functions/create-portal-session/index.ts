@@ -31,6 +31,16 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// Stripe's hosted portal only accepts an http(s) return_url — a native custom
+// scheme like "gbombs://" is rejected and the call throws (the non-2xx error
+// seen on mobile). Coerce any non-http(s) origin to the public site; the app
+// re-syncs subscription state on focus, so the user just taps "Done" to return.
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://gbombs.app';
+function httpsReturnUrl(origin: unknown): string {
+  const o = typeof origin === 'string' ? origin : '';
+  return /^https?:\/\//i.test(o) ? o : PUBLIC_SITE_URL;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -38,7 +48,7 @@ Deno.serve(async (req) => {
 
   try {
     const { origin } = await req.json().catch(() => ({ origin: undefined }));
-    const returnUrl = origin ?? 'https://gbombs.app';
+    const returnUrl = httpsReturnUrl(origin);
 
     // ---- Identify the signed-in user from their JWT ----
     const authHeader = req.headers.get('Authorization');

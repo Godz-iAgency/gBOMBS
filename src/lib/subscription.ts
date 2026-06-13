@@ -1,4 +1,5 @@
-import { Platform, Linking } from 'react-native';
+import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from './supabase';
 
 export type Plan = 'starter' | 'premium';
@@ -29,9 +30,14 @@ function currentOrigin(): string {
 export async function openCheckoutUrl(url: string): Promise<void> {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     window.location.href = url;
-  } else {
-    await Linking.openURL(url);
+    return;
   }
+  // Native: open Stripe inside an in-app browser (it has a built-in "Done"
+  // button). Stripe returns to our public https URL when finished; the user
+  // closes the sheet and the Profile screen re-syncs subscription state on
+  // focus. Using the in-app browser keeps the user from being stranded in an
+  // external Chrome tab on the website.
+  await WebBrowser.openBrowserAsync(url);
 }
 
 /**

@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { supabase } from '@/lib/supabase';
+import { signInWithGoogle } from '@/lib/googleAuth';
 import PasswordInput from '@/components/PasswordInput';
 import type { AuthStackParamList } from '@/navigation/AuthStack';
 
@@ -42,28 +43,15 @@ export default function LoginScreen({ navigation }: Props) {
   }
 
   async function handleGoogle() {
-    // Native (iOS/Android) OAuth needs deep-link plumbing built in a later task.
-    if (Platform.OS !== 'web') {
-      Alert.alert(
-        'Google Sign-In',
-        'Google sign-in on iOS/Android arrives in a later build. Email sign-in works now.'
-      );
-      return;
-    }
-
     setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        // Supabase sends the user back here with the session in the URL hash;
-        // detectSessionInUrl (web) then completes sign-in automatically.
-        redirectTo: window.location.origin,
-      },
-    });
-    // On success the browser redirects to Google, so code below only runs on error.
-    if (error) {
+    try {
+      const { cancelled } = await signInWithGoogle();
+      if (cancelled) return; // user backed out — stay quiet
+      // On success, the auth listener swaps the navigator automatically.
+    } catch (e) {
+      Alert.alert('Google sign-in failed', (e as Error).message);
+    } finally {
       setGoogleLoading(false);
-      Alert.alert('Google sign-in failed', error.message);
     }
   }
 

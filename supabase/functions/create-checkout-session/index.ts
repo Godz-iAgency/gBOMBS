@@ -51,6 +51,15 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// Stripe Checkout's success_url/cancel_url must be http(s) — a native custom
+// scheme like "gbombs://" is rejected. Coerce any non-http(s) origin to the
+// public site so mobile checkout works (the app re-syncs state on focus).
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://gbombs.app';
+function httpsBase(origin: unknown): string {
+  const o = typeof origin === 'string' ? origin : '';
+  return /^https?:\/\//i.test(o) ? o : PUBLIC_SITE_URL;
+}
+
 /**
  * Normalize a phone to digits-only with a US country code so the same number
  * always produces the same fingerprint regardless of formatting.
@@ -200,14 +209,15 @@ Deno.serve(async (req) => {
       subscriptionData.trial_period_days = 7;
     }
 
+    const base = httpsBase(origin);
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: subscriptionData,
       client_reference_id: user.id,
-      success_url: `${origin}/?checkout=success`,
-      cancel_url: `${origin}/?checkout=cancel`,
+      success_url: `${base}/?checkout=success`,
+      cancel_url: `${base}/?checkout=cancel`,
       allow_promotion_codes: true,
     });
 
