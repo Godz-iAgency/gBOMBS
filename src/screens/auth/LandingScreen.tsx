@@ -32,11 +32,14 @@ export default function LandingScreen({ navigation }: Props) {
         className="flex-1 w-full self-center overflow-hidden"
         style={{ maxWidth: 480 }}
       >
-        {/* Full-screen animation */}
+        {/* Full-screen animation. `contain` guarantees the whole G-BOMBS logo
+            stays visible (G…S) on every screen ratio — `cover` was cropping the
+            outer letters on taller/narrower phones. Letterbox areas fall back to
+            the dark page background, which blends with the gradients below. */}
         <VideoView
           player={player}
           style={StyleSheet.absoluteFill}
-          contentFit="cover"
+          contentFit="contain"
           nativeControls={false}
         />
 
