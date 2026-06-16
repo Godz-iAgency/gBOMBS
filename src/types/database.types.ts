@@ -65,6 +65,8 @@ export interface Database {
           preferred_delivery_day: string | null;
           instacart_store_preference: string | null;
           push_token: string | null;
+          timezone: string | null;
+          notifications_enabled: boolean;
           last_preferences_updated_at: string | null;
           preferences_version: number;
           created_at: string;

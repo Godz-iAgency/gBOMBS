@@ -15,3 +15,17 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/stripe-webhook/deno.json"
 entrypoint = "./functions/stripe-webhook/index.ts"
+
+[functions.create-portal-session]
+enabled = true
+verify_jwt = true
+import_map = "./functions/create-portal-session/deno.json"
+entrypoint = "./functions/create-portal-session/index.ts"
+
+# Called by pg_cron, not a logged-in user — JWT verification is off and the
+# function instead requires the service-role key in its Authorization header.
+[functions.send-daily-reminders]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-daily-reminders/deno.json"
+entrypoint = "./functions/send-daily-reminders/index.ts"

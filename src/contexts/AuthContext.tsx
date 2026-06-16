@@ -8,6 +8,10 @@ import React, {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import {
+  registerForPushNotifications,
+  clearPushToken,
+} from '@/lib/notifications';
 
 /** Minimal profile shape the navigator needs to gate routing. */
 type Profile = {
@@ -73,6 +77,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (session?.user) {
       fetchProfile(session.user.id);
+      // Register for the daily-reminder push (best-effort; prompts for
+      // permission the first time, no-ops on web/simulator or if denied).
+      registerForPushNotifications(session.user.id);
     } else {
       setProfile(null);
     }
@@ -87,6 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileLoading,
       refreshProfile,
       signOut: async () => {
+        // Stop this device from receiving pushes once signed out.
+        if (session?.user) await clearPushToken(session.user.id);
         await supabase.auth.signOut();
       },
     }),
