@@ -17,6 +17,7 @@ import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 import type { GBombsCategory } from '@/services/gemini';
 import type { MainTabParamList } from '@/navigation/MainTabNavigator';
 import CheckInScreen from './CheckInScreen';
+import ReportsScreen from '@/screens/reports/ReportsScreen';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 
@@ -114,6 +115,7 @@ export default function HomeScreen() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [booting, setBooting] = useState(true);
   const [checkInOpen, setCheckInOpen] = useState(false);
+  const [reportsOpen, setReportsOpen] = useState(false);
 
   // Refresh every time the tab gains focus — a check-in logged moments ago or
   // a plan generated on the Meal Plan tab should show here immediately.
@@ -231,8 +233,12 @@ export default function HomeScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Streak + week progress */}
-        <View className="-mx-1 mt-4 flex-row">
+        {/* Streak + week progress (taps through to the full report) */}
+        <TouchableOpacity
+          onPress={() => setReportsOpen(true)}
+          activeOpacity={0.9}
+          className="-mx-1 mt-4 flex-row"
+        >
           <View className="mx-1 flex-1 rounded-2xl bg-surface-card p-4">
             <Text className="text-content text-3xl font-extrabold">
               {streak} 🔥
@@ -257,7 +263,19 @@ export default function HomeScreen() {
               {weekDays >= 7 ? 'Perfect week! ⭐' : 'Resets every Monday.'}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
+
+        {/* Link into the full progress report */}
+        <TouchableOpacity
+          onPress={() => setReportsOpen(true)}
+          activeOpacity={0.7}
+          className="mt-2 flex-row items-center justify-center py-1"
+        >
+          <Ionicons name="bar-chart-outline" size={14} color="#5A9A3A" />
+          <Text className="ml-1.5 text-xs font-semibold" style={{ color: '#5A9A3A' }}>
+            View progress report
+          </Text>
+        </TouchableOpacity>
 
         {/* This week's plan */}
         <TouchableOpacity
@@ -323,6 +341,12 @@ export default function HomeScreen() {
         userId={user?.id ?? ''}
         tier={tier}
         onClose={closeCheckIn}
+      />
+
+      <ReportsScreen
+        visible={reportsOpen}
+        userId={user?.id ?? ''}
+        onClose={() => setReportsOpen(false)}
       />
     </SafeAreaView>
   );

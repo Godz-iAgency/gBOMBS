@@ -43,6 +43,7 @@ import EditPlanModal from './EditPlanModal';
 import EditFavoritesModal from './EditFavoritesModal';
 import EditAvoidModal from './EditAvoidModal';
 import BadgeTrophyModal from './BadgeTrophyModal';
+import ReportsScreen from '@/screens/reports/ReportsScreen';
 
 /** Whole days until `iso` (clamped at 0) — for the trial countdown. */
 function daysUntil(iso: string): number {
@@ -57,6 +58,7 @@ type ModalKind =
   | 'favorites'
   | 'avoid'
   | 'badges'
+  | 'reports'
   | null;
 
 /** A tappable settings row: icon + label on the left, value + chevron right. */
@@ -266,6 +268,13 @@ export default function ProfileScreen() {
             value="View"
             onPress={() => setModal('badges')}
           />
+          <View className="h-px bg-surface-border" />
+          <SettingRow
+            icon="bar-chart-outline"
+            label="Progress reports"
+            value="View"
+            onPress={() => setModal('reports')}
+          />
         </View>
 
         {/* SUBSCRIPTION */}
@@ -335,6 +344,11 @@ export default function ProfileScreen() {
       />
       <BadgeTrophyModal
         visible={modal === 'badges'}
+        userId={user?.id ?? ''}
+        onClose={() => setModal(null)}
+      />
+      <ReportsScreen
+        visible={modal === 'reports'}
         userId={user?.id ?? ''}
         onClose={() => setModal(null)}
       />
