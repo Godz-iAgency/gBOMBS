@@ -29,3 +29,11 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/send-daily-reminders/deno.json"
 entrypoint = "./functions/send-daily-reminders/index.ts"
+
+# Builds an Instacart shopping-list page from a grocery list. JWT is verified
+# inside the function so only signed-in users can spend our Instacart key.
+[functions.create-instacart-list]
+enabled = true
+verify_jwt = false
+import_map = "./functions/create-instacart-list/deno.json"
+entrypoint = "./functions/create-instacart-list/index.ts"

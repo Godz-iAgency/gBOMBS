@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -18,6 +19,11 @@ import {
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedGrocery, saveCachedGrocery } from '@/lib/groceryCache';
+import {
+  groceryListToLineItems,
+  createInstacartList,
+  openInstacart,
+} from '@/lib/instacart';
 import { LETTER_BY_KEY } from '@/utils/gbombsImages';
 
 // Safe area top padding — avoids react-native-safe-area-context on web
@@ -84,11 +90,13 @@ export default function GroceryScreen({
   plan: WeeklyMealPlan | null;
   userId: string;
   tier: string;
-  onClose: () => void;
+  /** Omitted when embedded as a tab (no overlay to dismiss → no X button). */
+  onClose?: () => void;
 }) {
   const [list, setList] = useState<GroceryList | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ordering, setOrdering] = useState(false);
 
   const generate = useCallback(async () => {
     if (!plan || !userId) return;
@@ -153,6 +161,25 @@ export default function GroceryScreen({
     [userId]
   );
 
+  // Build an Instacart shopping-list page from the current list and open it.
+  const handleInstacart = useCallback(async () => {
+    if (!list) return;
+    const items = groceryListToLineItems(list);
+    if (items.length === 0) {
+      Alert.alert('Nothing to order', 'Your grocery list is empty.');
+      return;
+    }
+    setOrdering(true);
+    try {
+      const url = await createInstacartList(items);
+      await openInstacart(url);
+    } catch (e) {
+      Alert.alert('Instacart', (e as Error).message);
+    } finally {
+      setOrdering(false);
+    }
+  }, [list]);
+
   if (!visible || !plan) return null;
 
   const totalItems = list
@@ -172,9 +199,13 @@ export default function GroceryScreen({
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-          <Ionicons name="close" size={22} color="#F5F5F0" />
-        </TouchableOpacity>
+        {onClose ? (
+          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <Ionicons name="close" size={22} color="#F5F5F0" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.closeBtn} />
+        )}
         <Text style={styles.headerTitle}>Grocery List</Text>
         <TouchableOpacity
           onPress={generate}
@@ -229,14 +260,26 @@ export default function GroceryScreen({
             ))}
           </ScrollView>
 
-          {/* Instacart placeholder — wired up in a later step */}
+          {/* Send the list to Instacart (pre-filled cart on a hosted page). */}
           <View style={styles.footer}>
-            <View style={styles.instacartBtn}>
-              <Ionicons name="cart-outline" size={18} color="#A8A29E" />
-              <Text style={styles.instacartText}>
-                Send to Instacart — Coming Soon
-              </Text>
-            </View>
+            <TouchableOpacity
+              onPress={handleInstacart}
+              disabled={ordering || totalItems === 0}
+              activeOpacity={0.85}
+              style={[
+                styles.instacartBtn,
+                (ordering || totalItems === 0) && styles.instacartBtnDisabled,
+              ]}
+            >
+              {ordering ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Ionicons name="cart" size={18} color="#FFFFFF" />
+                  <Text style={styles.instacartText}>Shop with Instacart</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         </>
       ) : null}
@@ -364,11 +407,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 16,
-    backgroundColor: '#161616',
+    backgroundColor: '#0AAD0A', // Instacart green
     paddingVertical: 14,
   },
+  instacartBtnDisabled: {
+    opacity: 0.5,
+  },
   instacartText: {
-    color: '#A8A29E',
+    color: '#FFFFFF',
     marginLeft: 8,
     fontSize: 14,
     fontWeight: 'bold',

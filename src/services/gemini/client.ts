@@ -15,6 +15,7 @@
  *   - everything else uses Pro for Wellness Pro subscribers, Flash for Starter.
  */
 
+import { jsonrepair } from 'jsonrepair';
 import type { GeminiTask } from './types';
 
 // ---- Providers ----
@@ -244,8 +245,47 @@ export async function callGemini(
 }
 
 /**
- * Calls the AI and parses the response as JSON, stripping ```json fences the
- * model sometimes adds. Use for every structured prompt (meal plan, recipe…).
+ * Slice out the first balanced JSON value (object or array) from a string,
+ * ignoring any prose the model wrote before or after it. Brace/bracket counting
+ * is string-aware so braces inside string literals don't throw off the balance.
+ * Returns the trimmed input unchanged if no JSON opener is found.
+ */
+function extractJsonBlock(input: string): string {
+  const start = input.search(/[[{]/);
+  if (start === -1) return input.trim();
+  const open = input[start];
+  const close = open === '{' ? '}' : ']';
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < input.length; i++) {
+    const ch = input[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === open) depth++;
+    else if (ch === close) {
+      depth--;
+      if (depth === 0) return input.slice(start, i + 1);
+    }
+  }
+  // Unbalanced (truncated output) — return from the opener so the caller's
+  // trailing-comma repair + parse gets the best shot at the partial block.
+  return input.slice(start);
+}
+
+/**
+ * Calls the AI and parses the response as JSON. Model output is frequently
+ * almost-valid — wrapped in ```json fences, surrounded by prose, carrying
+ * trailing commas, unescaped quotes/newlines inside strings, or truncated
+ * mid-structure. We escalate through cheap repairs so clean responses stay on
+ * the fast path, then fall back to a full tokenizing repair (jsonrepair) that
+ * handles the deep-in-the-list breakages JSON.parse can't recover from.
  */
 export async function callGeminiJson<T>(
   model: string,
@@ -258,6 +298,32 @@ export async function callGeminiJson<T>(
     json: true,
     ...options,
   });
-  const cleaned = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(cleaned) as T;
+
+  const defenced = text.replace(/```json|```/g, '').trim();
+
+  // 1. Fast path: already-clean JSON.
+  try {
+    return JSON.parse(defenced) as T;
+  } catch {
+    /* fall through to repair */
+  }
+
+  // 2. Isolate the JSON value from any surrounding prose, then parse.
+  const block = extractJsonBlock(defenced);
+  try {
+    return JSON.parse(block) as T;
+  } catch {
+    /* fall through to full repair */
+  }
+
+  // 3. Tokenizing repair: fixes trailing commas, unescaped quotes/newlines in
+  //    strings, missing commas, and closes structures truncated by token limits.
+  try {
+    return JSON.parse(jsonrepair(block)) as T;
+  } catch (e) {
+    const snippet = block.slice(0, 200);
+    throw new Error(
+      `AI returned malformed JSON (${(e as Error).message}). Near: ${snippet}`
+    );
+  }
 }

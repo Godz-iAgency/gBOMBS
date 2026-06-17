@@ -300,13 +300,13 @@ export default function MealPlanScreen() {
               <TouchableOpacity
                 key={d.day}
                 onPress={() => setSelectedDay(i)}
-                className="mr-2 rounded-full px-4 py-2"
+                className="mr-1.5 rounded-full px-3 py-1.5"
                 style={{
                   backgroundColor: isActive ? '#5A9A3A' : '#161616',
                 }}
               >
                 <Text
-                  className="text-sm font-bold"
+                  className="text-xs font-bold"
                   style={{ color: isActive ? '#000' : '#A8A29E' }}
                 >
                   {SHORT_DAYS[i] ?? d.label}
