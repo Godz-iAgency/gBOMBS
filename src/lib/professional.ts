@@ -1,0 +1,231 @@
+/**
+ * Professional dashboards data layer (Step 11).
+ * ------------------------------------------------------------------
+ * Everything the chef / trainer-nutritionist features touch on the data side.
+ * The CLIENT controls two fixed slots (chef + trainer_nutritionist); a
+ * PROFESSIONAL accepts a QR invite and reads the connected client's plan,
+ * grocery list, and (trainer only) scores.
+ *
+ * All WRITES that change connection state go through security-definer RPCs (see
+ * the migrations) so slot limits + Premium gating + attribution stay
+ * server-side; this module is the thin typed client over them, plus the reads
+ * the screens render. Reads rely on RLS — a professional only ever sees rows
+ * for clients they're actively connected to.
+ */
+
+import { supabase } from './supabase';
+import type { WeeklyMealPlan, GroceryList } from '@/services/gemini';
+import type {
+  ProfessionalRole,
+  ConnectionStatus,
+  ProfessionalEditType,
+  ProfessionalEditStatus,
+  ClientSummaryRow,
+} from '@/types/database.types';
+
+export type { ProfessionalRole, ClientSummaryRow };
+
+/** Human label + slot copy for each role (single source of truth for UI). */
+export const ROLE_META: Record<
+  ProfessionalRole,
+  { label: string; blurb: string; icon: string }
+> = {
+  chef: {
+    label: 'Personal Chef',
+    blurb: 'Cooks your plan — sees recipes, prep timing & your grocery list.',
+    icon: 'restaurant',
+  },
+  trainer_nutritionist: {
+    label: 'Trainer / Nutritionist',
+    blurb: 'Tunes your plan & goals — also sees your scores and streaks.',
+    icon: 'fitness',
+  },
+};
+
+export const ALL_ROLES: ProfessionalRole[] = ['chef', 'trainer_nutritionist'];
+
+// ---- Shapes the screens consume -------------------------------------------
+
+export interface ProfessionalConnection {
+  id: string;
+  client_id: string;
+  professional_id: string | null;
+  role: ProfessionalRole;
+  status: ConnectionStatus;
+  invite_code: string | null;
+  professional_name: string | null;
+  invite_created_at: string;
+  invite_expires_at: string | null;
+  accepted_at: string | null;
+  created_at: string;
+}
+
+export interface ClientProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  diet_mode: string;
+  health_goal: string;
+  cooking_style: string;
+}
+
+export interface ProfessionalEdit {
+  id: string;
+  connection_id: string | null;
+  client_id: string;
+  professional_id: string;
+  professional_role: ProfessionalRole;
+  professional_name: string | null;
+  edit_type: ProfessionalEditType;
+  target_reference: string | null;
+  previous_value: string | null;
+  new_value: string | null;
+  status: ProfessionalEditStatus;
+  created_at: string;
+  applied_at: string | null;
+  reverted_at: string | null;
+}
+
+export interface AcceptInviteResult {
+  connection_id: string;
+  client_id: string;
+  role: ProfessionalRole;
+}
+
+/** Surface the Postgres RAISE message (which is user-readable) to the caller. */
+function rpcError(message: string | undefined): Error {
+  return new Error(message?.trim() || 'Something went wrong. Please try again.');
+}
+
+// ===========================================================================
+// CLIENT SIDE — managing your two slots
+// ===========================================================================
+
+/** Both non-revoked slots for a client (pending + active), ordered by role. */
+export async function listMyConnections(
+  clientId: string
+): Promise<ProfessionalConnection[]> {
+  const { data, error } = await supabase
+    .from('professional_connections')
+    .select('*')
+    .eq('client_id', clientId)
+    .in('status', ['pending', 'active'])
+    .order('role', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ProfessionalConnection[];
+}
+
+/**
+ * Create an invite for one slot. Returns the invite CODE (encode it in a QR).
+ * Throws a readable message if the slot is taken or Premium isn't active.
+ */
+export async function createInvite(role: ProfessionalRole): Promise<string> {
+  const { data, error } = await supabase.rpc('create_professional_invite', {
+    p_role: role,
+  });
+  if (error) throw rpcError(error.message);
+  return data as string;
+}
+
+/** Revoke a slot (client only). Frees it for re-invite. */
+export async function revokeConnection(connectionId: string): Promise<void> {
+  const { error } = await supabase.rpc('revoke_professional_connection', {
+    p_connection_id: connectionId,
+  });
+  if (error) throw rpcError(error.message);
+}
+
+// ===========================================================================
+// PROFESSIONAL SIDE — accepting invites & reading clients
+// ===========================================================================
+
+/** Accept a scanned/typed invite code. Links the caller and activates the slot. */
+export async function acceptInvite(code: string): Promise<AcceptInviteResult> {
+  const { data, error } = await supabase.rpc('accept_professional_invite', {
+    p_code: code.trim(),
+  });
+  if (error) throw rpcError(error.message);
+  return data as unknown as AcceptInviteResult;
+}
+
+/** Every active client of the current professional (one round-trip). */
+export async function listMyClients(): Promise<ClientSummaryRow[]> {
+  const { data, error } = await supabase.rpc('list_my_clients');
+  if (error) throw error;
+  return (data ?? []) as ClientSummaryRow[];
+}
+
+/**
+ * Cheap "am I a professional?" check for the auto-detect entry point — true if
+ * the user has at least one active client. (No client names fetched.)
+ */
+export async function hasActiveClients(userId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('professional_connections')
+    .select('id', { count: 'exact', head: true })
+    .eq('professional_id', userId)
+    .eq('status', 'active');
+  if (error) return false;
+  return (count ?? 0) > 0;
+}
+
+/** Column-safe client profile (NO billing fields — enforced by the RPC). */
+export async function getClientProfile(
+  clientId: string
+): Promise<ClientProfile | null> {
+  const { data, error } = await supabase.rpc('get_client_profile', {
+    p_client_id: clientId,
+  });
+  if (error) throw rpcError(error.message);
+  return (data as unknown as ClientProfile) ?? null;
+}
+
+/** A connected client's current meal plan (RLS-gated to active connections). */
+export async function loadClientPlan(
+  clientId: string
+): Promise<WeeklyMealPlan | null> {
+  const { data, error } = await supabase
+    .from('meal_plans')
+    .select('plan')
+    .eq('user_id', clientId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.plan as WeeklyMealPlan) ?? null;
+}
+
+/** A connected client's current grocery list (RLS-gated to active connections). */
+export async function loadClientGrocery(
+  clientId: string
+): Promise<GroceryList | null> {
+  const { data, error } = await supabase
+    .from('grocery_lists')
+    .select('list')
+    .eq('user_id', clientId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.list as GroceryList) ?? null;
+}
+
+// ===========================================================================
+// EDITS / NOTES — reads (writes land with their RPCs in the dashboard steps)
+// ===========================================================================
+
+/**
+ * Recent professional edits on a client, newest first. RLS scopes the result:
+ *   • the client sees every edit made on them (their "Professional Updates"),
+ *   • a professional sees only the edits they authored.
+ * Same query serves both — the policy decides what comes back.
+ */
+export async function listEditsForClient(
+  clientId: string,
+  limit = 50
+): Promise<ProfessionalEdit[]> {
+  const { data, error } = await supabase
+    .from('professional_edits')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as ProfessionalEdit[];
+}

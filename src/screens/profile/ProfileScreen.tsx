@@ -44,6 +44,10 @@ import EditFavoritesModal from './EditFavoritesModal';
 import EditAvoidModal from './EditAvoidModal';
 import BadgeTrophyModal from './BadgeTrophyModal';
 import ReportsScreen from '@/screens/reports/ReportsScreen';
+import ProfessionalAccessModal from '@/screens/professional/ProfessionalAccessModal';
+import AcceptInviteModal from '@/screens/professional/AcceptInviteModal';
+import ClientListModal from '@/screens/professional/ClientListModal';
+import { hasActiveClients } from '@/lib/professional';
 
 /** Whole days until `iso` (clamped at 0) — for the trial countdown. */
 function daysUntil(iso: string): number {
@@ -59,6 +63,9 @@ type ModalKind =
   | 'avoid'
   | 'badges'
   | 'reports'
+  | 'proAccess'
+  | 'acceptInvite'
+  | 'clients'
   | null;
 
 /** A tappable settings row: icon + label on the left, value + chevron right. */
@@ -104,19 +111,74 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
+/** Personal | Professional segmented switch (dual-role accounts only). */
+function ModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: boolean;
+  onChange: (pro: boolean) => void;
+}) {
+  return (
+    <View className="mb-3 flex-row rounded-xl bg-surface-card p-1">
+      {[
+        { pro: false, label: 'Personal' },
+        { pro: true, label: 'Professional' },
+      ].map(({ pro, label }) => {
+        const selected = mode === pro;
+        return (
+          <TouchableOpacity
+            key={label}
+            onPress={() => onChange(pro)}
+            activeOpacity={0.85}
+            className={`flex-1 rounded-lg py-2 ${
+              selected ? 'bg-brand-green' : ''
+            }`}
+          >
+            <Text
+              className={`text-center text-sm font-bold ${
+                selected ? 'text-white' : 'text-content-muted'
+              }`}
+            >
+              {label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const [settings, setSettings] = useState<ProfileSettings | null>(null);
   const [modal, setModal] = useState<ModalKind>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
+  // Dual-role users (a normal member who is ALSO someone's chef/trainer) flip
+  // this to reach their client-facing surface. Defaults to Personal; the toggle
+  // that controls it only renders when `isPro` is true.
+  const [proMode, setProMode] = useState(false);
 
   const plan = getPlanState(profile);
+  // Inviting a chef/trainer is a Premium feature. Match the server rule
+  // (create_professional_invite): Premium tier, currently active or trialing.
+  const premium =
+    profile?.subscription_tier === 'wellness_pro' &&
+    ['active', 'trialing'].includes(profile?.subscription_status ?? '');
 
   const reload = useCallback(async () => {
     if (!user?.id) return;
     const next = await loadProfileSettings(user.id);
     setSettings(next);
+    // Auto-detect the professional side: only surface the Personal/Professional
+    // toggle when this account is actually connected to someone as their
+    // chef/trainer. If they stop being a professional, drop back to Personal.
+    hasActiveClients(user.id).then((v) => {
+      setIsPro(v);
+      if (!v) setProMode(false);
+    });
   }, [user?.id]);
 
   // Re-sync settings + subscription each time the tab gains focus.
@@ -148,6 +210,23 @@ export default function ProfileScreen() {
     } finally {
       setPortalLoading(false);
     }
+  }
+
+  // "Professional access" (invite your own chef/trainer). Premium opens the
+  // invite flow; everyone else is routed to upgrade first.
+  function handleProfessionalAccess() {
+    if (premium) {
+      setModal('proAccess');
+      return;
+    }
+    Alert.alert(
+      'Premium feature',
+      'Connecting a Personal Chef or Trainer/Nutritionist is part of gBOMBS Premium. Upgrade to invite your professionals.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Upgrade', onPress: handlePortal },
+      ]
+    );
   }
 
   // Save handler for the single-select plan modal (diet / goal / cooking).
@@ -277,6 +356,42 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* PROFESSIONAL */}
+        <SectionLabel>Professional</SectionLabel>
+
+        {/* The Personal/Professional switch only exists for accounts that are
+            actually someone's chef/trainer. Regular members never see it. */}
+        {isPro && <ModeToggle mode={proMode} onChange={setProMode} />}
+
+        <View className="overflow-hidden rounded-2xl bg-surface-card">
+          {isPro && proMode ? (
+            // PROFESSIONAL mode — the client-facing surface.
+            <>
+              <SettingRow
+                icon="briefcase-outline"
+                label="My clients"
+                value="View"
+                onPress={() => setModal('clients')}
+              />
+              <View className="h-px bg-surface-border" />
+              <SettingRow
+                icon="qr-code-outline"
+                label="Connect to a client"
+                value="Enter code"
+                onPress={() => setModal('acceptInvite')}
+              />
+            </>
+          ) : (
+            // PERSONAL mode — invite your own chef/trainer (Premium).
+            <SettingRow
+              icon="people-outline"
+              label="Professional access"
+              value={premium ? 'Chef & trainer' : 'Premium'}
+              onPress={handleProfessionalAccess}
+            />
+          )}
+        </View>
+
         {/* SUBSCRIPTION */}
         <SectionLabel>Subscription</SectionLabel>
         <View className="rounded-2xl border border-surface-border bg-surface-card p-5">
@@ -350,6 +465,24 @@ export default function ProfileScreen() {
       <ReportsScreen
         visible={modal === 'reports'}
         userId={user?.id ?? ''}
+        onClose={() => setModal(null)}
+      />
+
+      {/* Professional dashboards (Step 11) */}
+      <ProfessionalAccessModal
+        visible={modal === 'proAccess'}
+        onClose={() => setModal(null)}
+      />
+      <AcceptInviteModal
+        visible={modal === 'acceptInvite'}
+        onClose={() => setModal(null)}
+        onConnected={() => {
+          // A new client connection may have just made us a professional.
+          if (user?.id) hasActiveClients(user.id).then(setIsPro);
+        }}
+      />
+      <ClientListModal
+        visible={modal === 'clients'}
         onClose={() => setModal(null)}
       />
     </SafeAreaView>

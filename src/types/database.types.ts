@@ -40,6 +40,38 @@ export type FoodCategory =
   | 'other_vegetables'
   | 'eggs_dairy';
 
+// ---- Professional dashboards (Step 11) -----------------------------------
+export type ProfessionalRole = 'chef' | 'trainer_nutritionist';
+export type ConnectionStatus = 'pending' | 'active' | 'revoked';
+export type ProfessionalEditType =
+  | 'note'
+  | 'goal_edit'
+  | 'suggested_meal_adjustment';
+export type ProfessionalEditStatus =
+  | 'applied'
+  | 'pending_next_cycle'
+  | 'reverted';
+
+/** Arbitrary JSON returned by jsonb-returning RPCs. */
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+/** One row of list_my_clients() — a professional's active client. */
+export interface ClientSummaryRow {
+  connection_id: string;
+  client_id: string;
+  client_name: string | null;
+  role: ProfessionalRole;
+  accepted_at: string | null;
+  plan_updated_at: string | null;
+  grocery_updated_at: string | null;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -263,9 +295,142 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['user_badges']['Row']>;
         Relationships: [];
       };
+      meal_plans: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan: unknown; // WeeklyMealPlan JSON (see services/gemini types)
+          generated_at: string;
+          tier_used: string | null;
+          model_used: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          plan: unknown;
+          generated_at: string;
+          tier_used?: string | null;
+          model_used?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['meal_plans']['Row']>;
+        Relationships: [];
+      };
+      grocery_lists: {
+        Row: {
+          id: string;
+          user_id: string;
+          list: unknown; // GroceryList JSON (see services/gemini types)
+          plan_generated_at: string | null;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          list: unknown;
+          plan_generated_at?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['grocery_lists']['Row']>;
+        Relationships: [];
+      };
+      professional_connections: {
+        Row: {
+          id: string;
+          client_id: string;
+          professional_id: string | null;
+          role: ProfessionalRole;
+          status: ConnectionStatus;
+          invite_code: string | null;
+          professional_name: string | null;
+          invite_created_at: string;
+          invite_expires_at: string | null;
+          accepted_at: string | null;
+          revoked_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          client_id: string;
+          role: ProfessionalRole;
+          status?: ConnectionStatus;
+          invite_code?: string | null;
+          professional_id?: string | null;
+          professional_name?: string | null;
+          invite_expires_at?: string | null;
+        };
+        Update: Partial<
+          Database['public']['Tables']['professional_connections']['Row']
+        >;
+        Relationships: [];
+      };
+      professional_edits: {
+        Row: {
+          id: string;
+          connection_id: string | null;
+          client_id: string;
+          professional_id: string;
+          professional_role: ProfessionalRole;
+          professional_name: string | null;
+          edit_type: ProfessionalEditType;
+          target_reference: string | null;
+          previous_value: string | null;
+          new_value: string | null;
+          status: ProfessionalEditStatus;
+          created_at: string;
+          applied_at: string | null;
+          reverted_at: string | null;
+        };
+        Insert: {
+          client_id: string;
+          professional_id: string;
+          professional_role: ProfessionalRole;
+          edit_type: ProfessionalEditType;
+          connection_id?: string | null;
+          professional_name?: string | null;
+          target_reference?: string | null;
+          previous_value?: string | null;
+          new_value?: string | null;
+          status?: ProfessionalEditStatus;
+        };
+        Update: Partial<
+          Database['public']['Tables']['professional_edits']['Row']
+        >;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      create_professional_invite: {
+        Args: { p_role: string };
+        Returns: string;
+      };
+      accept_professional_invite: {
+        Args: { p_code: string };
+        Returns: Json;
+      };
+      revoke_professional_connection: {
+        Args: { p_connection_id: string };
+        Returns: undefined;
+      };
+      get_client_profile: {
+        Args: { p_client_id: string };
+        Returns: Json;
+      };
+      list_my_clients: {
+        Args: Record<PropertyKey, never>;
+        Returns: ClientSummaryRow[];
+      };
+      is_active_professional_for: {
+        Args: { target_client: string };
+        Returns: boolean;
+      };
+      is_active_professional_for_role: {
+        Args: { target_client: string; target_role: string };
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
   };
 }
