@@ -239,11 +239,14 @@ create policy "trainer reads client streaks"
 
 -- Create an invite for one slot. Requires active Premium; rejects if the slot
 -- is already pending/active. Returns the invite code (encoded in the QR).
+-- NOTE: search_path includes `extensions` because gen_random_bytes() (pgcrypto,
+-- used for the invite code below) lives there on Supabase, not in `public`.
+-- Without it the function raises 42883 "function gen_random_bytes does not exist".
 create or replace function public.create_professional_invite(p_role text)
 returns text
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_client     uuid := auth.uid();
