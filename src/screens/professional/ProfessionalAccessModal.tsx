@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +20,7 @@ import {
   type ProfessionalRole,
 } from '@/lib/professional';
 import { shareInvite, inviteDeepLink } from '@/lib/invite';
+import { confirmAsync, notify } from '@/utils/dialog';
 import QRCodeBox from '@/components/QRCodeBox';
 
 /** Premium gate (matches the create_professional_invite RPC's server-side rule). */
@@ -86,36 +86,32 @@ export default function ProfessionalAccessModal({
       await createInvite(role);
       await reload();
     } catch (e) {
-      Alert.alert('Could not create invite', (e as Error).message);
+      notify('Could not create invite', (e as Error).message);
     } finally {
       setBusyRole(null);
     }
   }
 
-  function handleRevoke(conn: ProfessionalConnection) {
+  async function handleRevoke(conn: ProfessionalConnection) {
     const label = ROLE_META[conn.role].label;
     const verb = conn.status === 'active' ? 'Remove' : 'Cancel invite';
-    Alert.alert(
-      `${verb}?`,
-      conn.status === 'active'
-        ? `${conn.professional_name ?? `Your ${label}`} will lose access to your plan and data. You can re-invite anytime.`
-        : `This invite code will stop working. You can generate a new one anytime.`,
-      [
-        { text: 'Keep', style: 'cancel' },
-        {
-          text: verb,
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await revokeConnection(conn.id);
-              await reload();
-            } catch (e) {
-              Alert.alert('Could not update', (e as Error).message);
-            }
-          },
-        },
-      ]
-    );
+    const ok = await confirmAsync({
+      title: `${verb}?`,
+      message:
+        conn.status === 'active'
+          ? `${conn.professional_name ?? `Your ${label}`} will lose access to your plan and data. You can re-invite anytime.`
+          : 'This invite code will stop working. You can generate a new one anytime.',
+      confirmLabel: verb,
+      cancelLabel: 'Keep',
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await revokeConnection(conn.id);
+      await reload();
+    } catch (e) {
+      notify('Could not update', (e as Error).message);
+    }
   }
 
   async function handleShare(conn: ProfessionalConnection) {
@@ -124,7 +120,7 @@ export default function ProfessionalAccessModal({
       conn.invite_code,
       ROLE_META[conn.role].label
     );
-    if (copied) Alert.alert('Copied', 'Invite copied to your clipboard.');
+    if (copied) notify('Copied', 'Invite copied to your clipboard.');
   }
 
   return (

@@ -383,12 +383,26 @@ export default function ProfileScreen() {
             </>
           ) : (
             // PERSONAL mode — invite your own chef/trainer (Premium).
-            <SettingRow
-              icon="people-outline"
-              label="Professional access"
-              value={premium ? 'Chef & trainer' : 'Premium'}
-              onPress={handleProfessionalAccess}
-            />
+            <>
+              <SettingRow
+                icon="people-outline"
+                label="Professional access"
+                value={premium ? 'Chef & trainer' : 'Premium'}
+                onPress={handleProfessionalAccess}
+              />
+              {/* TODO(Phase B): TEMPORARY testing entry — remove once deep-link
+                  accept (gbombs://connect?code=…) is wired. Lets a fresh account
+                  accept its first invite to become a professional, since the
+                  real "Connect to a client" only shows in Professional mode and
+                  Professional mode only appears after you already have a client. */}
+              <View className="h-px bg-surface-border" />
+              <SettingRow
+                icon="qr-code-outline"
+                label="Connect to a client (test)"
+                value="Enter code"
+                onPress={() => setModal('acceptInvite')}
+              />
+            </>
           )}
         </View>
 

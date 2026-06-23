@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +15,7 @@ import {
   loadClientGrocery,
   type ClientProfile,
 } from '@/lib/professional';
+import { notify } from '@/utils/dialog';
 import {
   groceryListToLineItems,
   createInstacartList,
@@ -110,7 +110,7 @@ export default function ChefDashboardModal({
       );
       await openInstacart(url);
     } catch (e) {
-      Alert.alert('Instacart', (e as Error).message);
+      notify('Instacart', (e as Error).message);
     } finally {
       setInstacartBusy(false);
     }

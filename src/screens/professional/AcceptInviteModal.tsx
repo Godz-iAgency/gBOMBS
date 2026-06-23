@@ -98,9 +98,13 @@ export default function AcceptInviteModal({
               <Text className="text-content mt-4 text-center text-xl font-extrabold">
                 You're connected
               </Text>
+              {/* NOTE: a single flat <Text> — a nested <Text> renders as a
+                  <span> on react-native-web and crashes the NativeWind style
+                  pass ("Failed to set an indexed property on CSSStyleDeclaration").
+                  Keep this one element; do not re-introduce an inner <Text>. */}
               <Text className="text-content-muted mt-2 text-center text-sm leading-5">
                 You're now this client's {ROLE_META[done.role].label}. They'll
-                appear under <Text className="font-bold">My Clients</Text>.
+                appear under “My Clients”.
               </Text>
               <TouchableOpacity
                 onPress={onClose}
