@@ -16,8 +16,11 @@ import {
 } from '@/lib/professional';
 import { loadReport, type ReportData } from '@/lib/reports';
 import { supabase } from '@/lib/supabase';
+import { buildClientMealContext } from '@/lib/mealContext';
 import { DIET_LABEL, GOAL_LABEL, STYLE_LABEL } from '@/utils/profileOptions';
-import type { WeeklyMealPlan } from '@/services/gemini';
+import RecipeModal from '@/screens/mealplan/RecipeModal';
+import DayAccordion from './DayAccordion';
+import type { WeeklyMealPlan, MealSummary } from '@/services/gemini';
 import type { DietMode, HealthGoal, CookingStyle } from '@/types/database.types';
 
 interface StreakRow {
@@ -49,6 +52,9 @@ export default function TrainerDashboardModal({
   const [streak, setStreak] = useState<StreakRow | null>(null);
   const [plan, setPlan] = useState<WeeklyMealPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  // Plan accordion: one day open at a time; selected meal opens its recipe.
+  const [openDay, setOpenDay] = useState<number | null>(null);
+  const [selectedMeal, setSelectedMeal] = useState<MealSummary | null>(null);
 
   useEffect(() => {
     if (!visible) {
@@ -57,6 +63,8 @@ export default function TrainerDashboardModal({
       setStreak(null);
       setPlan(null);
       setLoading(true);
+      setOpenDay(null);
+      setSelectedMeal(null);
       return;
     }
     let active = true;
@@ -204,23 +212,51 @@ export default function TrainerDashboardModal({
               )}
             </View>
 
-            {/* Plan overview */}
+            {/* Plan overview + accordion */}
             <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
               Current plan
             </Text>
-            <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
-              {plan ? (
-                <Text className="text-content text-sm">
-                  {plannedMeals} meals planned across {plan.days.length} days ·
-                  weekly gBOMBS {plan.weeklyScore.score}/{plan.weeklyScore.total}.
-                </Text>
-              ) : (
+            {plan && plan.days.length > 0 ? (
+              <>
+                <View className="mb-3 rounded-2xl border border-surface-border bg-surface-card p-4">
+                  <Text className="text-content text-sm">
+                    {plannedMeals} meals planned across {plan.days.length} days ·
+                    weekly gBOMBS {plan.weeklyScore.score}/
+                    {plan.weeklyScore.total}.
+                  </Text>
+                </View>
+                {plan.days.map((day) => (
+                  <DayAccordion
+                    key={day.day}
+                    day={day}
+                    open={openDay === day.day}
+                    onToggle={() =>
+                      setOpenDay((cur) => (cur === day.day ? null : day.day))
+                    }
+                    onSelectMeal={setSelectedMeal}
+                  />
+                ))}
+              </>
+            ) : (
+              <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
                 <Text className="text-content-muted text-sm">
                   No meal plan generated yet.
                 </Text>
-              )}
-            </View>
+              </View>
+            )}
           </ScrollView>
+        )}
+
+        {/* Full-recipe overlay (generated against the client's diet, cached
+            per client). Rendered at modal level for full-screen positioning. */}
+        {selectedMeal && (
+          <RecipeModal
+            meal={selectedMeal}
+            userId={clientId}
+            tier="wellness_pro"
+            buildContext={() => buildClientMealContext(clientId)}
+            onClose={() => setSelectedMeal(null)}
+          />
         )}
       </SafeAreaView>
     </Modal>

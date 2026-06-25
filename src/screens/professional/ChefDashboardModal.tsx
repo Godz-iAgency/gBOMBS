@@ -15,6 +15,7 @@ import {
   loadClientGrocery,
   type ClientProfile,
 } from '@/lib/professional';
+import { buildClientMealContext } from '@/lib/mealContext';
 import { notify } from '@/utils/dialog';
 import {
   groceryListToLineItems,
@@ -22,39 +23,23 @@ import {
   openInstacart,
 } from '@/lib/instacart';
 import { DIET_LABEL, GOAL_LABEL, STYLE_LABEL } from '@/utils/profileOptions';
+import RecipeModal from '@/screens/mealplan/RecipeModal';
+import DayAccordion from './DayAccordion';
 import type {
   WeeklyMealPlan,
   GroceryList,
-  DayPlan,
-  GBombsCategory,
+  MealSummary,
 } from '@/services/gemini';
 import type { DietMode, HealthGoal, CookingStyle } from '@/types/database.types';
-
-/** gBOMBS category → its dot color (mirrors tailwind.config gbombs.*). */
-const GB_COLOR: Record<GBombsCategory, string> = {
-  greens: '#3A6B2A',
-  beans: '#6B4423',
-  onion: '#8B2252',
-  mushroom: '#9B7232',
-  berries: '#3D2F7A',
-  seeds: '#9B8C3A',
-};
-
-const SLOT_LABEL: Record<string, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner',
-  smoothie: 'Smoothie',
-  dessert: 'Dessert',
-};
 
 /**
  * Chef Dashboard — the KITCHEN view for one connected client.
  * ------------------------------------------------------------------
- * The chef executes the plan: the full week with prep timing per day, the
- * client's diet constraints, and the consolidated grocery list with a
- * "Send to Instacart" action they can fire on the client's behalf. (Recipe
- * notes + the trainer-update banner arrive with the write layer in Step 11.6.)
+ * The chef executes the plan. Three-level drill-down: the week as an accordion
+ * of days (one open at a time) → that day's five meals → tap a meal to generate
+ * & read its full recipe (cooked against the CLIENT's diet, cached per client).
+ * Plus the client's constraints and the consolidated grocery list with a
+ * "Send to Instacart" action they can fire on the client's behalf.
  */
 export default function ChefDashboardModal({
   visible,
@@ -72,6 +57,11 @@ export default function ChefDashboardModal({
   const [grocery, setGrocery] = useState<GroceryList | null>(null);
   const [loading, setLoading] = useState(true);
   const [instacartBusy, setInstacartBusy] = useState(false);
+  // Accordion: which day is expanded (null = all collapsed). Single value, so
+  // opening one day implicitly closes the previously open one.
+  const [openDay, setOpenDay] = useState<number | null>(null);
+  // Which meal's full recipe is open over the dashboard (null = none).
+  const [selectedMeal, setSelectedMeal] = useState<MealSummary | null>(null);
 
   useEffect(() => {
     if (!visible) {
@@ -79,6 +69,8 @@ export default function ChefDashboardModal({
       setPlan(null);
       setGrocery(null);
       setLoading(true);
+      setOpenDay(null);
+      setSelectedMeal(null);
       return;
     }
     let active = true;
@@ -215,12 +207,22 @@ export default function ChefDashboardModal({
               )}
             </View>
 
-            {/* Weekly plan */}
+            {/* Weekly plan — accordion of days */}
             <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
               This week's plan
             </Text>
             {plan && plan.days.length > 0 ? (
-              plan.days.map((day) => <DayCard key={day.day} day={day} />)
+              plan.days.map((day) => (
+                <DayAccordion
+                  key={day.day}
+                  day={day}
+                  open={openDay === day.day}
+                  onToggle={() =>
+                    setOpenDay((cur) => (cur === day.day ? null : day.day))
+                  }
+                  onSelectMeal={setSelectedMeal}
+                />
+              ))
             ) : (
               <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
                 <Text className="text-content-muted text-sm">
@@ -229,6 +231,18 @@ export default function ChefDashboardModal({
               </View>
             )}
           </ScrollView>
+        )}
+
+        {/* Full-recipe overlay (generated against the client's diet, cached
+            per client). Rendered inside the modal so it covers the dashboard. */}
+        {selectedMeal && (
+          <RecipeModal
+            meal={selectedMeal}
+            userId={clientId}
+            tier="wellness_pro"
+            buildContext={() => buildClientMealContext(clientId)}
+            onClose={() => setSelectedMeal(null)}
+          />
         )}
       </SafeAreaView>
     </Modal>
@@ -246,62 +260,6 @@ function Chip({
     <View className="mb-2 mr-2 flex-row items-center rounded-full border border-surface-border bg-surface-card px-3 py-1.5">
       <Ionicons name={icon} size={13} color="#5A9A3A" />
       <Text className="text-content ml-1.5 text-xs font-semibold">{text}</Text>
-    </View>
-  );
-}
-
-function DayCard({ day }: { day: DayPlan }) {
-  const totalPrep = day.meals.reduce((n, m) => n + (m.prepMinutes || 0), 0);
-  return (
-    <View className="mb-3 rounded-2xl border border-surface-border bg-surface-card p-4">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-content text-base font-bold">{day.label}</Text>
-        {totalPrep > 0 && (
-          <View className="flex-row items-center">
-            <Ionicons name="time-outline" size={13} color="#A8A29E" />
-            <Text className="text-content-muted ml-1 text-xs">
-              {totalPrep} min prep
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {day.meals.map((meal, i) => (
-        <View
-          key={meal.id ?? `${day.day}-${i}`}
-          className="mt-3 border-t border-surface-border pt-3"
-        >
-          <View className="flex-row items-center justify-between">
-            <Text className="text-content-muted text-[11px] font-semibold uppercase tracking-wide">
-              {SLOT_LABEL[meal.slot] ?? meal.slot}
-            </Text>
-            {meal.prepMinutes > 0 && (
-              <Text className="text-content-muted text-[11px]">
-                {meal.prepMinutes} min
-              </Text>
-            )}
-          </View>
-          <Text className="text-content mt-0.5 text-sm font-semibold">
-            {meal.name}
-          </Text>
-          {!!meal.description && (
-            <Text className="text-content-muted mt-0.5 text-xs leading-4">
-              {meal.description}
-            </Text>
-          )}
-          {meal.gbombs?.length > 0 && (
-            <View className="mt-1.5 flex-row items-center">
-              {meal.gbombs.map((c) => (
-                <View
-                  key={c}
-                  className="mr-1 h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: GB_COLOR[c] }}
-                />
-              ))}
-            </View>
-          )}
-        </View>
-      ))}
     </View>
   );
 }

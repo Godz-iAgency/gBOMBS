@@ -2,6 +2,7 @@ import {
   Component,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -10,9 +11,10 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
   Platform,
+  Animated,
+  Easing,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -20,10 +22,96 @@ import {
   type Recipe,
   type MealSummary,
   type GBombsCategory,
+  type UserMealContext,
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedRecipe, saveCachedRecipe } from '@/lib/recipeCache';
 import { GBOMBS_LETTERS, LETTER_BY_KEY } from '@/utils/gbombsImages';
+
+/** Rotating, kitchen-themed status lines for the recipe loading screen. */
+const LOADING_MESSAGES = [
+  'Reading the recipe…',
+  'Gathering fresh ingredients…',
+  'Prepping the kitchen…',
+  'Seasoning to taste…',
+  'Plating it up…',
+  'Almost ready…',
+];
+
+/**
+ * Recipe loading state — an engaging, timed animation instead of a bare
+ * spinner. A pulsing chef icon, rotating status lines, and a progress bar that
+ * eases toward (but never reaches) full give a felt sense of "this is working
+ * and nearly done" — far less alarming than a spinner that reads as "stuck".
+ * Web-safe: react-native Animated runs on react-native-web; width animates with
+ * useNativeDriver:false, the icon pulse (transform) with true.
+ */
+function RecipeLoading() {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const progress = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Ease toward 95% over ~11s. The recipe usually lands in 3–8s and unmounts
+    // this; the long, decelerating tail means the bar never visibly stalls.
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 11000,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    // Gentle breathing pulse on the icon. useNativeDriver:false so it animates
+    // cleanly on react-native-web too (true logs an unsupported-driver warning).
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }),
+      ])
+    ).start();
+
+    const id = setInterval(() => {
+      setMsgIndex((i) => Math.min(i + 1, LOADING_MESSAGES.length - 1));
+    }, 2000);
+    return () => clearInterval(id);
+  }, [progress, pulse]);
+
+  const barWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['8%', '95%'],
+  });
+  const iconScale = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.12],
+  });
+
+  return (
+    <View style={styles.centered}>
+      <Animated.View
+        style={[styles.loadingIconWrap, { transform: [{ scale: iconScale }] }]}
+      >
+        <Ionicons name="restaurant" size={34} color="#5A9A3A" />
+      </Animated.View>
+      <Text style={styles.loadingText}>{LOADING_MESSAGES[msgIndex]}</Text>
+      <View style={styles.progressTrack}>
+        <Animated.View style={[styles.progressFill, { width: barWidth }]} />
+      </View>
+      <Text style={styles.loadingSub}>
+        Crafting a fresh Nutritarian recipe
+      </Text>
+    </View>
+  );
+}
 
 // Safe area top padding — avoids react-native-safe-area-context on web
 // (its inset style arrays can trigger a CSSStyleDeclaration indexed-property
@@ -129,11 +217,19 @@ export default function RecipeModal({
   userId,
   tier,
   onClose,
+  buildContext,
 }: {
   meal: MealSummary | null;
+  /** Owns the recipe cache namespace. For a professional viewing a client,
+   *  pass the CLIENT's id so cached recipes are per-client and isolated. */
   userId: string;
   tier: string;
   onClose: () => void;
+  /** Override how the AI personalization context is built. Defaults to the
+   *  signed-in user's own context; the chef/trainer pass a client-scoped
+   *  builder (buildClientMealContext) since RLS blocks reading the client's
+   *  users row directly. */
+  buildContext?: () => Promise<UserMealContext>;
 }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
@@ -150,7 +246,9 @@ export default function RecipeModal({
         setLoading(false);
         return;
       }
-      const ctx = await buildUserMealContext(userId);
+      const ctx = buildContext
+        ? await buildContext()
+        : await buildUserMealContext(userId);
       const next = await generateRecipe(
         {
           id: meal.id,
@@ -170,7 +268,7 @@ export default function RecipeModal({
     } finally {
       setLoading(false);
     }
-  }, [meal, userId, tier]);
+  }, [meal, userId, tier, buildContext]);
 
   useEffect(() => {
     if (meal) {
@@ -197,10 +295,7 @@ export default function RecipeModal({
 
       <RecipeErrorBoundary key={meal.id}>
         {loading ? (
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#5A9A3A" />
-            <Text style={styles.loadingText}>Writing your recipe…</Text>
-          </View>
+          <RecipeLoading />
         ) : error ? (
           <View style={styles.centered}>
             <Ionicons name="alert-circle-outline" size={44} color="#A8A29E" />
@@ -308,11 +403,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 32,
   },
+  loadingIconWrap: {
+    height: 72,
+    width: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 36,
+    backgroundColor: '#161616',
+    borderWidth: 1,
+    borderColor: '#2D2D2D',
+  },
   loadingText: {
     color: '#F5F5F0',
-    marginTop: 16,
+    marginTop: 20,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  progressTrack: {
+    marginTop: 18,
+    height: 6,
+    width: 220,
+    borderRadius: 3,
+    backgroundColor: '#1F1F1F',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#5A9A3A',
+  },
+  loadingSub: {
+    color: '#6B7280',
+    marginTop: 12,
+    fontSize: 12,
   },
   errorText: {
     marginTop: 12,
