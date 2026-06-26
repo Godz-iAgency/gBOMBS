@@ -18,6 +18,7 @@ import type { GBombsCategory } from '@/services/gemini';
 import type { MainTabParamList } from '@/navigation/MainTabNavigator';
 import CheckInScreen from './CheckInScreen';
 import ReportsScreen from '@/screens/reports/ReportsScreen';
+import ProfessionalUpdatesCard from './ProfessionalUpdatesCard';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 
@@ -315,6 +316,10 @@ export default function HomeScreen() {
             </>
           )}
         </TouchableOpacity>
+
+        {/* Professional Updates — chef/trainer changes, with 48h Undo
+            (renders nothing when there are none) */}
+        <ProfessionalUpdatesCard userId={user?.id ?? ''} tier={tier} />
 
         {/* Quick actions */}
         <View className="-mx-1 mt-4 flex-row">

@@ -4,6 +4,7 @@ import {
   View,
   Text,
   ScrollView,
+  TextInput,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -12,16 +13,32 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   getClientProfile,
   loadClientPlan,
+  editClientGoal,
+  queueMealAdjustment,
+  listEditsForClient,
   type ClientProfile,
+  type ProfessionalEdit,
 } from '@/lib/professional';
 import { loadReport, type ReportData } from '@/lib/reports';
 import { supabase } from '@/lib/supabase';
 import { buildClientMealContext } from '@/lib/mealContext';
-import { DIET_LABEL, GOAL_LABEL, STYLE_LABEL } from '@/utils/profileOptions';
+import { notify } from '@/utils/dialog';
+import {
+  DIET_MODES,
+  HEALTH_GOALS,
+  COOKING_STYLES,
+  DIET_LABEL,
+  GOAL_LABEL,
+  STYLE_LABEL,
+  type PlanOption,
+} from '@/utils/profileOptions';
 import RecipeModal from '@/screens/mealplan/RecipeModal';
+import EditPlanModal from '@/screens/profile/EditPlanModal';
 import DayAccordion from './DayAccordion';
 import type { WeeklyMealPlan, MealSummary } from '@/services/gemini';
 import type { DietMode, HealthGoal, CookingStyle } from '@/types/database.types';
+
+type GoalField = 'diet_mode' | 'health_goal' | 'cooking_style';
 
 interface StreakRow {
   current_daily_streak: number;
@@ -55,6 +72,19 @@ export default function TrainerDashboardModal({
   // Plan accordion: one day open at a time; selected meal opens its recipe.
   const [openDay, setOpenDay] = useState<number | null>(null);
   const [selectedMeal, setSelectedMeal] = useState<MealSummary | null>(null);
+  // Write actions: goal picker + queued meal adjustments.
+  const [editField, setEditField] = useState<GoalField | null>(null);
+  const [edits, setEdits] = useState<ProfessionalEdit[]>([]);
+  const [adjustText, setAdjustText] = useState('');
+  const [adjustBusy, setAdjustBusy] = useState(false);
+
+  async function refreshEdits() {
+    try {
+      setEdits(await listEditsForClient(clientId));
+    } catch {
+      /* best-effort */
+    }
+  }
 
   useEffect(() => {
     if (!visible) {
@@ -65,11 +95,14 @@ export default function TrainerDashboardModal({
       setLoading(true);
       setOpenDay(null);
       setSelectedMeal(null);
+      setEditField(null);
+      setEdits([]);
+      setAdjustText('');
       return;
     }
     let active = true;
     (async () => {
-      const [p, r, pl, s] = await Promise.all([
+      const [p, r, pl, s, e] = await Promise.all([
         getClientProfile(clientId).catch(() => null),
         loadReport(clientId, 7).catch(() => null),
         loadClientPlan(clientId).catch(() => null),
@@ -87,18 +120,64 @@ export default function TrainerDashboardModal({
             return null;
           }
         })(),
+        listEditsForClient(clientId).catch(() => [] as ProfessionalEdit[]),
       ]);
       if (!active) return;
       setProfile(p);
       setReport(r);
       setPlan(pl);
       setStreak(s);
+      setEdits(e);
       setLoading(false);
     })();
     return () => {
       active = false;
     };
   }, [visible, clientId]);
+
+  // Which option set + current value the goal picker is showing.
+  const goalPicker: {
+    title: string;
+    options: PlanOption<string>[];
+    current: string;
+  } | null =
+    editField === 'diet_mode'
+      ? { title: 'Diet mode', options: DIET_MODES, current: profile?.diet_mode ?? '' }
+      : editField === 'health_goal'
+        ? { title: 'Health goal', options: HEALTH_GOALS, current: profile?.health_goal ?? '' }
+        : editField === 'cooking_style'
+          ? { title: 'Cooking style', options: COOKING_STYLES, current: profile?.cooking_style ?? '' }
+          : null;
+
+  async function saveGoal(key: string) {
+    if (!editField) return;
+    await editClientGoal(clientId, editField, key);
+    const p = await getClientProfile(clientId).catch(() => null);
+    if (p) setProfile(p);
+    refreshEdits();
+  }
+
+  async function handleQueueAdjustment() {
+    const text = adjustText.trim();
+    if (!text) return;
+    setAdjustBusy(true);
+    try {
+      await queueMealAdjustment(clientId, text);
+      setAdjustText('');
+      await refreshEdits();
+      notify('Queued', 'Your adjustment will apply to the next plan.');
+    } catch (e) {
+      notify('Could not queue', (e as Error).message);
+    } finally {
+      setAdjustBusy(false);
+    }
+  }
+
+  const pendingAdjustments = edits.filter(
+    (e) =>
+      e.edit_type === 'suggested_meal_adjustment' &&
+      e.status === 'pending_next_cycle'
+  );
 
   const plannedMeals =
     plan?.days.reduce((n, d) => n + d.meals.length, 0) ?? 0;
@@ -138,15 +217,16 @@ export default function TrainerDashboardModal({
             contentContainerStyle={{ padding: 20, paddingBottom: 48 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Goals */}
+            {/* Goals — tappable; the trainer can change any of the three. */}
             <Text className="text-content-muted mb-2 px-1 text-xs font-semibold uppercase tracking-wide">
-              Goals
+              Goals · tap to adjust
             </Text>
             {profile && (
-              <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+              <View className="overflow-hidden rounded-2xl border border-surface-border bg-surface-card">
                 <GoalRow
                   label="Diet mode"
                   value={DIET_LABEL[profile.diet_mode as DietMode] ?? profile.diet_mode}
+                  onPress={() => setEditField('diet_mode')}
                 />
                 <View className="h-px bg-surface-border" />
                 <GoalRow
@@ -155,6 +235,7 @@ export default function TrainerDashboardModal({
                     GOAL_LABEL[profile.health_goal as HealthGoal] ??
                     profile.health_goal
                   }
+                  onPress={() => setEditField('health_goal')}
                 />
                 <View className="h-px bg-surface-border" />
                 <GoalRow
@@ -163,6 +244,7 @@ export default function TrainerDashboardModal({
                     STYLE_LABEL[profile.cooking_style as CookingStyle] ??
                     profile.cooking_style
                   }
+                  onPress={() => setEditField('cooking_style')}
                 />
               </View>
             )}
@@ -244,8 +326,77 @@ export default function TrainerDashboardModal({
                 </Text>
               </View>
             )}
+
+            {/* Meal-plan adjustments — queued for the next generation */}
+            <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
+              Adjustments for next plan
+            </Text>
+            <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+              {pendingAdjustments.length > 0 && (
+                <View className="mb-3">
+                  {pendingAdjustments.map((a) => (
+                    <View key={a.id} className="mb-2 flex-row items-start">
+                      <Ionicons
+                        name="time-outline"
+                        size={14}
+                        color="#9B8C3A"
+                        style={{ marginTop: 2 }}
+                      />
+                      <Text className="text-content ml-2 flex-1 text-sm">
+                        {a.new_value}
+                      </Text>
+                    </View>
+                  ))}
+                  <Text className="text-content-muted mt-1 text-[11px]">
+                    Applied automatically when the next plan is generated.
+                  </Text>
+                </View>
+              )}
+              <TextInput
+                value={adjustText}
+                onChangeText={setAdjustText}
+                placeholder="e.g. More high-protein lunches; cut dinner prep under 20 min."
+                placeholderTextColor="#6B7280"
+                multiline
+                className="text-content rounded-xl border border-surface-border bg-surface px-3 py-3 text-sm"
+                style={{ minHeight: 70, textAlignVertical: 'top' }}
+              />
+              <TouchableOpacity
+                onPress={handleQueueAdjustment}
+                disabled={!adjustText.trim() || adjustBusy}
+                activeOpacity={0.85}
+                className={`mt-3 items-center rounded-xl py-3 ${
+                  adjustText.trim() && !adjustBusy
+                    ? 'bg-brand-green'
+                    : 'bg-surface-cardAlt'
+                }`}
+              >
+                {adjustBusy ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text
+                    className={`text-sm font-bold ${
+                      adjustText.trim() ? 'text-white' : 'text-content-muted'
+                    }`}
+                  >
+                    Queue adjustment
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         )}
+
+        {/* Goal picker (reuses the client's plan picker) */}
+        <EditPlanModal
+          visible={!!goalPicker}
+          title={goalPicker?.title ?? ''}
+          subtitle={`Updates ${clientName.split(' ')[0]}'s plan. They can undo within 48h.`}
+          options={goalPicker?.options ?? []}
+          current={goalPicker?.current ?? ''}
+          onSelect={saveGoal}
+          onClose={() => setEditField(null)}
+        />
 
         {/* Full-recipe overlay (generated against the client's diet, cached
             per client). Rendered at modal level for full-screen positioning. */}
@@ -263,12 +414,32 @@ export default function TrainerDashboardModal({
   );
 }
 
-function GoalRow({ label, value }: { label: string; value: string }) {
+function GoalRow({
+  label,
+  value,
+  onPress,
+}: {
+  label: string;
+  value: string;
+  onPress?: () => void;
+}) {
   return (
-    <View className="flex-row items-center justify-between py-3">
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      className="flex-row items-center justify-between px-4 py-3.5"
+    >
       <Text className="text-content-muted text-sm">{label}</Text>
-      <Text className="text-content text-sm font-semibold">{value}</Text>
-    </View>
+      <View className="flex-row items-center">
+        <Text className="text-content text-sm font-semibold">{value}</Text>
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color="#6B7280"
+          style={{ marginLeft: 6 }}
+        />
+      </View>
+    </TouchableOpacity>
   );
 }
 

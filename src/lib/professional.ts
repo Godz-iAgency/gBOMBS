@@ -229,3 +229,89 @@ export async function listEditsForClient(
   if (error) throw error;
   return (data ?? []) as ProfessionalEdit[];
 }
+
+/** The current chef note on one meal (latest applied), or null. RLS-scoped:
+ *  the client reads notes on them; the chef reads notes they authored. */
+export async function loadMealNote(
+  clientId: string,
+  mealId: string
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('professional_edits')
+    .select('new_value')
+    .eq('client_id', clientId)
+    .eq('target_reference', mealId)
+    .eq('edit_type', 'note')
+    .eq('status', 'applied')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.new_value as string | null) ?? null;
+}
+
+// ===========================================================================
+// WRITES — professional actions (all via security-definer RPCs).
+// ===========================================================================
+
+/** Chef: attach/update a note on one meal (empty string clears it). */
+export async function addChefNote(
+  clientId: string,
+  mealId: string,
+  note: string
+): Promise<void> {
+  const { error } = await supabase.rpc('add_chef_note', {
+    p_client_id: clientId,
+    p_meal_id: mealId,
+    p_note: note,
+  });
+  if (error) throw rpcError(error.message);
+}
+
+/** Trainer: change one plan field on the client (immediate; client can undo). */
+export async function editClientGoal(
+  clientId: string,
+  field: 'diet_mode' | 'health_goal' | 'cooking_style',
+  value: string
+): Promise<void> {
+  const { error } = await supabase.rpc('edit_client_goal', {
+    p_client_id: clientId,
+    p_field: field,
+    p_value: value,
+  });
+  if (error) throw rpcError(error.message);
+}
+
+/** Trainer: queue a plan adjustment consumed at the next generation. */
+export async function queueMealAdjustment(
+  clientId: string,
+  note: string
+): Promise<void> {
+  const { error } = await supabase.rpc('queue_meal_adjustment', {
+    p_client_id: clientId,
+    p_note: note,
+  });
+  if (error) throw rpcError(error.message);
+}
+
+/** Client: undo a professional change within the 48-hour window. */
+export async function revertEdit(editId: string): Promise<void> {
+  const { error } = await supabase.rpc('revert_professional_edit', {
+    p_edit_id: editId,
+  });
+  if (error) throw rpcError(error.message);
+}
+
+/** Is this edit still undoable by the client? (revertable type, applied/queued,
+ *  inside the 48h window). Mirrors the server rule for the Undo button. */
+export function isRevertable(edit: ProfessionalEdit): boolean {
+  if (edit.status === 'reverted') return false;
+  if (
+    edit.edit_type !== 'goal_edit' &&
+    edit.edit_type !== 'suggested_meal_adjustment'
+  ) {
+    return false;
+  }
+  const ageMs = Date.now() - new Date(edit.created_at).getTime();
+  return ageMs < 48 * 60 * 60 * 1000;
+}

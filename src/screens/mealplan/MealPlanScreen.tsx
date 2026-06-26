@@ -336,6 +336,7 @@ export default function MealPlanScreen() {
         meal={recipeMeal}
         userId={user?.id ?? ''}
         tier={tier}
+        note={user?.id ? { clientId: user.id, editable: false } : undefined}
         onClose={() => setRecipeMeal(null)}
       />
 

@@ -430,6 +430,22 @@ export interface Database {
         Args: { target_client: string; target_role: string };
         Returns: boolean;
       };
+      add_chef_note: {
+        Args: { p_client_id: string; p_meal_id: string; p_note: string };
+        Returns: undefined;
+      };
+      edit_client_goal: {
+        Args: { p_client_id: string; p_field: string; p_value: string };
+        Returns: undefined;
+      };
+      queue_meal_adjustment: {
+        Args: { p_client_id: string; p_note: string };
+        Returns: undefined;
+      };
+      revert_professional_edit: {
+        Args: { p_edit_id: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
   };

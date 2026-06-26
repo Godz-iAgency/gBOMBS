@@ -10,7 +10,9 @@ import {
   View,
   Text,
   ScrollView,
+  TextInput,
   TouchableOpacity,
+  ActivityIndicator,
   StyleSheet,
   Platform,
   Animated,
@@ -26,7 +28,18 @@ import {
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedRecipe, saveCachedRecipe } from '@/lib/recipeCache';
+import { addChefNote, loadMealNote } from '@/lib/professional';
+import { notify } from '@/utils/dialog';
 import { GBOMBS_LETTERS, LETTER_BY_KEY } from '@/utils/gbombsImages';
+
+/** Chef-note context for a recipe. The chef (editable) attaches a note to a
+ *  meal; the client sees it read-only on their own copy of that recipe. */
+export interface RecipeNoteContext {
+  /** Whose meal this is — the recipe-cache + note owner. */
+  clientId: string;
+  /** true = chef can write the note; false = client sees it read-only. */
+  editable: boolean;
+}
 
 /** Rotating, kitchen-themed status lines for the recipe loading screen. */
 const LOADING_MESSAGES = [
@@ -218,6 +231,7 @@ export default function RecipeModal({
   tier,
   onClose,
   buildContext,
+  note,
 }: {
   meal: MealSummary | null;
   /** Owns the recipe cache namespace. For a professional viewing a client,
@@ -230,10 +244,18 @@ export default function RecipeModal({
    *  builder (buildClientMealContext) since RLS blocks reading the client's
    *  users row directly. */
   buildContext?: () => Promise<UserMealContext>;
+  /** Enables the chef-note section (editable for the chef, read-only for the
+   *  client). Omit to hide notes entirely. */
+  note?: RecipeNoteContext;
 }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Chef-note state (only used when `note` is provided).
+  const [noteText, setNoteText] = useState('');
+  const [savedNote, setSavedNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
   const load = useCallback(async () => {
     if (!meal || !userId) return;
@@ -277,7 +299,50 @@ export default function RecipeModal({
     }
   }, [meal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load the chef note for this meal whenever it changes (if notes are enabled).
+  useEffect(() => {
+    setJustSaved(false);
+    if (!meal || !note) {
+      setNoteText('');
+      setSavedNote('');
+      return;
+    }
+    let active = true;
+    loadMealNote(note.clientId, meal.id)
+      .then((n) => {
+        if (!active) return;
+        setNoteText(n ?? '');
+        setSavedNote(n ?? '');
+      })
+      .catch(() => {
+        if (active) {
+          setNoteText('');
+          setSavedNote('');
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [meal?.id, note?.clientId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleSaveNote() {
+    if (!meal || !note) return;
+    setNoteSaving(true);
+    try {
+      await addChefNote(note.clientId, meal.id, noteText);
+      setSavedNote(noteText.trim());
+      // Brief "Updated ✓" confirmation, then return to the dashboard.
+      setJustSaved(true);
+      setTimeout(() => onClose(), 850);
+    } catch (e) {
+      notify('Could not save note', (e as Error).message);
+    } finally {
+      setNoteSaving(false);
+    }
+  }
+
   const showTips = tier === 'wellness_pro' && recipe?.tips;
+  const noteDirty = note?.editable && noteText.trim() !== savedNote;
 
   if (!meal) return null;
 
@@ -313,6 +378,15 @@ export default function RecipeModal({
             <Text style={styles.recipeName}>{recipe.name}</Text>
             {recipe.description ? (
               <Text style={styles.recipeDesc}>{recipe.description}</Text>
+            ) : null}
+
+            {/* Chef's note — shown to the CLIENT at the top so it's the first
+                thing they see, never buried. (The chef's editor is at the end.) */}
+            {note && !note.editable && savedNote ? (
+              <View style={[styles.noteBox, { marginTop: 16 }]}>
+                <Text style={styles.noteLabel}>👨‍🍳 CHEF'S NOTE</Text>
+                <Text style={styles.noteText}>{savedNote}</Text>
+              </View>
             ) : null}
 
             {/* gBOMBS score row */}
@@ -363,6 +437,56 @@ export default function RecipeModal({
               <View style={styles.tipBox}>
                 <Text style={styles.tipLabel}>💡 NUTRITARIAN TIP</Text>
                 <Text style={styles.tipText}>{recipe.tips}</Text>
+              </View>
+            ) : null}
+
+            {/* Chef's note EDITOR — chef only, at the end of the recipe so they
+                can read the dish first, then annotate. The client sees their
+                note prominently at the TOP instead (see above). */}
+            {note?.editable ? (
+              <View style={styles.noteBox}>
+                <Text style={styles.noteLabel}>👨‍🍳 CHEF'S NOTE</Text>
+                <Text style={styles.noteHint}>
+                  Visible to your client on this meal.
+                </Text>
+                <TextInput
+                  value={noteText}
+                  onChangeText={setNoteText}
+                  placeholder="e.g. Swap the cashew cream for sunflower seeds; soak the lentils overnight."
+                  placeholderTextColor="#6B7280"
+                  multiline
+                  style={styles.noteInput}
+                />
+                <TouchableOpacity
+                  onPress={handleSaveNote}
+                  disabled={!noteDirty || noteSaving || justSaved}
+                  style={[
+                    styles.noteSaveBtn,
+                    // Faded only when there's nothing to save — stay green for
+                    // the saving spinner and the "Updated ✓" confirmation.
+                    !noteDirty && !noteSaving && !justSaved &&
+                      styles.noteSaveBtnDisabled,
+                  ]}
+                >
+                  {noteSaving ? (
+                    <ActivityIndicator color="#000" />
+                  ) : justSaved ? (
+                    <View style={styles.noteSavedRow}>
+                      <Ionicons name="checkmark" size={18} color="#000" />
+                      <Text style={[styles.noteSaveText, { marginLeft: 6 }]}>
+                        Updated
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.noteSaveText}>
+                      {savedNote && !noteText.trim()
+                        ? 'Clear note'
+                        : savedNote
+                          ? 'Update note'
+                          : 'Save note'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
               </View>
             ) : null}
           </ScrollView>
@@ -537,6 +661,61 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   tipText: {
+    color: '#F5F5F0',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  noteBox: {
+    marginTop: 24,
+    borderRadius: 16,
+    backgroundColor: '#141A12',
+    borderWidth: 1,
+    borderColor: '#2A3A22',
+    padding: 16,
+  },
+  noteLabel: {
+    color: '#7FBF5A',
+    marginBottom: 6,
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  noteHint: {
+    color: '#6B7280',
+    marginBottom: 10,
+    fontSize: 12,
+  },
+  noteInput: {
+    color: '#F5F5F0',
+    minHeight: 80,
+    borderRadius: 12,
+    backgroundColor: '#0F140D',
+    borderWidth: 1,
+    borderColor: '#2A3A22',
+    padding: 12,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlignVertical: 'top',
+  },
+  noteSaveBtn: {
+    marginTop: 12,
+    borderRadius: 12,
+    backgroundColor: '#5A9A3A',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  noteSaveBtnDisabled: {
+    opacity: 0.45,
+  },
+  noteSaveText: {
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  noteSavedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  noteText: {
     color: '#F5F5F0',
     fontSize: 14,
     lineHeight: 20,

@@ -241,6 +241,7 @@ export default function ChefDashboardModal({
             userId={clientId}
             tier="wellness_pro"
             buildContext={() => buildClientMealContext(clientId)}
+            note={{ clientId, editable: true }}
             onClose={() => setSelectedMeal(null)}
           />
         )}
