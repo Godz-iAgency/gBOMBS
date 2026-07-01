@@ -26,6 +26,7 @@ import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 import RecipeModal from './RecipeModal';
 import GroceryScreen from './GroceryScreen';
 import SwipeableMealCard from './SwipeableMealCard';
+import GeneratingPlanAnimation from './GeneratingPlanAnimation';
 
 /** Cross-platform alert — react-native-web's Alert is a no-op, so fall back. */
 function notify(title: string, message: string) {
@@ -224,16 +225,7 @@ export default function MealPlanScreen() {
   if (generating) {
     return (
       <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
-        <View className="flex-1 items-center justify-center px-8">
-          <ActivityIndicator size="large" color="#5A9A3A" />
-          <Text className="text-content mt-5 text-lg font-bold">
-            Crafting your week…
-          </Text>
-          <Text className="text-content-muted mt-2 text-center text-sm">
-            Building an original Nutritarian plan around your gBOMBS, goals, and
-            tastes.
-          </Text>
-        </View>
+        <GeneratingPlanAnimation />
       </SafeAreaView>
     );
   }
