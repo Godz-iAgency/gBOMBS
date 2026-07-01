@@ -122,15 +122,29 @@ export function computeDayScore(day: DayPlan): GBombsScore {
  */
 export async function generateWeeklyMealPlan(
   ctx: UserMealContext,
-  tier: string
+  tier: string,
+  /** Queued adjustments from the client's trainer/nutritionist, folded into
+   *  this generation (see queue_meal_adjustment). Honored within Nutritarian
+   *  principles — the system prompt's guardrails still win. */
+  adjustments?: string[]
 ): Promise<WeeklyMealPlan> {
   const model = getModel('meal-plan', tier);
   const userBlock = renderUserContext(ctx);
 
+  const cleanAdjustments = (adjustments ?? [])
+    .map((a) => a.trim())
+    .filter(Boolean);
+  const adjustmentBlock =
+    cleanAdjustments.length > 0
+      ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any Nutritarian rule above:\n${cleanAdjustments
+          .map((a) => `- ${a}`)
+          .join('\n')}\n`
+      : '';
+
   const prompt = `Create an original 7-day Nutritarian meal plan (Monday through Sunday).
 
 ${userBlock}
-
+${adjustmentBlock}
 REQUIREMENTS:
 - Each day has EXACTLY five items in this order:
   smoothie, breakfast, lunch, dinner, dessert.

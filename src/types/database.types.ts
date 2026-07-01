@@ -446,6 +446,10 @@ export interface Database {
         Args: { p_edit_id: string };
         Returns: undefined;
       };
+      consume_professional_adjustments: {
+        Args: { p_ids: string[] };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
   };

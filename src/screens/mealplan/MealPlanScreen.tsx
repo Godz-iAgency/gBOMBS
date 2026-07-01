@@ -21,6 +21,7 @@ import {
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedPlan, saveCachedPlan } from '@/lib/mealPlanCache';
+import { loadPendingAdjustments, consumeAdjustments } from '@/lib/professional';
 import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 import RecipeModal from './RecipeModal';
 import GroceryScreen from './GroceryScreen';
@@ -116,11 +117,24 @@ export default function MealPlanScreen() {
     setGenerating(true);
     setError(null);
     try {
-      const ctx = await buildUserMealContext(user.id);
-      const next = await generateWeeklyMealPlan(ctx, tier);
+      // Fold in any adjustments the client's trainer queued for this cycle.
+      const [ctx, pending] = await Promise.all([
+        buildUserMealContext(user.id),
+        loadPendingAdjustments(user.id).catch(() => []),
+      ]);
+      const next = await generateWeeklyMealPlan(
+        ctx,
+        tier,
+        pending.map((a) => a.note)
+      );
       setPlan(next);
       setSelectedDay(0);
       await saveCachedPlan(user.id, next);
+      // Only mark adjustments consumed AFTER the plan is safely saved, so a
+      // failed generation leaves them queued for next time.
+      if (pending.length > 0) {
+        consumeAdjustments(pending.map((a) => a.id)).catch(() => {});
+      }
     } catch (e) {
       setError(
         (e as Error).message ||

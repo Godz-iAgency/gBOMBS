@@ -302,6 +302,40 @@ export async function revertEdit(editId: string): Promise<void> {
   if (error) throw rpcError(error.message);
 }
 
+/** One queued trainer adjustment awaiting the next plan generation. */
+export interface PendingAdjustment {
+  id: string;
+  note: string;
+}
+
+/** The client's own queued trainer adjustments (pending next cycle), oldest
+ *  first so they read naturally in the prompt. RLS-scoped to the caller. */
+export async function loadPendingAdjustments(
+  clientId: string
+): Promise<PendingAdjustment[]> {
+  const { data, error } = await supabase
+    .from('professional_edits')
+    .select('id, new_value')
+    .eq('client_id', clientId)
+    .eq('edit_type', 'suggested_meal_adjustment')
+    .eq('status', 'pending_next_cycle')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? [])
+    .map((r) => ({ id: r.id as string, note: (r.new_value as string) ?? '' }))
+    .filter((a) => a.note.trim().length > 0);
+}
+
+/** Mark queued adjustments as applied after they've been folded into a new plan.
+ *  Best-effort: a failure here must never lose the freshly generated plan. */
+export async function consumeAdjustments(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await supabase.rpc('consume_professional_adjustments', {
+    p_ids: ids,
+  });
+  if (error) throw rpcError(error.message);
+}
+
 /** Is this edit still undoable by the client? (revertable type, applied/queued,
  *  inside the 48h window). Mirrors the server rule for the Undo button. */
 export function isRevertable(edit: ProfessionalEdit): boolean {
