@@ -25,31 +25,49 @@ const keyFor = (userId: string) => `${KEY_PREFIX}${userId}`;
 export async function loadCachedPlan(
   userId: string
 ): Promise<WeeklyMealPlan | null> {
-  // 1. Fast path: local cache.
+  // 1. Local cache (fast, offline-safe).
+  let local: WeeklyMealPlan | null = null;
   try {
     const raw = await AsyncStorage.getItem(keyFor(userId));
-    if (raw) return JSON.parse(raw) as WeeklyMealPlan;
+    if (raw) local = JSON.parse(raw) as WeeklyMealPlan;
   } catch {
-    // corrupt cache → fall through to the DB
+    // corrupt cache → treat as no local copy
   }
 
-  // 2. Fallback: the shared DB copy (fresh device / cleared cache). Re-seed the
-  //    local cache so subsequent loads hit the fast path again.
+  // 2. Freshness check against the shared DB copy. Autopilot (and any other
+  //    device) generates SERVER-side, so a local cache can be stale — without
+  //    this check the device would show the old week forever. We fetch only the
+  //    timestamp (cheap); the full plan is downloaded only when the DB is
+  //    actually newer. Offline → the local copy wins.
   try {
-    const { data } = await supabase
+    const { data: head } = await supabase
       .from('meal_plans')
-      .select('plan')
+      .select('generated_at')
       .eq('user_id', userId)
       .maybeSingle();
-    if (data?.plan) {
-      const plan = data.plan as WeeklyMealPlan;
-      AsyncStorage.setItem(keyFor(userId), JSON.stringify(plan)).catch(() => {});
-      return plan;
+
+    const dbMs = head?.generated_at ? new Date(head.generated_at).getTime() : 0;
+    const localMs = local?.generatedAt ? new Date(local.generatedAt).getTime() : 0;
+
+    // 1s epsilon: the same plan's timestamp can differ in format (Z vs +00:00)
+    // between what the client wrote and what Postgres returns.
+    if (dbMs > localMs + 1000) {
+      const { data } = await supabase
+        .from('meal_plans')
+        .select('plan')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data?.plan) {
+        const plan = data.plan as WeeklyMealPlan;
+        AsyncStorage.setItem(keyFor(userId), JSON.stringify(plan)).catch(() => {});
+        return plan;
+      }
     }
   } catch {
-    // offline / no row → treat as no plan
+    // offline / transient — fall back to whatever we have locally
   }
-  return null;
+
+  return local;
 }
 
 export async function saveCachedPlan(

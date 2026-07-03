@@ -99,6 +99,8 @@ export interface Database {
           push_token: string | null;
           timezone: string | null;
           notifications_enabled: boolean;
+          autopilot_enabled: boolean;
+          autopilot_day: number | null;
           last_preferences_updated_at: string | null;
           preferences_version: number;
           created_at: string;

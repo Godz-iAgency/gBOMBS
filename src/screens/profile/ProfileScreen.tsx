@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  Switch,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -28,6 +29,8 @@ import {
   DIET_MODES,
   HEALTH_GOALS,
   COOKING_STYLES,
+  AUTOPILOT_DAYS,
+  AUTOPILOT_DAY_LABEL,
   DIET_LABEL,
   GOAL_LABEL,
   STYLE_LABEL,
@@ -59,6 +62,7 @@ type ModalKind =
   | 'diet'
   | 'goal'
   | 'cooking'
+  | 'autopilotDay'
   | 'favorites'
   | 'avoid'
   | 'badges'
@@ -229,7 +233,7 @@ export default function ProfileScreen() {
     );
   }
 
-  // Save handler for the single-select plan modal (diet / goal / cooking).
+  // Save handler for the single-select plan modal (diet / goal / cooking / day).
   const savePlan = useCallback(
     async (key: string) => {
       if (!user?.id) return;
@@ -239,10 +243,37 @@ export default function ProfileScreen() {
         await updateUserField(user.id, { health_goal: key as HealthGoal });
       } else if (modal === 'cooking') {
         await updateUserField(user.id, { cooking_style: key as CookingStyle });
+      } else if (modal === 'autopilotDay') {
+        await updateUserField(user.id, { autopilot_day: Number(key) });
       }
       await reload();
     },
     [user?.id, modal, reload]
+  );
+
+  // Autopilot opt-in/out. Enabling defaults the day to TODAY's weekday (so a
+  // Friday enable means "every Friday") unless a day was already chosen.
+  const toggleAutopilot = useCallback(
+    async (on: boolean) => {
+      if (!user?.id || !settings) return;
+      // Optimistic flip so the switch answers instantly.
+      setSettings({ ...settings, autopilotEnabled: on });
+      try {
+        await updateUserField(
+          user.id,
+          on
+            ? {
+                autopilot_enabled: true,
+                autopilot_day: settings.autopilotDay ?? new Date().getDay(),
+              }
+            : { autopilot_enabled: false }
+        );
+      } catch (e) {
+        Alert.alert('Could not save', (e as Error).message);
+      }
+      await reload();
+    },
+    [user?.id, settings, reload]
   );
 
   // Which option set + current value the plan modal is showing.
@@ -253,7 +284,13 @@ export default function ProfileScreen() {
         ? { title: 'Health goal', options: HEALTH_GOALS, current: settings?.healthGoal }
         : modal === 'cooking'
           ? { title: 'Cooking style', options: COOKING_STYLES, current: settings?.cookingStyle }
-          : null;
+          : modal === 'autopilotDay'
+            ? {
+                title: 'Regeneration day',
+                options: AUTOPILOT_DAYS,
+                current: String(settings?.autopilotDay ?? new Date().getDay()),
+              }
+            : null;
 
   const trialDays = trialEndsAt ? daysUntil(trialEndsAt) : null;
   const subTitle =
@@ -314,6 +351,47 @@ export default function ProfileScreen() {
             value={STYLE_LABEL[settings.cookingStyle]}
             onPress={() => setModal('cooking')}
           />
+        </View>
+
+        {/* AUTOPILOT — weekly hands-off regeneration (Step 11.8). Off by
+            default; enabling anchors the day to today until they change it. */}
+        <SectionLabel>Autopilot</SectionLabel>
+        <View className="overflow-hidden rounded-2xl bg-surface-card">
+          <View className="flex-row items-center justify-between px-4 py-3.5">
+            <View className="flex-1 flex-row items-center">
+              <Ionicons name="sync-outline" size={20} color="#5A9A3A" />
+              <View className="ml-3 flex-1 pr-3">
+                <Text className="text-content text-base">
+                  Auto-generate weekly
+                </Text>
+                <Text className="text-content-muted mt-0.5 text-xs leading-4">
+                  A fresh plan + grocery list every week, automatically — in
+                  the evening, your local time.
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={settings.autopilotEnabled}
+              onValueChange={toggleAutopilot}
+              trackColor={{ false: '#2D2D2D', true: '#5A9A3A' }}
+              thumbColor="#F5F5F0"
+            />
+          </View>
+          {settings.autopilotEnabled && (
+            <>
+              <View className="h-px bg-surface-border" />
+              <SettingRow
+                icon="calendar-outline"
+                label="Regenerates every"
+                value={
+                  AUTOPILOT_DAY_LABEL[
+                    String(settings.autopilotDay ?? new Date().getDay())
+                  ] ?? '—'
+                }
+                onPress={() => setModal('autopilotDay')}
+              />
+            </>
+          )}
         </View>
 
         {/* FOOD PREFERENCES */}

@@ -49,6 +49,35 @@ export const COOKING_STYLES: PlanOption<CookingStyle>[] = [
   { key: 'batch_cooking', icon: 'layers', color: '#8A7BD8', title: 'Batch cooking', desc: 'Cook once, eat all week' },
 ];
 
+/**
+ * Autopilot regeneration day (Step 11.8). Keys are JS Date.getDay() values as
+ * strings ('0'=Sunday … '6'=Saturday) so one string-keyed EditPlanModal serves
+ * this picker too; the parent converts back to a number on save.
+ */
+export const AUTOPILOT_DAYS: PlanOption<string>[] = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+].map((day, i) => ({
+  key: String(i),
+  icon: 'calendar' as IconName,
+  color: '#6FBF4A',
+  title: day,
+  desc: `Fresh plan + grocery list every ${day} evening`,
+}));
+
+export const AUTOPILOT_DAY_LABEL: Record<string, string> = AUTOPILOT_DAYS.reduce(
+  (acc, o) => {
+    acc[o.key] = o.title;
+    return acc;
+  },
+  {} as Record<string, string>
+);
+
 /** Build a key→title map from an option list, for compact summary rows. */
 function labelMap<T extends string>(opts: PlanOption<T>[]): Record<T, string> {
   return opts.reduce(

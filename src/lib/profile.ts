@@ -42,6 +42,10 @@ export interface ProfileSettings {
   cookingStyle: CookingStyle;
   favoriteCount: number;
   avoidCount: number;
+  /** Autopilot Mode 2 (Step 11.8): weekly hands-off regeneration. */
+  autopilotEnabled: boolean;
+  /** 0=Sunday … 6=Saturday (JS Date.getDay()); null until first enabled. */
+  autopilotDay: number | null;
 }
 
 export async function loadProfileSettings(
@@ -50,7 +54,9 @@ export async function loadProfileSettings(
   const [{ data: u }, { data: prefs }] = await Promise.all([
     supabase
       .from('users')
-      .select('diet_mode, health_goal, cooking_style')
+      .select(
+        'diet_mode, health_goal, cooking_style, autopilot_enabled, autopilot_day'
+      )
       .eq('id', userId)
       .single(),
     supabase
@@ -72,6 +78,9 @@ export async function loadProfileSettings(
     cookingStyle: (u?.cooking_style as CookingStyle) ?? 'balanced_everyday',
     favoriteCount,
     avoidCount,
+    autopilotEnabled: Boolean(u?.autopilot_enabled),
+    autopilotDay:
+      typeof u?.autopilot_day === 'number' ? u.autopilot_day : null,
   };
 }
 
@@ -82,6 +91,8 @@ export async function updateUserField(
     diet_mode: DietMode;
     health_goal: HealthGoal;
     cooking_style: CookingStyle;
+    autopilot_enabled: boolean;
+    autopilot_day: number;
   }>
 ): Promise<void> {
   const { error } = await supabase.from('users').update(patch).eq('id', userId);

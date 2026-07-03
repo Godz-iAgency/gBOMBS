@@ -23,30 +23,50 @@ const keyFor = (userId: string) => `${KEY_PREFIX}${userId}`;
 export async function loadCachedGrocery(
   userId: string
 ): Promise<GroceryList | null> {
-  // 1. Fast path: local cache.
+  // 1. Local cache (fast, offline-safe, carries check-off state).
+  let local: GroceryList | null = null;
   try {
     const raw = await AsyncStorage.getItem(keyFor(userId));
-    if (raw) return JSON.parse(raw) as GroceryList;
+    if (raw) local = JSON.parse(raw) as GroceryList;
   } catch {
-    // corrupt cache → fall through to the DB
+    // corrupt cache → treat as no local copy
   }
 
-  // 2. Fallback: the shared DB copy. Re-seed local on success.
+  // 2. Freshness check: if the DB list is anchored to a NEWER plan than the
+  //    local one (autopilot generated server-side, or another device
+  //    regenerated), take the DB copy. Same-plan lists keep the local copy —
+  //    it has the user's latest check-offs (write-through keeps DB in sync).
   try {
-    const { data } = await supabase
+    const { data: head } = await supabase
       .from('grocery_lists')
-      .select('list')
+      .select('plan_generated_at')
       .eq('user_id', userId)
       .maybeSingle();
-    if (data?.list) {
-      const list = data.list as GroceryList;
-      AsyncStorage.setItem(keyFor(userId), JSON.stringify(list)).catch(() => {});
-      return list;
+
+    const dbMs = head?.plan_generated_at
+      ? new Date(head.plan_generated_at).getTime()
+      : 0;
+    const localMs = local?.planGeneratedAt
+      ? new Date(local.planGeneratedAt).getTime()
+      : 0;
+
+    if ((dbMs > localMs + 1000 || !local) && head) {
+      const { data } = await supabase
+        .from('grocery_lists')
+        .select('list')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data?.list) {
+        const list = data.list as GroceryList;
+        AsyncStorage.setItem(keyFor(userId), JSON.stringify(list)).catch(() => {});
+        return list;
+      }
     }
   } catch {
-    // offline / no row → treat as no list
+    // offline / transient — fall back to whatever we have locally
   }
-  return null;
+
+  return local;
 }
 
 export async function saveCachedGrocery(

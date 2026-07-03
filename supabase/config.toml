@@ -37,3 +37,12 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/create-instacart-list/deno.json"
 entrypoint = "./functions/create-instacart-list/index.ts"
+
+# Autopilot Mode 2: weekly hands-off plan + grocery generation. Called hourly by
+# pg_cron (schedule_autopilot_generation.sql) — JWT off, requires the
+# service-role key in the Authorization header. Needs the GEMINI_API_KEY secret.
+[functions.autopilot-generate]
+enabled = true
+verify_jwt = false
+import_map = "./functions/autopilot-generate/deno.json"
+entrypoint = "./functions/autopilot-generate/index.ts"
