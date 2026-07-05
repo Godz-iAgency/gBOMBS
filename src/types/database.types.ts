@@ -101,6 +101,8 @@ export interface Database {
           notifications_enabled: boolean;
           autopilot_enabled: boolean;
           autopilot_day: number | null;
+          pending_deletion_at: string | null;
+          deletion_warned: boolean;
           last_preferences_updated_at: string | null;
           preferences_version: number;
           created_at: string;

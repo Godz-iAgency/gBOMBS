@@ -12,7 +12,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { updateFullName } from '@/lib/profile';
 import { notify } from '@/utils/dialog';
 import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
 
@@ -60,7 +59,15 @@ export default function ProfessionalNameScreen({ route }: Props) {
     Keyboard.dismiss();
     setBusy(true);
     try {
-      await updateFullName(user.id, trimmed);
+      // Save the name AND mark onboarding complete — a professional's short
+      // signup IS their onboarding. Without this flag, if they later lose their
+      // last client they'd be wrongly funneled back through the whole role-choice
+      // flow as if brand new (they should land on the paywall instead).
+      const { error } = await supabase
+        .from('users')
+        .update({ full_name: trimmed, onboarding_completed: true })
+        .eq('id', user.id);
+      if (error) throw error;
       // Flip routing → the pro app. AppNavigator unmounts this stack.
       await refreshProfile();
     } catch (e) {

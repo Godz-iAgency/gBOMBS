@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import {
 } from '@/lib/subscription';
 import { LOGO_WITH_BG } from '@/utils/gbombsImages';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import AcceptInviteModal from '@/screens/professional/AcceptInviteModal';
 
 type PlanCard = {
@@ -87,7 +88,30 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const { profile, signOut, refreshProfile } = useAuth();
+  // Set for an ex-professional who just lost their last client — their account
+  // is scheduled for deletion unless a client reconnects with them.
+  const [deletionAt, setDeletionAt] = useState<string | null>(null);
+  const { user, profile, signOut, refreshProfile } = useAuth();
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    supabase
+      .from('users')
+      .select('pending_deletion_at')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const at = data?.pending_deletion_at as string | null | undefined;
+        // Only surface a still-in-the-future deadline.
+        if (active && at && new Date(at).getTime() > Date.now()) {
+          setDeletionAt(at);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   // Used to scroll the phone field into view and focus it when a user taps a
   // plan before entering a number (the field sits at the top and is easy to
@@ -179,6 +203,30 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             won't be charged.
           </Text>
         </View>
+
+        {/* Ex-professional deletion warning — their last client removed them and
+            they have no subscription of their own. Reconnecting via a new
+            client's code (link below) cancels the deletion. */}
+        {deletionAt && (
+          <View className="mb-5 rounded-2xl border border-brand-onion bg-surface-cardAlt p-4">
+            <View className="flex-row items-center">
+              <Ionicons name="warning-outline" size={18} color="#8B2252" />
+              <Text className="text-content ml-2 text-base font-bold">
+                No active clients
+              </Text>
+            </View>
+            <Text className="text-content-muted mt-1.5 text-sm leading-5">
+              Your professional account has no connected clients. It will be
+              removed on{' '}
+              {new Date(deletionAt).toLocaleDateString(undefined, {
+                month: 'long',
+                day: 'numeric',
+              })}{' '}
+              unless a client connects with you again. Have a new invite code?
+              Enter it below to stay.
+            </Text>
+          </View>
+        )}
 
         {/* Payment-needs-fixing banner → portal, not a new checkout */}
         {needsBillingFix && (

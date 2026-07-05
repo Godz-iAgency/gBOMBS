@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { supabase } from '@/lib/supabase';
 import { signInWithGoogle } from '@/lib/googleAuth';
+import { confirmAsync, notify } from '@/utils/dialog';
 import PasswordInput from '@/components/PasswordInput';
 import type { AuthStackParamList } from '@/navigation/AuthStack';
 
@@ -31,15 +31,15 @@ export default function SignUpScreen({ navigation }: Props) {
 
   async function handleSignUp() {
     if (!email.trim() || !password) {
-      Alert.alert('Missing info', 'Enter your email and password.');
+      notify('Missing info', 'Enter your email and password.');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Weak password', 'Use at least 6 characters.');
+      notify('Weak password', 'Use at least 6 characters.');
       return;
     }
     if (password !== confirm) {
-      Alert.alert('Passwords differ', 'Both passwords must match.');
+      notify('Passwords differ', 'Both passwords must match.');
       return;
     }
 
@@ -51,18 +51,38 @@ export default function SignUpScreen({ navigation }: Props) {
     });
     setLoading(false);
 
+    // Catch it at the source: this email already has an account. Supabase
+    // either errors ("already registered") or, with email-confirmation on,
+    // returns an obfuscated user with no identities. Offer to sign in instead
+    // of letting them proceed and get confused.
+    const alreadyExists =
+      (error && /already\s*(registered|exists)/i.test(error.message)) ||
+      (!error && data.user && (data.user.identities?.length ?? 0) === 0);
+    if (alreadyExists) {
+      const goSignIn = await confirmAsync({
+        title: 'You already have an account',
+        message: `An account with ${email.trim()} already exists. Sign in instead?`,
+        confirmLabel: 'Sign in',
+        cancelLabel: 'Cancel',
+      });
+      if (goSignIn) navigation.navigate('Login');
+      return;
+    }
+
     if (error) {
-      Alert.alert('Sign up failed', error.message);
+      notify('Sign up failed', error.message);
       return;
     }
 
     // If email confirmation is ON in Supabase, no session is returned yet.
     if (!data.session) {
-      Alert.alert(
-        'Confirm your email',
-        'We sent a confirmation link. Tap it, then sign in.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-      );
+      await confirmAsync({
+        title: 'Confirm your email',
+        message: 'We sent a confirmation link. Tap it, then sign in.',
+        confirmLabel: 'OK',
+        cancelLabel: 'Close',
+      });
+      navigation.navigate('Login');
     }
     // If confirmation is OFF, the auth listener logs them straight in.
   }
@@ -74,7 +94,7 @@ export default function SignUpScreen({ navigation }: Props) {
       if (cancelled) return; // user backed out — stay quiet
       // On success, the auth listener swaps the navigator automatically.
     } catch (e) {
-      Alert.alert('Google sign-up failed', (e as Error).message);
+      notify('Google sign-up failed', (e as Error).message);
     } finally {
       setGoogleLoading(false);
     }

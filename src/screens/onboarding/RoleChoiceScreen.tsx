@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
 import { LOGO_WITH_BG } from '@/utils/gbombsImages';
 import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
 
@@ -13,11 +14,25 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'RoleChoice'>;
  * continues into onboarding) vs. professional (chef/trainer with an invite code,
  * skips consumer onboarding). The professional card is styled more "elevated"
  * (gold) so the two roles read as distinct at a glance.
+ *
+ * Never a dead end: a back arrow (and a "Sign in" link for returning users who
+ * landed here by mistake) signs out and returns to the landing page — the only
+ * honest way "back" past the first onboarding screen, since they're signed in.
  */
 export default function RoleChoiceScreen({ navigation }: Props) {
+  const { signOut } = useAuth();
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
       <View className="flex-1 px-6">
+        {/* Back to the landing page (signs this fresh session out) */}
+        <TouchableOpacity
+          onPress={signOut}
+          hitSlop={10}
+          className="absolute left-1 top-2 z-10 h-10 w-10 items-center justify-center rounded-full"
+        >
+          <Ionicons name="chevron-back" size={28} color="#A8A29E" />
+        </TouchableOpacity>
+
         {/* Brand anchor */}
         <View className="items-center pt-4">
           <Image
@@ -97,10 +112,26 @@ export default function RoleChoiceScreen({ navigation }: Props) {
 
         {/* Gentle nudge — most people are clients. (Flat single <Text>: a
             nested <Text> renders as a <span> on web and crashes NativeWind.) */}
-        <Text className="text-content-muted mt-auto pb-2 text-center text-xs leading-5">
+        <Text className="text-content-muted mt-auto text-center text-xs leading-5">
           No invite code? Choose Client — professionals join free with a
           client's code, no subscription needed.
         </Text>
+
+        {/* Returning user who landed here by mistake → sign out to the landing
+            page, where they can sign in as themselves. (Two flat <Text>s — no
+            nesting, which crashes NativeWind on web.) */}
+        <TouchableOpacity
+          onPress={signOut}
+          activeOpacity={0.7}
+          className="mt-4 flex-row items-center justify-center pb-2"
+        >
+          <Text className="text-content-muted text-sm">
+            Already have an account?{' '}
+          </Text>
+          <Text className="text-sm font-bold" style={{ color: '#5A9A3A' }}>
+            Sign in
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

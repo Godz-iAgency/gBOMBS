@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import LetterTile from '@/components/LetterTile';
 import { GBOMBS_LETTERS, LOGO_WITH_BG } from '@/utils/gbombsImages';
 import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
@@ -19,6 +20,15 @@ const BLURBS: Record<string, string> = {
 export default function WelcomeScreen({ navigation }: Props) {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
+      {/* Back to the client-or-professional choice */}
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        hitSlop={10}
+        className="absolute left-3 top-2 z-10 h-10 w-10 items-center justify-center rounded-full"
+      >
+        <Ionicons name="chevron-back" size={28} color="#A8A29E" />
+      </TouchableOpacity>
+
       <ScrollView
         contentContainerClassName="px-6 pb-4 pt-2"
         showsVerticalScrollIndicator={false}
