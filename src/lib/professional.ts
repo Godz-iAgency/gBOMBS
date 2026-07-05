@@ -135,6 +135,32 @@ export async function revokeConnection(connectionId: string): Promise<void> {
   if (error) throw rpcError(error.message);
 }
 
+export interface RevokePreview {
+  /** True when removing this connection will PERMANENTLY DELETE the professional
+   *  (it's their last client and they have no personal subscription). */
+  willDelete: boolean;
+  professionalName: string | null;
+}
+
+/** Ask the server what removing this connection will do, so the UI can show the
+ *  hard "erases their account + data" warning only when it's actually true. */
+export async function previewRevoke(
+  connectionId: string
+): Promise<RevokePreview> {
+  const { data, error } = await supabase.rpc('preview_revoke', {
+    p_connection_id: connectionId,
+  });
+  if (error) throw rpcError(error.message);
+  const d = (data ?? {}) as {
+    will_delete?: boolean;
+    professional_name?: string | null;
+  };
+  return {
+    willDelete: Boolean(d.will_delete),
+    professionalName: d.professional_name ?? null,
+  };
+}
+
 // ===========================================================================
 // PROFESSIONAL SIDE — accepting invites & reading clients
 // ===========================================================================

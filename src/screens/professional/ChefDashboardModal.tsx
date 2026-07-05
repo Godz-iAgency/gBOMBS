@@ -22,7 +22,15 @@ import {
   createInstacartList,
   openInstacart,
 } from '@/lib/instacart';
-import { DIET_LABEL, GOAL_LABEL, STYLE_LABEL } from '@/utils/profileOptions';
+import {
+  DIET_LABEL,
+  GOAL_LABEL,
+  STYLE_LABEL,
+  DIET_META,
+  GOAL_META,
+  STYLE_META,
+  type OptionMeta,
+} from '@/utils/profileOptions';
 import RecipeModal from '@/screens/mealplan/RecipeModal';
 import DayAccordion from './DayAccordion';
 import type {
@@ -146,22 +154,22 @@ export default function ChefDashboardModal({
             contentContainerStyle={{ padding: 20, paddingBottom: 48 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Client constraints */}
+            {/* Client constraints — colored per option */}
             {profile && (
               <View className="flex-row flex-wrap">
                 <Chip
-                  icon="leaf-outline"
+                  meta={DIET_META[profile.diet_mode as DietMode]}
                   text={DIET_LABEL[profile.diet_mode as DietMode] ?? profile.diet_mode}
                 />
                 <Chip
-                  icon="flag-outline"
+                  meta={GOAL_META[profile.health_goal as HealthGoal]}
                   text={
                     GOAL_LABEL[profile.health_goal as HealthGoal] ??
                     profile.health_goal
                   }
                 />
                 <Chip
-                  icon="time-outline"
+                  meta={STYLE_META[profile.cooking_style as CookingStyle]}
                   text={
                     STYLE_LABEL[profile.cooking_style as CookingStyle] ??
                     profile.cooking_style
@@ -171,10 +179,13 @@ export default function ChefDashboardModal({
             )}
 
             {/* Grocery + Instacart */}
-            <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
+            <SectionLabel icon="cart" color="#D4A84E">
               Grocery list
-            </Text>
-            <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+            </SectionLabel>
+            <View
+              className="rounded-2xl border border-surface-border bg-surface-card p-4"
+              style={{ borderLeftWidth: 3, borderLeftColor: '#D4A84E' }}
+            >
               {groceryCount > 0 ? (
                 <>
                   <Text className="text-content text-sm">
@@ -208,9 +219,9 @@ export default function ChefDashboardModal({
             </View>
 
             {/* Weekly plan — accordion of days */}
-            <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
+            <SectionLabel icon="calendar" color="#8A7BD8">
               This week's plan
-            </Text>
+            </SectionLabel>
             {plan && plan.days.length > 0 ? (
               plan.days.map((day) => (
                 <DayAccordion
@@ -224,7 +235,10 @@ export default function ChefDashboardModal({
                 />
               ))
             ) : (
-              <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+              <View
+                className="rounded-2xl border border-surface-border bg-surface-card p-4"
+                style={{ borderLeftWidth: 3, borderLeftColor: '#8A7BD8' }}
+              >
                 <Text className="text-content-muted text-sm">
                   {clientName.split(' ')[0]} hasn't generated a meal plan yet.
                 </Text>
@@ -250,16 +264,37 @@ export default function ChefDashboardModal({
   );
 }
 
-function Chip({
+/** Colored section header — a small brand-colored icon + the uppercase label. */
+function SectionLabel({
   icon,
-  text,
+  color,
+  children,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
-  text: string;
+  color: string;
+  children: string;
 }) {
   return (
-    <View className="mb-2 mr-2 flex-row items-center rounded-full border border-surface-border bg-surface-card px-3 py-1.5">
-      <Ionicons name={icon} size={13} color="#5A9A3A" />
+    <View className="mb-2 mt-7 flex-row items-center px-1">
+      <Ionicons name={icon} size={13} color={color} />
+      <Text className="text-content-muted ml-1.5 text-xs font-semibold uppercase tracking-wide">
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+const CHIP_FALLBACK: OptionMeta = { icon: 'ellipse-outline', color: '#5A9A3A' };
+
+/** A client-constraint pill, tinted with the option's own brand color. */
+function Chip({ meta, text }: { meta?: OptionMeta; text: string }) {
+  const m = meta ?? CHIP_FALLBACK;
+  return (
+    <View
+      className="mb-2 mr-2 flex-row items-center rounded-full border px-3 py-1.5"
+      style={{ borderColor: m.color + '66', backgroundColor: m.color + '1A' }}
+    >
+      <Ionicons name={m.icon} size={13} color={m.color} />
       <Text className="text-content ml-1.5 text-xs font-semibold">{text}</Text>
     </View>
   );

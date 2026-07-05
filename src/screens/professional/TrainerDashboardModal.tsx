@@ -30,7 +30,11 @@ import {
   DIET_LABEL,
   GOAL_LABEL,
   STYLE_LABEL,
+  DIET_META,
+  GOAL_META,
+  STYLE_META,
   type PlanOption,
+  type OptionMeta,
 } from '@/utils/profileOptions';
 import RecipeModal from '@/screens/mealplan/RecipeModal';
 import EditPlanModal from '@/screens/profile/EditPlanModal';
@@ -218,14 +222,18 @@ export default function TrainerDashboardModal({
             showsVerticalScrollIndicator={false}
           >
             {/* Goals — tappable; the trainer can change any of the three. */}
-            <Text className="text-content-muted mb-2 px-1 text-xs font-semibold uppercase tracking-wide">
+            <SectionLabel icon="flag" color="#5A9A3A" first>
               Goals · tap to adjust
-            </Text>
+            </SectionLabel>
             {profile && (
-              <View className="overflow-hidden rounded-2xl border border-surface-border bg-surface-card">
+              <View
+                className="overflow-hidden rounded-2xl border border-surface-border bg-surface-card"
+                style={{ borderLeftWidth: 3, borderLeftColor: '#5A9A3A' }}
+              >
                 <GoalRow
                   label="Diet mode"
                   value={DIET_LABEL[profile.diet_mode as DietMode] ?? profile.diet_mode}
+                  meta={DIET_META[profile.diet_mode as DietMode]}
                   onPress={() => setEditField('diet_mode')}
                 />
                 <View className="h-px bg-surface-border" />
@@ -235,6 +243,7 @@ export default function TrainerDashboardModal({
                     GOAL_LABEL[profile.health_goal as HealthGoal] ??
                     profile.health_goal
                   }
+                  meta={GOAL_META[profile.health_goal as HealthGoal]}
                   onPress={() => setEditField('health_goal')}
                 />
                 <View className="h-px bg-surface-border" />
@@ -244,16 +253,20 @@ export default function TrainerDashboardModal({
                     STYLE_LABEL[profile.cooking_style as CookingStyle] ??
                     profile.cooking_style
                   }
+                  meta={STYLE_META[profile.cooking_style as CookingStyle]}
                   onPress={() => setEditField('cooking_style')}
                 />
               </View>
             )}
 
             {/* Adherence */}
-            <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
+            <SectionLabel icon="pulse" color="#D4A84E">
               Adherence — last 7 days
-            </Text>
-            <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+            </SectionLabel>
+            <View
+              className="rounded-2xl border border-surface-border bg-surface-card p-4"
+              style={{ borderLeftWidth: 3, borderLeftColor: '#D4A84E' }}
+            >
               <View className="flex-row justify-between">
                 <Stat label="Avg score" value={report ? `${report.avgScore}/6` : '—'} />
                 <Stat
@@ -295,12 +308,15 @@ export default function TrainerDashboardModal({
             </View>
 
             {/* Plan overview + accordion */}
-            <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
+            <SectionLabel icon="calendar" color="#8A7BD8">
               Current plan
-            </Text>
+            </SectionLabel>
             {plan && plan.days.length > 0 ? (
               <>
-                <View className="mb-3 rounded-2xl border border-surface-border bg-surface-card p-4">
+                <View
+                  className="mb-3 rounded-2xl border border-surface-border bg-surface-card p-4"
+                  style={{ borderLeftWidth: 3, borderLeftColor: '#8A7BD8' }}
+                >
                   <Text className="text-content text-sm">
                     {plannedMeals} meals planned across {plan.days.length} days ·
                     weekly gBOMBS {plan.weeklyScore.score}/
@@ -320,7 +336,10 @@ export default function TrainerDashboardModal({
                 ))}
               </>
             ) : (
-              <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+              <View
+                className="rounded-2xl border border-surface-border bg-surface-card p-4"
+                style={{ borderLeftWidth: 3, borderLeftColor: '#8A7BD8' }}
+              >
                 <Text className="text-content-muted text-sm">
                   No meal plan generated yet.
                 </Text>
@@ -328,10 +347,13 @@ export default function TrainerDashboardModal({
             )}
 
             {/* Meal-plan adjustments — queued for the next generation */}
-            <Text className="text-content-muted mb-2 mt-7 px-1 text-xs font-semibold uppercase tracking-wide">
+            <SectionLabel icon="construct" color="#D85A8E">
               Adjustments for next plan
-            </Text>
-            <View className="rounded-2xl border border-surface-border bg-surface-card p-4">
+            </SectionLabel>
+            <View
+              className="rounded-2xl border border-surface-border bg-surface-card p-4"
+              style={{ borderLeftWidth: 3, borderLeftColor: '#D85A8E' }}
+            >
               {pendingAdjustments.length > 0 && (
                 <View className="mb-3">
                   {pendingAdjustments.map((a) => (
@@ -414,31 +436,64 @@ export default function TrainerDashboardModal({
   );
 }
 
+/** Colored section header — a small brand-colored icon + the uppercase label. */
+function SectionLabel({
+  icon,
+  color,
+  children,
+  first,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  children: string;
+  first?: boolean;
+}) {
+  return (
+    <View className={`mb-2 flex-row items-center px-1 ${first ? '' : 'mt-7'}`}>
+      <Ionicons name={icon} size={13} color={color} />
+      <Text className="text-content-muted ml-1.5 text-xs font-semibold uppercase tracking-wide">
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+const GOAL_FALLBACK: OptionMeta = { icon: 'ellipse-outline', color: '#5A9A3A' };
+
 function GoalRow({
   label,
   value,
+  meta,
   onPress,
 }: {
   label: string;
   value: string;
+  meta?: OptionMeta;
   onPress?: () => void;
 }) {
+  const m = meta ?? GOAL_FALLBACK;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      className="flex-row items-center justify-between px-4 py-3.5"
+      className="flex-row items-center px-4 py-3.5"
     >
-      <Text className="text-content-muted text-sm">{label}</Text>
-      <View className="flex-row items-center">
-        <Text className="text-content text-sm font-semibold">{value}</Text>
-        <Ionicons
-          name="chevron-forward"
-          size={16}
-          color="#6B7280"
-          style={{ marginLeft: 6 }}
-        />
+      <View
+        className="h-9 w-9 items-center justify-center rounded-full"
+        style={{ backgroundColor: m.color + '22' }}
+      >
+        <Ionicons name={m.icon} size={17} color={m.color} />
       </View>
+      <Text className="text-content-muted ml-3 flex-1 text-sm">{label}</Text>
+      <Text className="text-sm font-bold" style={{ color: m.color }}>
+        {value}
+      </Text>
+      <Ionicons
+        name="chevron-forward"
+        size={16}
+        color="#6B7280"
+        style={{ marginLeft: 6 }}
+      />
     </TouchableOpacity>
   );
 }
@@ -446,7 +501,9 @@ function GoalRow({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View className="items-center">
-      <Text className="text-content text-xl font-extrabold">{value}</Text>
+      <Text className="text-xl font-extrabold" style={{ color: '#5A9A3A' }}>
+        {value}
+      </Text>
       <Text className="text-content-muted mt-0.5 text-[11px]">{label}</Text>
     </View>
   );

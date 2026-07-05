@@ -416,6 +416,14 @@ export interface Database {
         Args: { p_connection_id: string };
         Returns: undefined;
       };
+      preview_revoke: {
+        Args: { p_connection_id: string };
+        Returns: Json;
+      };
+      has_paid_access: {
+        Args: { p_user: string };
+        Returns: boolean;
+      };
       get_client_profile: {
         Args: { p_client_id: string };
         Returns: Json;

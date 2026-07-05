@@ -14,6 +14,7 @@ import {
   listMyConnections,
   createInvite,
   revokeConnection,
+  previewRevoke,
   ROLE_META,
   ALL_ROLES,
   type ProfessionalConnection,
@@ -94,17 +95,55 @@ export default function ProfessionalAccessModal({
 
   async function handleRevoke(conn: ProfessionalConnection) {
     const label = ROLE_META[conn.role].label;
-    const verb = conn.status === 'active' ? 'Remove' : 'Cancel invite';
-    const ok = await confirmAsync({
-      title: `${verb}?`,
-      message:
-        conn.status === 'active'
-          ? `${conn.professional_name ?? `Your ${label}`} will lose access to your plan and data. You can re-invite anytime.`
-          : 'This invite code will stop working. You can generate a new one anytime.',
-      confirmLabel: verb,
-      cancelLabel: 'Keep',
-      destructive: true,
-    });
+    const who = conn.professional_name ?? `Your ${label}`;
+
+    // Cancelling a still-pending invite never deletes anyone (no account yet).
+    if (conn.status !== 'active') {
+      const ok = await confirmAsync({
+        title: 'Cancel invite?',
+        message:
+          'This invite code will stop working. You can generate a new one anytime.',
+        confirmLabel: 'Cancel invite',
+        cancelLabel: 'Keep',
+        destructive: true,
+      });
+      if (!ok) return;
+      try {
+        await revokeConnection(conn.id);
+        await reload();
+      } catch (e) {
+        notify('Could not update', (e as Error).message);
+      }
+      return;
+    }
+
+    // Active connection: ask the server whether removing it will permanently
+    // delete this professional (their last client + no personal subscription),
+    // and show the hard warning only when that's actually true.
+    let willDelete = false;
+    try {
+      ({ willDelete } = await previewRevoke(conn.id));
+    } catch {
+      // If the check fails, fall back to the softer message (never block removal).
+    }
+
+    const ok = await confirmAsync(
+      willDelete
+        ? {
+            title: 'Remove and delete account?',
+            message: `You're ${who}'s only client. Removing them will PERMANENTLY DELETE their professional account and erase all their data — they'll have to start from scratch if you ever reconnect. This cannot be undone. Continue?`,
+            confirmLabel: 'Remove & delete',
+            cancelLabel: 'Keep',
+            destructive: true,
+          }
+        : {
+            title: 'Remove?',
+            message: `${who} will lose access to your plan and data. You can re-invite anytime.`,
+            confirmLabel: 'Remove',
+            cancelLabel: 'Keep',
+            destructive: true,
+          }
+    );
     if (!ok) return;
     try {
       await revokeConnection(conn.id);

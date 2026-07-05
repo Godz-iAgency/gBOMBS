@@ -92,3 +92,25 @@ function labelMap<T extends string>(opts: PlanOption<T>[]): Record<T, string> {
 export const DIET_LABEL = labelMap(DIET_MODES);
 export const GOAL_LABEL = labelMap(HEALTH_GOALS);
 export const STYLE_LABEL = labelMap(COOKING_STYLES);
+
+/** Icon + brand color for an option key — lets any surface render a plan value
+ *  with the same colored icon it has everywhere else (not flat gray text). */
+export interface OptionMeta {
+  icon: IconName;
+  color: string;
+}
+function metaMap<T extends string>(
+  opts: PlanOption<T>[]
+): Record<T, OptionMeta> {
+  return opts.reduce(
+    (acc, o) => {
+      acc[o.key] = { icon: o.icon, color: o.color };
+      return acc;
+    },
+    {} as Record<T, OptionMeta>
+  );
+}
+
+export const DIET_META = metaMap(DIET_MODES);
+export const GOAL_META = metaMap(HEALTH_GOALS);
+export const STYLE_META = metaMap(COOKING_STYLES);

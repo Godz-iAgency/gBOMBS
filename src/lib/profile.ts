@@ -84,6 +84,18 @@ export async function loadProfileSettings(
   };
 }
 
+/** Update the account's display name (shown to clients as their professional). */
+export async function updateFullName(
+  userId: string,
+  fullName: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update({ full_name: fullName.trim() })
+    .eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
 /** Update one profile field on `users`. Throws on failure. */
 export async function updateUserField(
   userId: string,

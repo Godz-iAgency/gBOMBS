@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthStack from './AuthStack';
 import OnboardingStack from './OnboardingStack';
 import MainStack from './MainStack';
+import ProfessionalStack from './ProfessionalStack';
 import PaywallGate from './PaywallGate';
 import { hasActiveSubscription } from '@/lib/access';
 
@@ -28,7 +29,8 @@ function Splash() {
 }
 
 export default function AppNavigator() {
-  const { session, profile, loading, profileLoading } = useAuth();
+  const { session, profile, loading, profileLoading, isProfessional } =
+    useAuth();
 
   // 1. Booting the session.
   if (loading) return <Splash />;
@@ -40,14 +42,21 @@ export default function AppNavigator() {
   } else if (!profile && profileLoading) {
     // 3. Signed in, profile still loading.
     content = <Splash />;
+  } else if (profile && isProfessional && !hasActiveSubscription(profile)) {
+    // 4. PURE PROFESSIONAL: an active chef/trainer with no personal
+    //    subscription. They exist only to serve their client(s) — give them the
+    //    stripped clients-only app, never the client onboarding or the paywall.
+    //    (A dual-role user WITH a subscription falls through to MainStack and
+    //    keeps the full app + the Personal/Professional toggle.)
+    content = <ProfessionalStack />;
   } else if (profile && !profile.onboarding_completed) {
-    // 4. Signed in but hasn't finished onboarding.
+    // 5. Signed in but hasn't finished onboarding.
     content = <OnboardingStack />;
   } else if (profile && !hasActiveSubscription(profile)) {
-    // 5. Onboarded but no active subscription → card-required paywall.
+    // 6. Onboarded but no active subscription → card-required paywall.
     content = <PaywallGate />;
   } else {
-    // 6. Signed in + onboarded + subscribed (or profile unavailable — fail
+    // 7. Signed in + onboarded + subscribed (or profile unavailable — fail
     //    open to the app so a transient profile-fetch error can't lock out a
     //    paying user).
     content = <MainStack />;

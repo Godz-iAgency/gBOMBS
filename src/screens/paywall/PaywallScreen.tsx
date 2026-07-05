@@ -20,6 +20,7 @@ import {
 } from '@/lib/subscription';
 import { LOGO_WITH_BG } from '@/utils/gbombsImages';
 import { useAuth } from '@/contexts/AuthContext';
+import AcceptInviteModal from '@/screens/professional/AcceptInviteModal';
 
 type PlanCard = {
   key: Plan;
@@ -85,7 +86,8 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
   const [portalLoading, setPortalLoading] = useState(false);
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState(false);
-  const { profile, signOut } = useAuth();
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const { profile, signOut, refreshProfile } = useAuth();
 
   // Used to scroll the phone field into view and focus it when a user taps a
   // plan before entering a number (the field sits at the top and is easy to
@@ -316,6 +318,24 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
           after the trial unless you cancel. Secure checkout by Stripe.
         </Text>
 
+        {/* Invited by a client? A chef/trainer doesn't subscribe — they connect
+            with a code. Accepting routes them to the pro app (AppNavigator
+            re-evaluates once refreshProfile marks them an active professional). */}
+        <View className="mt-6 items-center">
+          <Text className="text-content-muted text-sm">
+            Invited by a client?
+          </Text>
+          <TouchableOpacity
+            onPress={() => setInviteOpen(true)}
+            activeOpacity={0.7}
+            className="mt-1 py-1"
+          >
+            <Text className="text-center text-sm font-bold" style={{ color: '#5A9A3A' }}>
+              Enter your invite code
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Escape hatch when shown as the subscription gate, so a user who
             doesn't want to subscribe isn't trapped on this screen. */}
         {gated && (
@@ -330,6 +350,15 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <AcceptInviteModal
+        visible={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        onConnected={() => {
+          // Now an active professional → re-route to the pro app.
+          refreshProfile();
+        }}
+      />
     </SafeAreaView>
   );
 }

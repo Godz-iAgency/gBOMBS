@@ -29,6 +29,10 @@ type AuthContextValue = {
   profile: Profile | null;
   loading: boolean; // session bootstrap
   profileLoading: boolean; // profile fetch in flight
+  // True when this account is an ACTIVE professional for at least one client.
+  // Drives the pure-professional routing (a professional with no personal
+  // subscription gets the stripped clients-only app, not the paywall).
+  isProfessional: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -40,17 +44,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isProfessional, setIsProfessional] = useState(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     setProfileLoading(true);
-    const { data, error } = await supabase
-      .from('users')
-      .select(
-        'onboarding_completed, subscription_tier, subscription_status, subscription_id'
-      )
-      .eq('id', userId)
-      .single();
+    // Profile + "am I an active professional?" in parallel — both gate routing.
+    const [{ data, error }, { count }] = await Promise.all([
+      supabase
+        .from('users')
+        .select(
+          'onboarding_completed, subscription_tier, subscription_status, subscription_id'
+        )
+        .eq('id', userId)
+        .single(),
+      supabase
+        .from('professional_connections')
+        .select('id', { count: 'exact', head: true })
+        .eq('professional_id', userId)
+        .eq('status', 'active'),
+    ]);
     if (!error && data) setProfile(data as Profile);
+    setIsProfessional((count ?? 0) > 0);
     setProfileLoading(false);
   }, []);
 
@@ -82,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       registerForPushNotifications(session.user.id);
     } else {
       setProfile(null);
+      setIsProfessional(false);
     }
   }, [session?.user?.id, fetchProfile]);
 
@@ -92,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile,
       loading,
       profileLoading,
+      isProfessional,
       refreshProfile,
       signOut: async () => {
         // Stop this device from receiving pushes once signed out.
@@ -99,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [session, profile, loading, profileLoading, refreshProfile]
+    [session, profile, loading, profileLoading, isProfessional, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

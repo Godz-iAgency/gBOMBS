@@ -1,5 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { OnboardingProvider } from '@/store/onboardingStore';
+import RoleChoiceScreen from '@/screens/onboarding/RoleChoiceScreen';
+import ProfessionalConnectScreen from '@/screens/onboarding/ProfessionalConnectScreen';
+import ProfessionalNameScreen from '@/screens/onboarding/ProfessionalNameScreen';
 import WelcomeScreen from '@/screens/onboarding/WelcomeScreen';
 import DietModeScreen from '@/screens/onboarding/DietModeScreen';
 import HealthGoalScreen from '@/screens/onboarding/HealthGoalScreen';
@@ -8,6 +11,9 @@ import FoodPreferenceScreen from '@/screens/onboarding/FoodPreferenceScreen';
 import AllergiesScreen from '@/screens/onboarding/AllergiesScreen';
 
 export type OnboardingStackParamList = {
+  RoleChoice: undefined;
+  ProfessionalConnect: undefined;
+  ProfessionalName: { roleLabel: string };
   Welcome: undefined;
   DietMode: undefined;
   HealthGoal: undefined;
@@ -28,6 +34,16 @@ export default function OnboardingStack() {
           animation: 'slide_from_right',
         }}
       >
+        {/* Role fork comes first — a professional never sees the consumer flow */}
+        <Stack.Screen name="RoleChoice" component={RoleChoiceScreen} />
+        <Stack.Screen
+          name="ProfessionalConnect"
+          component={ProfessionalConnectScreen}
+        />
+        <Stack.Screen
+          name="ProfessionalName"
+          component={ProfessionalNameScreen}
+        />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="DietMode" component={DietModeScreen} />
         <Stack.Screen name="HealthGoal" component={HealthGoalScreen} />

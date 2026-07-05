@@ -46,3 +46,12 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/autopilot-generate/deno.json"
 entrypoint = "./functions/autopilot-generate/index.ts"
+
+# Phase B lifecycle: deletes pure-professional accounts client-less for 48h.
+# Called hourly by pg_cron (schedule_delete_orphaned_professionals.sql) — JWT
+# off, requires the service-role key in the Authorization header.
+[functions.delete-orphaned-professionals]
+enabled = true
+verify_jwt = false
+import_map = "./functions/delete-orphaned-professionals/deno.json"
+entrypoint = "./functions/delete-orphaned-professionals/index.ts"
