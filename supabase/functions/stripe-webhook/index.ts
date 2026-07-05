@@ -135,9 +135,15 @@ async function syncSubscription(
   const priceId = priceItem?.price?.id;
   const planMeta = sub.metadata?.plan as string | undefined;
 
+  // PRICE first, metadata.plan only as a fallback: metadata.plan is a snapshot
+  // written once at checkout and Stripe never updates it again, so after a
+  // self-serve upgrade/downgrade through the billing portal it still reflects
+  // whatever plan the customer ORIGINALLY signed up for — silently freezing
+  // their tier forever on every subsequent plan change. The current price on
+  // the subscription is always the source of truth for what they're on now.
   let tier =
-    (planMeta && PLAN_TO_TIER[planMeta]) ||
     (priceId && PRICE_TO_TIER[priceId]) ||
+    (planMeta && PLAN_TO_TIER[planMeta]) ||
     'standard';
 
   if (status === 'canceled') tier = 'canceled';
@@ -149,6 +155,35 @@ async function syncSubscription(
   const currency = priceItem?.price?.currency ?? sub.currency ?? 'usd';
 
   const periods = periodDates(sub);
+
+  // ---- Guard: is THIS subscription the one that governs the user's access? ----
+  // A user can have more than one Stripe subscription — a duplicate created
+  // during testing, or an old one still winding down after they re-subscribed.
+  // Without this guard a 'customer.subscription.deleted' event for an OLD/
+  // duplicate sub overwrites users.subscription_status to 'canceled' even though
+  // the user's CURRENT sub is still active — silently revoking a paying user's
+  // access (the double-subscribe bug). So we only mirror onto the canonical rows
+  // when this event's sub is the governing one:
+  //   • nothing on file yet            → adopt this sub (first subscription)
+  //   • it IS the stored sub           → normal lifecycle update
+  //   • a DIFFERENT sub going active/trialing → it takes over as governing
+  //   • a different, non-active sub    → ignore (this is the bug case)
+  const { data: current } = await admin
+    .from('users')
+    .select('subscription_id')
+    .eq('id', userId)
+    .maybeSingle();
+  const storedSubId = current?.subscription_id ?? null;
+  const isActiveState = status === 'active' || status === 'trialing';
+  const isGoverning = !storedSubId || storedSubId === sub.id || isActiveState;
+
+  if (!isGoverning) {
+    console.log(
+      `Ignoring non-governing subscription event: user=${userId} ` +
+        `event_sub=${sub.id} status=${status} governing_sub=${storedSubId}`
+    );
+    return;
+  }
 
   // ---- Write the subscriptions row (one per user) ----
   const { error: subErr } = await admin.from('subscriptions').upsert(
