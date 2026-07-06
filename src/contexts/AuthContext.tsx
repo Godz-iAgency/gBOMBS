@@ -15,6 +15,7 @@ import {
 
 /** Minimal profile shape the navigator needs to gate routing. */
 type Profile = {
+  full_name: string | null;
   onboarding_completed: boolean;
   subscription_tier: string;
   subscription_status: string;
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase
         .from('users')
         .select(
-          'onboarding_completed, subscription_tier, subscription_status, subscription_id'
+          'full_name, onboarding_completed, subscription_tier, subscription_status, subscription_id'
         )
         .eq('id', userId)
         .single(),

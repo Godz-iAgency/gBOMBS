@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { loadDashboard, type DashboardData } from '@/lib/dashboard';
 import { getPlanState, PLAN_BADGE_LABEL } from '@/lib/subscriptionPlan';
@@ -89,19 +90,22 @@ function BadgeRow({ hit }: { hit: GBombsCategory[] }) {
 function QuickAction({
   icon,
   label,
+  color,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
+  color: string;
   onPress: () => void;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      className="mx-1 flex-1 items-center rounded-2xl bg-surface-card py-4"
+      className="mx-1 flex-1 items-center rounded-2xl border py-4"
+      style={{ borderColor: color + '66', backgroundColor: color + '14' }}
     >
-      <Ionicons name={icon} size={22} color="#5A9A3A" />
+      <Ionicons name={icon} size={22} color={color} />
       <Text className="text-content mt-2 text-xs font-semibold">{label}</Text>
     </TouchableOpacity>
   );
@@ -111,7 +115,9 @@ export default function HomeScreen() {
   const { user, profile } = useAuth();
   const navigation = useNavigation<Nav>();
   const tier = profile?.subscription_tier ?? 'standard';
-  const planBadge = PLAN_BADGE_LABEL[getPlanState(profile)];
+  const planState = getPlanState(profile);
+  const planBadge = PLAN_BADGE_LABEL[planState];
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0] ?? '';
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [booting, setBooting] = useState(true);
@@ -170,33 +176,94 @@ export default function HomeScreen() {
         {/* Greeting + plan badge (badge taps through to Profile) */}
         <View className="flex-row items-start justify-between">
           <View className="flex-1">
-            <Text className="text-content text-3xl font-extrabold">
-              {greeting()}
-            </Text>
+            {firstName ? (
+              <>
+                <Text
+                  className="text-content font-extrabold"
+                  style={{ fontSize: 20 }}
+                >
+                  {greeting()},
+                </Text>
+                <Text
+                  className="text-content -mt-1"
+                  style={{ fontFamily: 'Caveat_700Bold', fontSize: 34 }}
+                >
+                  {firstName}
+                </Text>
+              </>
+            ) : (
+              <Text
+                className="text-content font-extrabold"
+                style={{ fontSize: 20 }}
+              >
+                {greeting()}
+              </Text>
+            )}
             <Text className="text-content-muted mt-1 text-sm">
               {todayLabel()}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Profile')}
-            activeOpacity={0.85}
-            className="ml-3 mt-1.5 flex-row items-center rounded-full border border-surface-border bg-surface-card px-3 py-1.5"
-          >
-            <View
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: '#5A9A3A' }}
-            />
-            <Text className="text-content ml-1.5 text-xs font-semibold">
-              {planBadge}
-            </Text>
-          </TouchableOpacity>
+          {planState === 'premium' ? (
+            // Premium reads as a luxe gold pill — brushed-gold gradient, a subtle
+            // lighter rim, and a sparkle mark. The others stay understated.
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Profile')}
+              activeOpacity={0.85}
+              className="ml-3 mt-1.5"
+              style={{
+                shadowColor: '#D4A84E',
+                shadowOpacity: 0.5,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 4,
+              }}
+            >
+              <LinearGradient
+                colors={['#F8E39A', '#D9AE52', '#B7862E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderRadius: 999,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderWidth: 1,
+                  borderColor: '#F2D98C',
+                }}
+              >
+                <Ionicons name="sparkles" size={12} color="#3D2C00" />
+                <Text
+                  className="ml-1 text-xs font-extrabold"
+                  style={{ color: '#3D2C00' }}
+                >
+                  {planBadge}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Profile')}
+              activeOpacity={0.85}
+              className="ml-3 mt-1.5 flex-row items-center rounded-full border border-surface-border bg-surface-card px-3 py-1.5"
+            >
+              <View
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: '#5A9A3A' }}
+              />
+              <Text className="text-content ml-1.5 text-xs font-semibold">
+                {planBadge}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Today's gBOMBS — hero card, opens the check-in overlay */}
         <TouchableOpacity
           onPress={() => setCheckInOpen(true)}
           activeOpacity={0.9}
-          className="mt-6 rounded-2xl bg-surface-card p-5"
+          className="mt-6 rounded-2xl border p-5"
+          style={{ borderColor: '#5A9A3A66', backgroundColor: '#5A9A3A14' }}
         >
           <Text className="text-content-muted text-xs font-semibold uppercase tracking-wide">
             Today's gBOMBS
@@ -240,10 +307,21 @@ export default function HomeScreen() {
           activeOpacity={0.9}
           className="-mx-1 mt-4 flex-row"
         >
-          <View className="mx-1 flex-1 rounded-2xl bg-surface-card p-4">
-            <Text className="text-content text-3xl font-extrabold">
-              {streak} 🔥
-            </Text>
+          <View
+            className="mx-1 flex-1 rounded-2xl border p-4"
+            style={{ borderColor: '#4A90D966', backgroundColor: '#4A90D914' }}
+          >
+            <View className="flex-row items-center">
+              <Text className="text-content text-3xl font-extrabold">
+                {streak}
+              </Text>
+              <Ionicons
+                name="flame"
+                size={22}
+                color="#4A90D9"
+                style={{ marginLeft: 4 }}
+              />
+            </View>
             <Text className="text-content-muted mt-1 text-xs font-semibold">
               Day streak
             </Text>
@@ -253,7 +331,10 @@ export default function HomeScreen() {
                 : 'Keep it going — log every day.'}
             </Text>
           </View>
-          <View className="mx-1 flex-1 rounded-2xl bg-surface-card p-4">
+          <View
+            className="mx-1 flex-1 rounded-2xl border p-4"
+            style={{ borderColor: '#8A7BD866', backgroundColor: '#8A7BD814' }}
+          >
             <Text className="text-content text-3xl font-extrabold">
               {weekDays}/7
             </Text>
@@ -282,7 +363,8 @@ export default function HomeScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate('MealPlan')}
           activeOpacity={0.9}
-          className="mt-4 rounded-2xl bg-surface-card p-5"
+          className="mt-4 rounded-2xl border p-5"
+          style={{ borderColor: '#D4A84E66', backgroundColor: '#D4A84E14' }}
         >
           <Text className="text-content-muted text-xs font-semibold uppercase tracking-wide">
             This Week's Plan
@@ -326,16 +408,19 @@ export default function HomeScreen() {
           <QuickAction
             icon="checkmark-done"
             label="Check in"
+            color="#5A9A3A"
             onPress={() => setCheckInOpen(true)}
           />
           <QuickAction
             icon="calendar"
             label="Meal plan"
+            color="#D4A84E"
             onPress={() => navigation.navigate('MealPlan')}
           />
           <QuickAction
             icon="cart"
             label="Grocery"
+            color="#4A90D9"
             onPress={() => navigation.navigate('Grocery')}
           />
         </View>

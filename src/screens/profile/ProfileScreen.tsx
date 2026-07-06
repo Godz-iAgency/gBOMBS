@@ -330,7 +330,10 @@ export default function ProfileScreen() {
 
         {/* MY PLAN */}
         <SectionLabel>My Plan</SectionLabel>
-        <View className="overflow-hidden rounded-2xl bg-surface-card">
+        <View
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: '#5A9A3A66', backgroundColor: '#5A9A3A14' }}
+        >
           <SettingRow
             icon="leaf-outline"
             label="Diet mode"
@@ -356,7 +359,10 @@ export default function ProfileScreen() {
         {/* AUTOPILOT — weekly hands-off regeneration (Step 11.8). Off by
             default; enabling anchors the day to today until they change it. */}
         <SectionLabel>Autopilot</SectionLabel>
-        <View className="overflow-hidden rounded-2xl bg-surface-card">
+        <View
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: '#4A90D966', backgroundColor: '#4A90D914' }}
+        >
           <View className="flex-row items-center justify-between px-4 py-3.5">
             <View className="flex-1 flex-row items-center">
               <Ionicons name="sync-outline" size={20} color="#5A9A3A" />
@@ -396,7 +402,10 @@ export default function ProfileScreen() {
 
         {/* FOOD PREFERENCES */}
         <SectionLabel>Food Preferences</SectionLabel>
-        <View className="overflow-hidden rounded-2xl bg-surface-card">
+        <View
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: '#D85A8E66', backgroundColor: '#D85A8E14' }}
+        >
           <SettingRow
             icon="heart-outline"
             label="Favorite foods"
@@ -418,7 +427,10 @@ export default function ProfileScreen() {
 
         {/* ACHIEVEMENTS */}
         <SectionLabel>Achievements</SectionLabel>
-        <View className="overflow-hidden rounded-2xl bg-surface-card">
+        <View
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: '#D4A84E66', backgroundColor: '#D4A84E14' }}
+        >
           <SettingRow
             icon="trophy-outline"
             label="Badges & streaks"
@@ -441,7 +453,10 @@ export default function ProfileScreen() {
             actually someone's chef/trainer. Regular members never see it. */}
         {isPro && <ModeToggle mode={proMode} onChange={setProMode} />}
 
-        <View className="overflow-hidden rounded-2xl bg-surface-card">
+        <View
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: '#8A7BD866', backgroundColor: '#8A7BD814' }}
+        >
           {isPro && proMode ? (
             // PROFESSIONAL mode — the client-facing surface.
             <>
@@ -486,7 +501,10 @@ export default function ProfileScreen() {
 
         {/* SUBSCRIPTION */}
         <SectionLabel>Subscription</SectionLabel>
-        <View className="rounded-2xl border border-surface-border bg-surface-card p-5">
+        <View
+          className="rounded-2xl border p-5"
+          style={{ borderColor: '#5A9A3A66', backgroundColor: '#5A9A3A14' }}
+        >
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
               <Text className="text-content text-lg font-extrabold">
@@ -521,7 +539,8 @@ export default function ProfileScreen() {
         <TouchableOpacity
           onPress={signOut}
           activeOpacity={0.85}
-          className="mt-7 self-center rounded-xl border border-surface-border bg-surface-card px-8 py-3"
+          className="mt-7 self-center rounded-xl border px-8 py-3"
+          style={{ borderColor: '#D85A8E66', backgroundColor: '#D85A8E14' }}
         >
           <Text className="text-content text-base font-semibold">Sign out</Text>
         </TouchableOpacity>

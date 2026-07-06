@@ -11,6 +11,7 @@ import {
   Poppins_700Bold,
   Poppins_800ExtraBold,
 } from '@expo-google-fonts/poppins';
+import { Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { AuthProvider } from '@/contexts/AuthContext';
 import AppNavigator from '@/navigation/AppNavigator';
 
@@ -39,6 +40,8 @@ export default function App() {
     Poppins_600SemiBold,
     Poppins_700Bold,
     Poppins_800ExtraBold,
+    // Handwritten accent — used for the user's name in the home greeting.
+    Caveat_700Bold,
   });
 
   // Hold the UI until the fonts are ready to avoid a flash of system font.

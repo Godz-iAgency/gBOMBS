@@ -225,6 +225,15 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
               unless a client connects with you again. Have a new invite code?
               Enter it below to stay.
             </Text>
+            <TouchableOpacity
+              onPress={() => setInviteOpen(true)}
+              activeOpacity={0.85}
+              className="mt-3 rounded-xl bg-brand-green py-3"
+            >
+              <Text className="text-center text-base font-bold text-white">
+                Enter your invite code
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 

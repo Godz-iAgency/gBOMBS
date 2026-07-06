@@ -103,7 +103,10 @@ export default function ProfessionalUpdatesCard({
 
   return (
     <>
-      <View className="mt-4 overflow-hidden rounded-2xl bg-surface-card">
+      <View
+        className="mt-4 overflow-hidden rounded-2xl border"
+        style={{ borderColor: '#D85A8E66', backgroundColor: '#D85A8E14' }}
+      >
         {/* Header — tap to expand/collapse */}
         <TouchableOpacity
           onPress={() => setExpanded((v) => !v)}
