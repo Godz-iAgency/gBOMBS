@@ -9,6 +9,7 @@
 
 import { callGeminiJson, getModel } from './client';
 import { FUHRMAN_SYSTEM_PROMPT, renderUserContext } from './prompts';
+import { fetchRecipePhoto } from '@/services/unsplash';
 import type {
   GBombsCategory,
   GBombsScore,
@@ -87,6 +88,11 @@ export async function generateRecipe(
   const isDessert = meal.slot === 'dessert';
   const model = getModel(isSmoothie ? 'smoothie' : 'recipe', tier);
   const userBlock = renderUserContext(ctx);
+
+  // Fire the hero-image lookup in PARALLEL with the (slower) Gemini call so it
+  // adds no latency. Keyed on the meal name we already have — best-effort, so a
+  // miss or failure just yields no photo and never blocks the recipe.
+  const photoPromise = fetchRecipePhoto(meal.name, meal.slot);
 
   const dishPrompt = `Write a complete, original Nutritarian recipe for this dish.
 
@@ -231,6 +237,10 @@ Use ONLY these category values (or null): greens, beans, onion, mushroom, berrie
 
   const name = (raw.name ?? meal.name).trim();
 
+  // The Unsplash search resolves well before Gemini does, so this await is
+  // effectively free. Null on any miss/failure — the UI just omits the hero.
+  const photo = await photoPromise;
+
   return {
     id: meal.id || slugify(name),
     name,
@@ -256,5 +266,8 @@ Use ONLY these category values (or null): greens, beans, onion, mushroom, berrie
     steps,
     gbombs: computeRecipeScore(ingredients),
     tips: (raw.tips ?? '').trim() || undefined,
+    photoUrl: photo?.url,
+    photoSource: photo ? 'unsplash' : undefined,
+    photoCredit: photo?.credit,
   };
 }

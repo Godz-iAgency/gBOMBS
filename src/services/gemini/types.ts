@@ -101,6 +101,13 @@ export interface Recipe {
   gbombs: GBombsScore;
   /** Optional Fuhrman-style nutrition note (richer on the Pro tier). */
   tips?: string;
+  /** Hero photo for the dish (best-effort — absent if lookup found nothing or
+   *  no image provider is configured). Matches the DB `meals.photo_*` columns. */
+  photoUrl?: string;
+  /** Where `photoUrl` came from (mirrors the DB `photo_source` enum). */
+  photoSource?: 'unsplash' | 'imagen' | 'pexels';
+  /** Photographer attribution for `photoUrl` (Unsplash usage guideline). */
+  photoCredit?: { name: string; link: string };
 }
 
 /** Canonical store sections, in shopping-path order (Prompt 4). */

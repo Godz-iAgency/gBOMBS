@@ -9,6 +9,7 @@ import {
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -375,6 +376,23 @@ export default function RecipeModal({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
+            {/* Hero photo (best-effort from Unsplash). Omitted entirely when no
+                image was found so the layout stays clean. */}
+            {recipe.photoUrl ? (
+              <View style={styles.heroWrap}>
+                <Image
+                  source={{ uri: recipe.photoUrl }}
+                  style={styles.hero}
+                  resizeMode="cover"
+                />
+                {recipe.photoCredit?.name ? (
+                  <Text style={styles.heroCredit}>
+                    Photo: {recipe.photoCredit.name} / Unsplash
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+
             <Text style={styles.recipeName}>{recipe.name}</Text>
             {recipe.description ? (
               <Text style={styles.recipeDesc}>{recipe.description}</Text>
@@ -585,6 +603,21 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 60,
     backgroundColor: '#0A0A0A',
+  },
+  heroWrap: {
+    marginBottom: 16,
+  },
+  hero: {
+    width: '100%',
+    height: 200,
+    borderRadius: 16,
+    backgroundColor: '#161616',
+  },
+  heroCredit: {
+    color: '#6B7280',
+    fontSize: 10,
+    marginTop: 6,
+    textAlign: 'right',
   },
   recipeName: {
     color: '#F5F5F0',
