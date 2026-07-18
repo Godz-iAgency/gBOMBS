@@ -9,6 +9,7 @@
  */
 
 import { Platform, Share } from 'react-native';
+import { supabase } from './supabase';
 
 export const INVITE_SCHEME = 'gbombs';
 
@@ -55,4 +56,34 @@ export async function shareInvite(code: string, roleLabel: string): Promise<{
 
   await Share.share({ message });
   return { copied: false };
+}
+
+/**
+ * Email an existing invite to a professional via the send-invite-email Edge
+ * Function (Resend). The code must already exist as one of the caller's pending
+ * connections — the function re-checks ownership server-side. Throws a readable
+ * message on failure so the caller can surface it.
+ */
+export async function emailInvite(
+  code: string,
+  role: string,
+  email: string
+): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('send-invite-email', {
+    body: { code, role, email: email.trim() },
+  });
+  // supabase-js surfaces non-2xx as `error`, but the useful message lives in the
+  // JSON body — pull it out so the user sees "Enter a valid email" etc.
+  if (error) {
+    let detail = '';
+    try {
+      detail = (await (error as { context?: Response }).context?.json())?.error ?? '';
+    } catch {
+      /* fall back to the generic message below */
+    }
+    throw new Error(detail || 'Could not send the invite email.');
+  }
+  if (data && (data as { error?: string }).error) {
+    throw new Error((data as { error: string }).error);
+  }
 }

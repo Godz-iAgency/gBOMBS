@@ -34,6 +34,11 @@ type AuthContextValue = {
   // Drives the pure-professional routing (a professional with no personal
   // subscription gets the stripped clients-only app, not the paywall).
   isProfessional: boolean;
+  // An invite code captured from a `gbombs://connect?code=` deep link, HELD
+  // here (not in a screen) so it survives navigator/stack swaps and a sign-in
+  // detour. AppNavigator surfaces the accept modal once the user is signed in.
+  pendingInviteCode: string | null;
+  setPendingInviteCode: (code: string | null) => void;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -46,6 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [isProfessional, setIsProfessional] = useState(false);
+  const [pendingInviteCode, setPendingInviteCode] = useState<string | null>(
+    null
+  );
 
   const fetchProfile = useCallback(async (userId: string) => {
     setProfileLoading(true);
@@ -109,6 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       profileLoading,
       isProfessional,
+      pendingInviteCode,
+      setPendingInviteCode,
       refreshProfile,
       signOut: async () => {
         // Stop this device from receiving pushes once signed out.
@@ -116,7 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [session, profile, loading, profileLoading, isProfessional, refreshProfile]
+    [
+      session,
+      profile,
+      loading,
+      profileLoading,
+      isProfessional,
+      pendingInviteCode,
+      refreshProfile,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

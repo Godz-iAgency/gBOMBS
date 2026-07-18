@@ -1,11 +1,13 @@
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useInviteDeepLink } from '@/hooks/useInviteDeepLink';
 import AuthStack from './AuthStack';
 import OnboardingStack from './OnboardingStack';
 import MainStack from './MainStack';
 import ProfessionalStack from './ProfessionalStack';
 import PaywallGate from './PaywallGate';
+import AcceptInviteModal from '@/screens/professional/AcceptInviteModal';
 import { hasActiveSubscription } from '@/lib/access';
 
 const navTheme = {
@@ -29,8 +31,22 @@ function Splash() {
 }
 
 export default function AppNavigator() {
-  const { session, profile, loading, profileLoading, isProfessional } =
-    useAuth();
+  const {
+    session,
+    profile,
+    loading,
+    profileLoading,
+    isProfessional,
+    pendingInviteCode,
+    setPendingInviteCode,
+    refreshProfile,
+  } = useAuth();
+
+  // Capture an invite code from a `gbombs://connect?code=` deep link. Held in
+  // context (setPendingInviteCode) so it survives the sign-in detour below and
+  // surfaces the accept modal once there's a session — regardless of which
+  // stack is currently mounted.
+  useInviteDeepLink(setPendingInviteCode);
 
   // 1. Booting the session.
   if (loading) return <Splash />;
@@ -63,6 +79,21 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>{content}</NavigationContainer>
+    <>
+      <NavigationContainer theme={navTheme}>{content}</NavigationContainer>
+
+      {/* Deep-link invite: once signed in, surface the accept flow over whatever
+          stack is mounted, with the code prefilled. A signed-OUT user's code is
+          held until they sign in (this simply waits for `session`). Accepting
+          flips isProfessional via refreshProfile, so the navigator re-routes. */}
+      {session && pendingInviteCode && (
+        <AcceptInviteModal
+          visible
+          initialCode={pendingInviteCode}
+          onConnected={() => refreshProfile()}
+          onClose={() => setPendingInviteCode(null)}
+        />
+      )}
+    </>
   );
 }

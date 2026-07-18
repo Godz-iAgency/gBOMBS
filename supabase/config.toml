@@ -55,3 +55,12 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/delete-orphaned-professionals/deno.json"
 entrypoint = "./functions/delete-orphaned-professionals/index.ts"
+
+# Phase B Chunk 3: emails a professional their client's invite code (Resend).
+# JWT verified inside (so the web CORS preflight isn't blocked); the caller must
+# own a pending connection with the code. Needs the RESEND_API_KEY secret.
+[functions.send-invite-email]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-invite-email/deno.json"
+entrypoint = "./functions/send-invite-email/index.ts"
