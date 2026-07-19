@@ -293,12 +293,18 @@ export default function MealPlanScreen() {
           score={plan.weeklyScore.score}
         />
 
-        {/* Day tabs */}
+        {/* Day tabs — sized to fit all 7 without scrolling on a typical ~360-390px
+            phone (screen padding is 20px each side, leaving ~320-350px). At the
+            previous px-3/mr-1.5 sizing, 7 pills needed ~372px and Sunday fell
+            off-screen with the scroll indicator hidden, giving no hint that
+            scrolling would reveal it. Tighter padding/margin brings the row to
+            ~300px so it fits outright; the ScrollView stays as a safety net for
+            anything narrower rather than the primary mechanism to see Sunday. */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           className="mb-4 -mx-1"
-          contentContainerStyle={{ paddingHorizontal: 4 }}
+          contentContainerStyle={{ paddingLeft: 4, paddingRight: 12 }}
         >
           {plan.days.map((d, i) => {
             const isActive = i === selectedDay;
@@ -306,7 +312,7 @@ export default function MealPlanScreen() {
               <TouchableOpacity
                 key={d.day}
                 onPress={() => setSelectedDay(i)}
-                className="mr-1.5 rounded-full px-3 py-1.5"
+                className="mr-1 rounded-full px-2 py-1.5"
                 style={{
                   backgroundColor: isActive ? '#5A9A3A' : '#161616',
                 }}
