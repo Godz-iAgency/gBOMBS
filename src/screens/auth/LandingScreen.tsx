@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -16,6 +22,16 @@ export default function LandingScreen({ navigation }: Props) {
     p.loop = true;
     p.muted = true;
   });
+
+  // The source video is a narrow, phone-shaped 720x1280 clip. `contain` (no
+  // cropping, ever) was chosen specifically because on a narrow PHONE,
+  // `cover` cropped the outer edges of the animation. On a tablet the screen
+  // is wide enough that the crop is minimal, and `contain` there instead
+  // shows visible black letterbox bars on both sides — worse than a small
+  // crop for a full-bleed landing page. 600px is the same phone/tablet
+  // breakpoint used elsewhere in this app (e.g. RecipeModal's font scaling).
+  const { width: windowWidth } = useWindowDimensions();
+  const videoContentFit = windowWidth >= 600 ? 'cover' : 'contain';
 
   // Start playback after the view is mounted (web autoplay needs the
   // player fully attached before play() will take effect).
@@ -40,11 +56,15 @@ export default function LandingScreen({ navigation }: Props) {
         className="flex-1 w-full self-center overflow-hidden"
         style={{ maxWidth: 900 }}
       >
-        {/* Full-screen animation. `contain` guarantees the whole G-BOMBS logo
-            stays visible (G…S) on every screen ratio — `cover` was cropping the
-            outer letters on taller/narrower phones. Letterbox areas fall back to
-            the dark page background, which blends with the gradients below.
-            width/height:'100%' are explicit here (not just absoluteFill's
+        {/* Full-screen animation. contentFit is width-conditional (see
+            videoContentFit above): `contain` on phones so the crop-prone
+            `cover` mode doesn't cut into the outer edges of the narrow source
+            video, `cover` on tablets so the wider screen fills edge-to-edge
+            instead of showing letterbox bars (the crop is minor there since
+            the aspect ratio gap is much smaller). Any letterbox area that
+            does show falls back to the dark page background, which blends
+            with the gradients below. width/height:'100%' are explicit here
+            (not just absoluteFill's
             top/left/right/bottom:0) because expo-video's web implementation
             renders an actual <video> tag with its native pixel dimensions
             (e.g. 720x1280) as literal CSS width/height — which, in CSS, wins
@@ -55,7 +75,7 @@ export default function LandingScreen({ navigation }: Props) {
         <VideoView
           player={player}
           style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-          contentFit="contain"
+          contentFit={videoContentFit}
           nativeControls={false}
         />
 
