@@ -27,10 +27,18 @@ export default function LandingScreen({ navigation }: Props) {
     // Page background — fills the whole window; on desktop the dark
     // surface shows on the sides of the centered phone-width frame.
     <View className="flex-1 bg-surface">
-      {/* Phone-width frame, centered. Keeps desktop identical to mobile. */}
+      {/* Width-capped frame, centered — keeps a giant desktop monitor from
+          stretching this into an absurdly wide single column. 480 was sized
+          for that desktop case but also caught tablets (e.g. a ~497-1024px
+          iPad/Galaxy Tab), squeezing them into the same narrow phone-width
+          column instead of using their real screen width, and forcing the
+          `contentFit="contain"` video to shrink dramatically to fit that
+          narrow-but-full-height box — which is what read as a large empty/
+          black area top and bottom on tablet. 900 comfortably covers tablet
+          widths as full-bleed while still capping true desktop. */}
       <View
         className="flex-1 w-full self-center overflow-hidden"
-        style={{ maxWidth: 480 }}
+        style={{ maxWidth: 900 }}
       >
         {/* Full-screen animation. `contain` guarantees the whole G-BOMBS logo
             stays visible (G…S) on every screen ratio — `cover` was cropping the

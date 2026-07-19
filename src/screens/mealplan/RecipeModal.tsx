@@ -18,6 +18,7 @@ import {
   Platform,
   Animated,
   Easing,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -130,8 +131,13 @@ function RecipeLoading() {
 
 // Safe area top padding — avoids react-native-safe-area-context on web
 // (its inset style arrays can trigger a CSSStyleDeclaration indexed-property
-// error in react-native-web 0.21 + React 19).
-const TOP_PAD = Platform.OS === 'web' ? 48 : 44;
+// error in react-native-web 0.21 + React 19). 48 was sized for a desktop
+// browser's own chrome on top of the page; on an actual mobile browser
+// there's no native notch to clear (the browser chrome is already outside the
+// page viewport), so that much space just reads as unexplained dead air above
+// the close button — confirmed against LoginScreen's real SafeAreaView, which
+// shows no such gap on the same device.
+const TOP_PAD = Platform.OS === 'web' ? 12 : 44;
 
 /** Full-width gBOMBS score row: all six letters, lit if the recipe hits them. */
 function ScoreRow({ hit, score }: { hit: GBombsCategory[]; score: number }) {
@@ -181,15 +187,21 @@ function MacroStat({
   value,
   label,
   isLast,
+  fontScale,
 }: {
   value: string;
   label: string;
   isLast?: boolean;
+  fontScale: number;
 }) {
   return (
     <View style={[styles.macroStat, !isLast && styles.macroStatDivider]}>
-      <Text style={styles.macroValue}>{value}</Text>
-      <Text style={styles.macroLabel}>{label}</Text>
+      <Text style={[styles.macroValue, { fontSize: 19 * fontScale }]}>
+        {value}
+      </Text>
+      <Text style={[styles.macroLabel, { fontSize: 11 * fontScale }]}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -202,9 +214,11 @@ function MacroStat({
 function NutritionPanel({
   nutrition,
   loading,
+  fontScale,
 }: {
   nutrition: Recipe['nutrition'];
   loading: boolean;
+  fontScale: number;
 }) {
   if (!nutrition) {
     if (!loading) return null;
@@ -227,11 +241,11 @@ function NutritionPanel({
         </View>
       </View>
       <View style={styles.macroRow}>
-        <MacroStat value={`${nutrition.calories}`} label="cal" />
-        <MacroStat value={`${nutrition.protein}g`} label="protein" />
-        <MacroStat value={`${nutrition.carbs}g`} label="carbs" />
-        <MacroStat value={`${nutrition.fat}g`} label="fat" />
-        <MacroStat value={`${nutrition.fiber}g`} label="fiber" isLast />
+        <MacroStat value={`${nutrition.calories}`} label="cal" fontScale={fontScale} />
+        <MacroStat value={`${nutrition.protein}g`} label="protein" fontScale={fontScale} />
+        <MacroStat value={`${nutrition.carbs}g`} label="carbs" fontScale={fontScale} />
+        <MacroStat value={`${nutrition.fat}g`} label="fat" fontScale={fontScale} />
+        <MacroStat value={`${nutrition.fiber}g`} label="fiber" isLast fontScale={fontScale} />
       </View>
     </View>
   );
@@ -316,6 +330,11 @@ export default function RecipeModal({
   const [loading, setLoading] = useState(false);
   const [nutritionLoading, setNutritionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Body text sized for a phone reads a bit small stretched across a tablet's
+  // extra width — a modest bump keeps ingredients/steps/nutrition comfortably
+  // readable there without a full responsive-typography rewrite.
+  const { width: windowWidth } = useWindowDimensions();
+  const fontScale = windowWidth >= 600 ? 1.15 : 1;
   // Chef-note state (only used when `note` is provided).
   const [noteText, setNoteText] = useState('');
   const [savedNote, setSavedNote] = useState('');
@@ -489,9 +508,13 @@ export default function RecipeModal({
               </View>
             ) : null}
 
-            <Text style={styles.recipeName}>{recipe.name}</Text>
+            <Text style={[styles.recipeName, { fontSize: 24 * fontScale }]}>
+              {recipe.name}
+            </Text>
             {recipe.description ? (
-              <Text style={styles.recipeDesc}>{recipe.description}</Text>
+              <Text style={[styles.recipeDesc, { fontSize: 14 * fontScale }]}>
+                {recipe.description}
+              </Text>
             ) : null}
 
             {/* Chef's note — shown to the CLIENT at the top so it's the first
@@ -524,6 +547,7 @@ export default function RecipeModal({
             <NutritionPanel
               nutrition={recipe.nutrition}
               loading={nutritionLoading}
+              fontScale={fontScale}
             />
 
             {/* Ingredients */}
@@ -531,7 +555,9 @@ export default function RecipeModal({
             <View style={{ marginTop: 8 }}>
               {recipe.ingredients.map((ing, i) => (
                 <View key={`${ing.item}-${i}`} style={styles.ingredientRow}>
-                  <Text style={styles.ingredientText}>
+                  <Text
+                    style={[styles.ingredientText, { fontSize: 14 * fontScale }]}
+                  >
                     {ing.quantity ? `${ing.quantity}   ` : ''}{ing.item}
                   </Text>
                   {ing.category ? <IngredientBadge cat={ing.category} /> : null}
@@ -547,7 +573,9 @@ export default function RecipeModal({
                   <View style={styles.stepNum}>
                     <Text style={styles.stepNumText}>{i + 1}</Text>
                   </View>
-                  <Text style={styles.stepText}>{step}</Text>
+                  <Text style={[styles.stepText, { fontSize: 14 * fontScale }]}>
+                    {step}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -711,7 +739,15 @@ const styles = StyleSheet.create({
   },
   hero: {
     width: '100%',
-    height: 200,
+    // A fixed height (was 200) combined with width:'100%' means the box's
+    // aspect ratio balloons out on a wide tablet screen (e.g. 800px wide by
+    // still only 200px tall — a 4:1 box) while staying ~1.6:1 on mobile.
+    // `cover` has to zoom the source photo in much further to fill that much
+    // wider box, cropping far more of it top/bottom — which is exactly why
+    // the same photo showed the whole glass on mobile but only a tight,
+    // cropped sliver on tablet. aspectRatio keeps the crop ratio constant
+    // across screen widths instead of a fixed pixel height.
+    aspectRatio: 1.6,
     borderRadius: 16,
     backgroundColor: '#161616',
   },

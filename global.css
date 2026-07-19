@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Expo's generated index.html sets html/body to fill 100% height but never
+   sets a background color, so any sliver of unfilled space — mobile browsers
+   resize their visual viewport when the address bar shows/hides, which RN Web's
+   height:100% doesn't always track perfectly — falls back to the browser's
+   plain white default instead of the app's dark theme (visible as a white strip
+   at the bottom of the screen on some real devices). Matches the dark surface
+   color already declared as the native splash/root background in app.json. */
+html,
+body {
+  background-color: #0A0A0A;
+}

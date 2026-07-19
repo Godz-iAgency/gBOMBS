@@ -60,6 +60,11 @@ function todayLabel(): string {
 }
 
 /** The six gBOMBS letters, lit when hit — same look as the meal plan bar. */
+// Sized to comfortably fit alongside the "X/6" score text on a narrow phone:
+// 6 badges at the old h-8/w-8 (32px) + mr-1.5 (6px) totaled ~228px, which left
+// only a razor-thin margin against the "This week's plan" card's ~290px of
+// interior width — it fit on some screens and overflowed past the card border
+// on others. h-7/w-7 (28px) + mr-1 (4px) brings that down to ~192px.
 function BadgeRow({ hit }: { hit: GBombsCategory[] }) {
   return (
     <View className="flex-row">
@@ -68,7 +73,7 @@ function BadgeRow({ hit }: { hit: GBombsCategory[] }) {
         return (
           <View
             key={meta.key}
-            className="mr-1.5 h-8 w-8 items-center justify-center rounded-full border"
+            className="mr-1 h-7 w-7 items-center justify-center rounded-full border"
             style={{
               backgroundColor: isHit ? meta.glow : 'transparent',
               borderColor: isHit ? meta.glow : '#2D2D2D',
