@@ -28,6 +28,7 @@ import {
   type UserMealContext,
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
+import { fetchRecipeNutrition, NUTRITION_VERSION } from '@/services/usda';
 import { loadCachedRecipe, saveCachedRecipe } from '@/lib/recipeCache';
 import { addChefNote, loadMealNote } from '@/lib/professional';
 import { notify } from '@/utils/dialog';
@@ -174,6 +175,68 @@ function ScoreRow({ hit, score }: { hit: GBombsCategory[]; score: number }) {
   );
 }
 
+/** One macro stat (number + label) in the nutrition panel. A right-edge
+ *  divider separates it from the next stat — omitted on the last one. */
+function MacroStat({
+  value,
+  label,
+  isLast,
+}: {
+  value: string;
+  label: string;
+  isLast?: boolean;
+}) {
+  return (
+    <View style={[styles.macroStat, !isLast && styles.macroStatDivider]}>
+      <Text style={styles.macroValue}>{value}</Text>
+      <Text style={styles.macroLabel}>{label}</Text>
+    </View>
+  );
+}
+
+/**
+ * Per-serving nutrition panel. Renders the USDA-estimated macros once they've
+ * streamed in, a compact loading line while they're being fetched, and nothing
+ * at all if the estimate came back empty (best-effort — never a hard error).
+ */
+function NutritionPanel({
+  nutrition,
+  loading,
+}: {
+  nutrition: Recipe['nutrition'];
+  loading: boolean;
+}) {
+  if (!nutrition) {
+    if (!loading) return null;
+    return (
+      <View style={styles.nutritionCard}>
+        <View style={styles.nutritionLoadingRow}>
+          <ActivityIndicator size="small" color="#5A9A3A" />
+          <Text style={styles.nutritionLoadingText}>Estimating nutrition…</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.nutritionCard}>
+      <View style={styles.nutritionHeaderRow}>
+        <Text style={styles.nutritionTitle}>NUTRITION · PER SERVING</Text>
+        <View style={styles.nutritionPill}>
+          <Text style={styles.nutritionEstimate}>Estimated · USDA</Text>
+        </View>
+      </View>
+      <View style={styles.macroRow}>
+        <MacroStat value={`${nutrition.calories}`} label="cal" />
+        <MacroStat value={`${nutrition.protein}g`} label="protein" />
+        <MacroStat value={`${nutrition.carbs}g`} label="carbs" />
+        <MacroStat value={`${nutrition.fat}g`} label="fat" />
+        <MacroStat value={`${nutrition.fiber}g`} label="fiber" isLast />
+      </View>
+    </View>
+  );
+}
+
 /** Small category badge next to an ingredient. */
 function IngredientBadge({ cat }: { cat: GBombsCategory }) {
   const meta = LETTER_BY_KEY[cat];
@@ -251,6 +314,7 @@ export default function RecipeModal({
 }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
+  const [nutritionLoading, setNutritionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Chef-note state (only used when `note` is provided).
   const [noteText, setNoteText] = useState('');
@@ -299,6 +363,38 @@ export default function RecipeModal({
       load();
     }
   }, [meal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Second phase: once the recipe exists (fresh or cached) but has no
+  // CURRENT-version nutrition yet, estimate it via USDA and merge it in, then
+  // persist so it's computed once per meal. The version check (not just
+  // presence) matters because recipeCache.ts never expires entries — without
+  // it, a recipe cached before a USDA-estimator bugfix would show the old,
+  // wrong numbers forever instead of getting recomputed. Best-effort — a null
+  // result just leaves the panel empty.
+  useEffect(() => {
+    if (
+      !recipe ||
+      recipe.nutrition?.nutritionVersion === NUTRITION_VERSION ||
+      !userId ||
+      !meal
+    )
+      return;
+    let active = true;
+    setNutritionLoading(true);
+    fetchRecipeNutrition(recipe.ingredients, recipe.servings)
+      .then((n) => {
+        if (!active || !n) return;
+        const withNutrition = { ...recipe, nutrition: n };
+        setRecipe(withNutrition);
+        saveCachedRecipe(userId, meal.id, withNutrition);
+      })
+      .finally(() => {
+        if (active) setNutritionLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [recipe?.id, recipe?.nutrition, userId, meal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load the chef note for this meal whenever it changes (if notes are enabled).
   useEffect(() => {
@@ -423,6 +519,12 @@ export default function RecipeModal({
                   : `⏱  ${recipe.prepMinutes} min prep · ${recipe.cookMinutes} min cook · ${recipe.servings} servings`}
               </Text>
             </View>
+
+            {/* Per-serving nutrition (USDA estimate, streams in after load) */}
+            <NutritionPanel
+              nutrition={recipe.nutrition}
+              loading={nutritionLoading}
+            />
 
             {/* Ingredients */}
             <Text style={styles.sectionHeader}>Ingredients</Text>
@@ -637,6 +739,74 @@ const styles = StyleSheet.create({
   metaText: {
     color: '#A8A29E',
     fontSize: 12,
+  },
+  nutritionCard: {
+    marginTop: 20,
+    borderRadius: 16,
+    backgroundColor: '#141A12',
+    borderWidth: 1,
+    borderColor: '#2A3A22',
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+  },
+  nutritionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  nutritionTitle: {
+    color: '#7FBF5A',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  nutritionPill: {
+    borderRadius: 999,
+    backgroundColor: '#0F140D',
+    borderWidth: 1,
+    borderColor: '#2A3A22',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  nutritionEstimate: {
+    color: '#8FA88A',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  macroRow: {
+    flexDirection: 'row',
+  },
+  macroStat: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  macroStatDivider: {
+    borderRightWidth: 1,
+    borderRightColor: '#2A3A22',
+  },
+  macroValue: {
+    color: '#F5F5F0',
+    fontSize: 19,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  macroLabel: {
+    color: '#8FA88A',
+    fontSize: 11,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  nutritionLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  nutritionLoadingText: {
+    color: '#A8A29E',
+    fontSize: 13,
+    marginLeft: 10,
   },
   sectionHeader: {
     color: '#F5F5F0',

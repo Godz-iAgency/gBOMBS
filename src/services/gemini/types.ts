@@ -108,6 +108,34 @@ export interface Recipe {
   photoSource?: 'unsplash' | 'imagen' | 'pexels';
   /** Photographer attribution for `photoUrl` (Unsplash usage guideline). */
   photoCredit?: { name: string; link: string };
+  /** Per-serving nutrition estimate (USDA-backed). Absent until the lookup
+   *  resolves; the recipe renders immediately and this streams in after. */
+  nutrition?: RecipeNutrition;
+}
+
+/** Per-serving macros for a recipe, estimated from USDA FoodData Central.
+ *  Fields mirror the DB `meals` nutrition columns. */
+export interface RecipeNutrition {
+  /** kcal per serving. */
+  calories: number;
+  /** grams per serving. */
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  /** How many of the recipe's ingredients USDA could match (for a confidence
+   *  hint) and the total attempted. */
+  matched: number;
+  total: number;
+  /** Always true — auto-parsed nutrition is an estimate; the UI labels it so. */
+  estimated: boolean;
+  /** Bumped whenever the USDA matching/scaling logic changes meaningfully.
+   *  A cached recipe's nutrition is only trusted if this matches the current
+   *  build's version — otherwise it's silently recomputed. Without this, a
+   *  recipe cached under an older (buggy) version of the estimator keeps
+   *  showing its stale numbers forever, since the recipe cache itself never
+   *  expires (see src/lib/recipeCache.ts). */
+  nutritionVersion: number;
 }
 
 /** Canonical store sections, in shopping-path order (Prompt 4). */

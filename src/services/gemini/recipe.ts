@@ -89,11 +89,6 @@ export async function generateRecipe(
   const model = getModel(isSmoothie ? 'smoothie' : 'recipe', tier);
   const userBlock = renderUserContext(ctx);
 
-  // Fire the hero-image lookup in PARALLEL with the (slower) Gemini call so it
-  // adds no latency. Keyed on the meal name we already have — best-effort, so a
-  // miss or failure just yields no photo and never blocks the recipe.
-  const photoPromise = fetchRecipePhoto(meal.name, meal.slot);
-
   const dishPrompt = `Write a complete, original Nutritarian recipe for this dish.
 
 DISH: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}` : ''}
@@ -237,9 +232,17 @@ Use ONLY these category values (or null): greens, beans, onion, mushroom, berrie
 
   const name = (raw.name ?? meal.name).trim();
 
-  // The Unsplash search resolves well before Gemini does, so this await is
-  // effectively free. Null on any miss/failure — the UI just omits the hero.
-  const photo = await photoPromise;
+  // Grounded in the recipe's own ingredients (real food nouns) rather than its
+  // invented dish name — see services/unsplash/fetch.ts for why that matters.
+  // Only available now that ingredients are parsed, so unlike a name-only
+  // lookup this can't run in parallel with the Gemini call; fetchRecipePhoto
+  // is guaranteed to resolve to a real photo (never null) as long as a key is
+  // configured, so this always adds one photo but never adds a failure mode.
+  const photo = await fetchRecipePhoto({
+    dishName: name,
+    slot: meal.slot,
+    ingredientItems: ingredients.map((i) => i.item),
+  });
 
   return {
     id: meal.id || slugify(name),

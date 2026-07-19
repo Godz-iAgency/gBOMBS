@@ -64,3 +64,12 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/send-invite-email/deno.json"
 entrypoint = "./functions/send-invite-email/index.ts"
+
+# Estimates per-serving recipe nutrition from an ingredient list via the USDA
+# FoodData Central API. JWT verified inside (so the web CORS preflight isn't
+# blocked) — only signed-in users can spend our key. Needs the USDA_API_KEY secret.
+[functions.usda-nutrition]
+enabled = true
+verify_jwt = false
+import_map = "./functions/usda-nutrition/deno.json"
+entrypoint = "./functions/usda-nutrition/index.ts"
