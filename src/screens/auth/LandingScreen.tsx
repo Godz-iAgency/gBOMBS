@@ -43,10 +43,18 @@ export default function LandingScreen({ navigation }: Props) {
         {/* Full-screen animation. `contain` guarantees the whole G-BOMBS logo
             stays visible (G…S) on every screen ratio — `cover` was cropping the
             outer letters on taller/narrower phones. Letterbox areas fall back to
-            the dark page background, which blends with the gradients below. */}
+            the dark page background, which blends with the gradients below.
+            width/height:'100%' are explicit here (not just absoluteFill's
+            top/left/right/bottom:0) because expo-video's web implementation
+            renders an actual <video> tag with its native pixel dimensions
+            (e.g. 720x1280) as literal CSS width/height — which, in CSS, wins
+            over inset-based sizing even with all four offsets at 0. Confirmed
+            on the live tablet build: the video rendered unscaled at its native
+            720x1280 instead of filling the container, leaving a gap on the
+            right and running 256px past the bottom of the screen. */}
         <VideoView
           player={player}
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
           contentFit="contain"
           nativeControls={false}
         />
