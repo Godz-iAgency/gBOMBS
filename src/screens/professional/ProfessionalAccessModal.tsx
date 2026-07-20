@@ -3,7 +3,6 @@ import {
   Modal,
   View,
   Text,
-  TextInput,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -21,7 +20,7 @@ import {
   type ProfessionalConnection,
   type ProfessionalRole,
 } from '@/lib/professional';
-import { shareInvite, inviteDeepLink, emailInvite } from '@/lib/invite';
+import { shareInvite, inviteDeepLink } from '@/lib/invite';
 import { confirmAsync, notify } from '@/utils/dialog';
 import QRCodeBox from '@/components/QRCodeBox';
 
@@ -163,36 +162,6 @@ export default function ProfessionalAccessModal({
     if (copied) notify('Copied', 'Invite copied to your clipboard.');
   }
 
-  // Email an invite. Confirm first (sending mail is a real-world side effect a
-  // client could easily fat-finger). Returns true on success so the SlotCard can
-  // clear its input. `notify`/`confirmAsync` are web-safe.
-  async function handleEmailInvite(
-    conn: ProfessionalConnection,
-    email: string
-  ): Promise<boolean> {
-    if (!conn.invite_code) return false;
-    const to = email.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
-      notify('Check the email', 'Enter a valid email address.');
-      return false;
-    }
-    const ok = await confirmAsync({
-      title: 'Send invite?',
-      message: `We'll email this invite to ${to}.`,
-      confirmLabel: 'Send',
-      cancelLabel: 'Cancel',
-    });
-    if (!ok) return false;
-    try {
-      await emailInvite(conn.invite_code, conn.role, to);
-      notify('Invite sent', `We emailed the invite to ${to}.`);
-      return true;
-    } catch (e) {
-      notify('Could not send', (e as Error).message);
-      return false;
-    }
-  }
-
   return (
     <Modal
       visible={visible}
@@ -251,7 +220,6 @@ export default function ProfessionalAccessModal({
                 onGenerate={() => handleGenerate(role)}
                 onRevoke={handleRevoke}
                 onShare={handleShare}
-                onEmailInvite={handleEmailInvite}
               />
             ))
           )}
@@ -270,7 +238,6 @@ function SlotCard({
   onGenerate,
   onRevoke,
   onShare,
-  onEmailInvite,
 }: {
   role: ProfessionalRole;
   conn: ProfessionalConnection | null;
@@ -279,22 +246,8 @@ function SlotCard({
   onGenerate: () => void;
   onRevoke: (c: ProfessionalConnection) => void;
   onShare: (c: ProfessionalConnection) => void;
-  onEmailInvite: (
-    c: ProfessionalConnection,
-    email: string
-  ) => Promise<boolean>;
 }) {
   const meta = ROLE_META[role];
-  const [email, setEmail] = useState('');
-  const [sending, setSending] = useState(false);
-
-  async function submitEmail() {
-    if (!conn || sending) return;
-    setSending(true);
-    const sent = await onEmailInvite(conn, email);
-    setSending(false);
-    if (sent) setEmail('');
-  }
 
   return (
     <View className="mt-5 rounded-2xl border border-surface-border bg-surface-card p-4">
@@ -361,44 +314,6 @@ function SlotCard({
               className="flex-1 items-center justify-center rounded-xl border border-surface-border py-3"
             >
               <Text className="text-sm font-bold text-brand-onion">Cancel</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Email delivery — send the code straight to their inbox. (Two flat
-              <Text>s in the divider, never nested — nesting crashes NativeWind
-              on web.) */}
-          <View className="mt-5 w-full flex-row items-center">
-            <View className="h-px flex-1 bg-surface-border" />
-            <Text className="text-content-muted mx-2 text-xs">
-              or invite by email
-            </Text>
-            <View className="h-px flex-1 bg-surface-border" />
-          </View>
-          <View className="mt-3 w-full flex-row">
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder={`Your ${meta.label.toLowerCase()}'s email`}
-              placeholderTextColor="#6B7280"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="email"
-              keyboardType="email-address"
-              onSubmitEditing={submitEmail}
-              returnKeyType="send"
-              className="text-content mr-2 flex-1 rounded-xl border border-surface-border bg-surface-cardAlt px-3 py-3 text-sm"
-            />
-            <TouchableOpacity
-              onPress={submitEmail}
-              disabled={sending}
-              activeOpacity={0.85}
-              className="items-center justify-center rounded-xl bg-brand-green px-4"
-            >
-              {sending ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Ionicons name="mail-outline" size={18} color="#FFFFFF" />
-              )}
             </TouchableOpacity>
           </View>
         </View>
