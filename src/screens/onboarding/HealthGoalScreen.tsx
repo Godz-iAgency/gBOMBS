@@ -29,16 +29,40 @@ const GOALS: GoalDef[] = [
 ];
 
 export default function HealthGoalScreen({ navigation }: Props) {
-  const { healthGoal, setHealthGoal } = useOnboarding();
+  const { healthGoal, setHealthGoal, healthGoalSecondary, setHealthGoalSecondary } =
+    useOnboarding();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+
+  // Up to 2 goals. First tap = primary, second tap = secondary. Tapping either
+  // selected card again deselects it (secondary is promoted if primary drops).
+  // A third tap replaces whichever was picked second, so the user is never stuck.
+  function toggleGoal(key: HealthGoal) {
+    if (healthGoal === key) {
+      setHealthGoal(healthGoalSecondary);
+      setHealthGoalSecondary(null);
+      return;
+    }
+    if (healthGoalSecondary === key) {
+      setHealthGoalSecondary(null);
+      return;
+    }
+    if (!healthGoal) {
+      setHealthGoal(key);
+      return;
+    }
+    setHealthGoalSecondary(key);
+  }
 
   async function handleContinue() {
     if (!healthGoal || !user) return;
     setSaving(true);
     const { error } = await supabase
       .from('users')
-      .update({ health_goal: healthGoal })
+      .update({
+        health_goal: healthGoal,
+        health_goal_secondary: healthGoalSecondary,
+      })
       .eq('id', user.id);
     setSaving(false);
     if (error) {
@@ -52,7 +76,7 @@ export default function HealthGoalScreen({ navigation }: Props) {
     <OnboardingScaffold
       step={3}
       title="Your health goal"
-      subtitle="We'll tune your meals toward this."
+      subtitle="Pick up to 2 — we'll tune your meals toward both."
       buttonLabel="Continue"
       buttonDisabled={!healthGoal}
       buttonLoading={saving}
@@ -66,8 +90,8 @@ export default function HealthGoalScreen({ navigation }: Props) {
           iconColor={g.color}
           title={g.title}
           description={g.desc}
-          selected={healthGoal === g.key}
-          onPress={() => setHealthGoal(g.key)}
+          selected={healthGoal === g.key || healthGoalSecondary === g.key}
+          onPress={() => toggleGoal(g.key)}
         />
       ))}
     </OnboardingScaffold>

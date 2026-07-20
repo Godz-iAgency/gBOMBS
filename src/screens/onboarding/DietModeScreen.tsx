@@ -14,7 +14,7 @@ export default function DietModeScreen({ navigation }: Props) {
     <OnboardingScaffold
       step={2}
       title="Your diet mode"
-      subtitle="You'll confirm this again when you save your foods."
+      subtitle="You can revisit this later when you save your foods."
       buttonLabel="Continue"
       onPressButton={() => navigation.navigate('HealthGoal')}
       onBack={() => navigation.goBack()}

@@ -66,6 +66,7 @@ export interface ClientProfile {
   avatar_url: string | null;
   diet_mode: string;
   health_goal: string;
+  health_goal_secondary: string | null;
   cooking_style: string;
 }
 

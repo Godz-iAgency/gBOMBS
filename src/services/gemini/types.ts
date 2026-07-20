@@ -203,6 +203,8 @@ export interface CheckInResult {
 export interface UserMealContext {
   dietMode: string; // 'vegan' | 'vegetarian'
   healthGoal: string; // weight_loss | gut_health | energy | ...
+  /** Optional second focus area, chosen alongside healthGoal. */
+  healthGoalSecondary?: string | null;
   cookingStyle: string; // quick_simple | balanced_everyday | ...
   /** Foods the user actively likes (from food_preferences). */
   preferredFoods?: string[];

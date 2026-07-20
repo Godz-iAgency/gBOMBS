@@ -39,6 +39,8 @@ export const COMMON_ALLERGENS = [
 export interface ProfileSettings {
   dietMode: DietMode;
   healthGoal: HealthGoal;
+  /** Optional second focus area, chosen alongside healthGoal. */
+  healthGoalSecondary: HealthGoal | null;
   cookingStyle: CookingStyle;
   favoriteCount: number;
   avoidCount: number;
@@ -55,7 +57,7 @@ export async function loadProfileSettings(
     supabase
       .from('users')
       .select(
-        'diet_mode, health_goal, cooking_style, autopilot_enabled, autopilot_day'
+        'diet_mode, health_goal, health_goal_secondary, cooking_style, autopilot_enabled, autopilot_day'
       )
       .eq('id', userId)
       .single(),
@@ -75,6 +77,7 @@ export async function loadProfileSettings(
   return {
     dietMode: (u?.diet_mode as DietMode) ?? 'vegan',
     healthGoal: (u?.health_goal as HealthGoal) ?? 'general_wellness',
+    healthGoalSecondary: (u?.health_goal_secondary as HealthGoal | null) ?? null,
     cookingStyle: (u?.cooking_style as CookingStyle) ?? 'balanced_everyday',
     favoriteCount,
     avoidCount,
@@ -102,6 +105,7 @@ export async function updateUserField(
   patch: Partial<{
     diet_mode: DietMode;
     health_goal: HealthGoal;
+    health_goal_secondary: HealthGoal | null;
     cooking_style: CookingStyle;
     autopilot_enabled: boolean;
     autopilot_day: number;

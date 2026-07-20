@@ -23,6 +23,8 @@ export interface CoachTurn {
 export interface CoachContext {
   dietMode: string;
   healthGoal: string;
+  /** Optional second focus area, chosen alongside healthGoal. */
+  healthGoalSecondary?: string | null;
   cookingStyle: string;
   preferredFoods: string[];
   excludedFoods: string[];
@@ -32,6 +34,9 @@ export interface CoachContext {
   hasPlan: boolean;
   /** Weekly gBOMBS coverage (0–6), when a plan exists. */
   weeklyScore: number | null;
+  /** Day-by-day meal names from the current weekly plan, so the coach can
+   *  answer questions about specific days/meals instead of just the score. */
+  weekMealNames: { day: string; meals: string[] }[] | null;
 }
 
 const ALL_CATEGORIES: GBombsCategory[] = [
@@ -78,7 +83,9 @@ function renderContext(ctx: CoachContext): string {
   const lines: string[] = [
     'ABOUT THIS USER (use to personalize; never read it back verbatim):',
     `- Diet mode: ${ctx.dietMode}`,
-    `- Health goal: ${ctx.healthGoal}`,
+    ctx.healthGoalSecondary
+      ? `- Health goals: ${ctx.healthGoal} and ${ctx.healthGoalSecondary}`
+      : `- Health goal: ${ctx.healthGoal}`,
     `- Cooking style: ${ctx.cookingStyle}`,
   ];
   if (ctx.preferredFoods.length) {
@@ -106,6 +113,15 @@ function renderContext(ctx: CoachContext): string {
         ctx.weeklyScore != null ? ` (covers ${ctx.weeklyScore}/6 gBOMBS)` : ''
       }.`
     );
+    if (ctx.weekMealNames?.length) {
+      lines.push('- Their meal plan for this week, by day:');
+      for (const d of ctx.weekMealNames) {
+        lines.push(`  - ${d.day}: ${d.meals.join('; ')}`);
+      }
+      lines.push(
+        '  (Use this to answer questions about specific days or meals — e.g. "what\'s for dinner Wednesday.")'
+      );
+    }
   } else {
     lines.push("- They haven't generated a weekly meal plan yet.");
   }

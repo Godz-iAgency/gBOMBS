@@ -168,6 +168,17 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
           </Text>
         }
       >
+        {/* Explains WHY a typed-in food sometimes gets rejected, before anyone
+            hits that surprise — gBOMBS is a curated whole-food system, not an
+            open free-text list. */}
+        <View className="mb-4 rounded-xl border border-surface-border bg-surface-card px-4 py-3">
+          <Text className="text-content-muted text-xs leading-5">
+            Each category only accepts whole, unprocessed foods that fit its
+            group (e.g. Greens = dark leafy greens, not every vegetable). If
+            something you add doesn't qualify, you'll see why.
+          </Text>
+        </View>
+
         {GBOMBS_CATEGORIES.map((config) => (
           <FoodCategorySection
             key={`${config.key}-${config.label}`}

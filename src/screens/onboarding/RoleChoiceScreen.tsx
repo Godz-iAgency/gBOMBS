@@ -48,10 +48,7 @@ export default function RoleChoiceScreen({ navigation }: Props) {
         {/* Hero question — the biggest thing on the screen */}
         <View className="mt-10">
           <Text className="text-content text-center text-4xl font-extrabold leading-tight">
-            Are you a client{'\n'}or a professional?
-          </Text>
-          <Text className="text-content-muted mt-3 text-center text-sm">
-            Pick the one that fits you to get started.
+            How will you use{'\n'}G-BOMBS?
           </Text>
         </View>
 
@@ -69,7 +66,8 @@ export default function RoleChoiceScreen({ navigation }: Props) {
             <View className="ml-4 flex-1">
               <Text className="text-content text-lg font-extrabold">Client</Text>
               <Text className="text-content-muted mt-0.5 text-sm leading-5">
-                Meal plans & tracking built around your goals.
+                Create meal plans, track progress, and work toward your health
+                goals.
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#6B7280" />
@@ -103,7 +101,7 @@ export default function RoleChoiceScreen({ navigation }: Props) {
                 </View>
               </View>
               <Text className="text-content-muted text-sm leading-5">
-                A chef or trainer invited by a client.
+                For chefs and trainers invited by a client.
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#9B8C3A" />

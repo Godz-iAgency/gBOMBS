@@ -49,7 +49,9 @@ OUTPUT DISCIPLINE:
 export function renderUserContext(ctx: UserMealContext): string {
   const lines = [
     `- Diet mode: ${ctx.dietMode}`,
-    `- Health goal: ${ctx.healthGoal}`,
+    ctx.healthGoalSecondary
+      ? `- Health goals: ${ctx.healthGoal} and ${ctx.healthGoalSecondary} (weight both)`
+      : `- Health goal: ${ctx.healthGoal}`,
     `- Cooking style: ${ctx.cookingStyle}`,
   ];
 

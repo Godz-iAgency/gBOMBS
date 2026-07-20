@@ -61,6 +61,7 @@ function daysUntil(iso: string): number {
 type ModalKind =
   | 'diet'
   | 'goal'
+  | 'goalSecondary'
   | 'cooking'
   | 'autopilotDay'
   | 'favorites'
@@ -241,6 +242,10 @@ export default function ProfileScreen() {
         await updateUserField(user.id, { diet_mode: key as DietMode });
       } else if (modal === 'goal') {
         await updateUserField(user.id, { health_goal: key as HealthGoal });
+      } else if (modal === 'goalSecondary') {
+        await updateUserField(user.id, {
+          health_goal_secondary: key === 'none' ? null : (key as HealthGoal),
+        });
       } else if (modal === 'cooking') {
         await updateUserField(user.id, { cooking_style: key as CookingStyle });
       } else if (modal === 'autopilotDay') {
@@ -276,13 +281,33 @@ export default function ProfileScreen() {
     [user?.id, settings, reload]
   );
 
+  // Secondary-goal picker: "None" to clear, plus every goal except whichever
+  // is already the primary (so the two can never collide).
+  const secondaryGoalOptions: PlanOption<string>[] = [
+    {
+      key: 'none',
+      icon: 'close-circle-outline',
+      color: '#6B7280',
+      title: 'None',
+      desc: 'Just focus on your primary goal',
+    },
+    ...HEALTH_GOALS.filter((g) => g.key !== settings?.healthGoal),
+  ];
+
   // Which option set + current value the plan modal is showing.
   const planModal =
     modal === 'diet'
       ? { title: 'Diet mode', options: DIET_MODES, current: settings?.dietMode }
       : modal === 'goal'
         ? { title: 'Health goal', options: HEALTH_GOALS, current: settings?.healthGoal }
-        : modal === 'cooking'
+        : modal === 'goalSecondary'
+          ? {
+              title: 'Secondary goal',
+              subtitle: 'Optional — a second focus area alongside your primary goal.',
+              options: secondaryGoalOptions,
+              current: settings?.healthGoalSecondary ?? 'none',
+            }
+          : modal === 'cooking'
           ? { title: 'Cooking style', options: COOKING_STYLES, current: settings?.cookingStyle }
           : modal === 'autopilotDay'
             ? {
@@ -346,6 +371,17 @@ export default function ProfileScreen() {
             label="Health goal"
             value={GOAL_LABEL[settings.healthGoal]}
             onPress={() => setModal('goal')}
+          />
+          <View className="h-px bg-surface-border" />
+          <SettingRow
+            icon="flag-outline"
+            label="Secondary goal"
+            value={
+              settings.healthGoalSecondary
+                ? GOAL_LABEL[settings.healthGoalSecondary]
+                : 'None'
+            }
+            onPress={() => setModal('goalSecondary')}
           />
           <View className="h-px bg-surface-border" />
           <SettingRow
@@ -538,6 +574,7 @@ export default function ProfileScreen() {
       <EditPlanModal
         visible={!!planModal}
         title={planModal?.title ?? ''}
+        subtitle={(planModal as { subtitle?: string } | null)?.subtitle}
         options={(planModal?.options ?? []) as PlanOption<string>[]}
         current={planModal?.current ?? ''}
         onSelect={savePlan}

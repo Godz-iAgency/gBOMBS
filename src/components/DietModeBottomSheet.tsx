@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -9,9 +10,17 @@ import {
 } from 'react-native';
 import type { DietMode } from '@/types/database.types';
 
+const DIET_META: Record<DietMode, { emoji: string; label: string }> = {
+  vegan: { emoji: '🌱', label: 'Vegan' },
+  vegetarian: { emoji: '🥚', label: 'Vegetarian' },
+};
+
 /**
  * Slide-up sheet shown when the user taps "Save my food preferences". Diet mode
- * is chosen HERE (intentional — not earlier). Confirming persists everything.
+ * was already picked back on step 2 (DietModeScreen), so this defaults to a
+ * collapsed "already chosen" summary with a Change link — a re-confirmation
+ * safety net (foods picked here can imply a diet, e.g. adding eggs/cheese)
+ * without making the user redo a choice they already made.
  */
 export default function DietModeBottomSheet({
   visible,
@@ -30,6 +39,13 @@ export default function DietModeBottomSheet({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const [editingDiet, setEditingDiet] = useState(false);
+
+  // Fresh collapsed state each time the sheet opens.
+  useEffect(() => {
+    if (visible) setEditingDiet(false);
+  }, [visible]);
+
   return (
     <Modal
       visible={visible}
@@ -86,24 +102,44 @@ export default function DietModeBottomSheet({
             </View>
           </ScrollView>
 
-          <Text className="text-content mt-4 text-base font-semibold">
-            Choose your diet mode:
-          </Text>
-
-          <View className="mt-3 flex-row gap-3">
-            <DietButton
-              emoji="🌱"
-              label="Vegan"
-              active={dietMode === 'vegan'}
-              onPress={() => onChangeDietMode('vegan')}
-            />
-            <DietButton
-              emoji="🥚"
-              label="Vegetarian"
-              active={dietMode === 'vegetarian'}
-              onPress={() => onChangeDietMode('vegetarian')}
-            />
-          </View>
+          {editingDiet ? (
+            <>
+              <Text className="text-content mt-4 text-base font-semibold">
+                Choose your diet mode:
+              </Text>
+              <View className="mt-3 flex-row gap-3">
+                <DietButton
+                  emoji="🌱"
+                  label="Vegan"
+                  active={dietMode === 'vegan'}
+                  onPress={() => {
+                    onChangeDietMode('vegan');
+                    setEditingDiet(false);
+                  }}
+                />
+                <DietButton
+                  emoji="🥚"
+                  label="Vegetarian"
+                  active={dietMode === 'vegetarian'}
+                  onPress={() => {
+                    onChangeDietMode('vegetarian');
+                    setEditingDiet(false);
+                  }}
+                />
+              </View>
+            </>
+          ) : (
+            <View className="mt-4 flex-row items-center justify-between rounded-xl border border-surface-border bg-surface-card px-4 py-3">
+              <Text className="text-content text-base font-semibold">
+                {DIET_META[dietMode].emoji} {DIET_META[dietMode].label}
+              </Text>
+              <TouchableOpacity onPress={() => setEditingDiet(true)} hitSlop={8}>
+                <Text className="text-sm font-bold" style={{ color: '#5A9A3A' }}>
+                  Change
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Vegetarian notice */}
           {dietMode === 'vegetarian' ? (

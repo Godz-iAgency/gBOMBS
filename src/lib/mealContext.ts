@@ -12,10 +12,10 @@ import type { UserMealContext } from '@/services/gemini';
 export async function buildUserMealContext(
   userId: string
 ): Promise<UserMealContext> {
-  // Profile basics (diet mode, goal, cooking style).
+  // Profile basics (diet mode, goal(s), cooking style).
   const { data: profile, error: profileErr } = await supabase
     .from('users')
-    .select('diet_mode, health_goal, cooking_style')
+    .select('diet_mode, health_goal, health_goal_secondary, cooking_style')
     .eq('id', userId)
     .single();
 
@@ -44,6 +44,7 @@ export async function buildUserMealContext(
   return {
     dietMode: profile.diet_mode,
     healthGoal: profile.health_goal,
+    healthGoalSecondary: profile.health_goal_secondary ?? null,
     cookingStyle: profile.cooking_style,
     preferredFoods,
     excludedFoods,
@@ -75,6 +76,7 @@ export async function buildClientMealContext(
   const p = profile as unknown as {
     diet_mode: string;
     health_goal: string;
+    health_goal_secondary: string | null;
     cooking_style: string;
   };
 
@@ -97,6 +99,7 @@ export async function buildClientMealContext(
   return {
     dietMode: p.diet_mode,
     healthGoal: p.health_goal,
+    healthGoalSecondary: p.health_goal_secondary ?? null,
     cookingStyle: p.cooking_style,
     preferredFoods,
     excludedFoods,

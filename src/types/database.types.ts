@@ -83,6 +83,8 @@ export interface Database {
           avatar_url: string | null;
           diet_mode: DietMode;
           health_goal: HealthGoal;
+          /** Optional second focus area, chosen alongside the primary goal. */
+          health_goal_secondary: HealthGoal | null;
           cooking_style: CookingStyle;
           subscription_tier: SubscriptionTier;
           subscription_status: SubscriptionStatus;
@@ -115,6 +117,7 @@ export interface Database {
           avatar_url?: string | null;
           diet_mode?: DietMode;
           health_goal?: HealthGoal;
+          health_goal_secondary?: HealthGoal | null;
           cooking_style?: CookingStyle;
           phone_number?: string | null;
           onboarding_completed?: boolean;

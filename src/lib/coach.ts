@@ -53,6 +53,7 @@ export async function buildCoachContext(userId: string): Promise<CoachContext> {
   return {
     dietMode: mealCtx?.dietMode ?? 'vegan',
     healthGoal: mealCtx?.healthGoal ?? 'general_health',
+    healthGoalSecondary: mealCtx?.healthGoalSecondary ?? null,
     cookingStyle: mealCtx?.cookingStyle ?? 'balanced_everyday',
     preferredFoods: mealCtx?.preferredFoods ?? [],
     excludedFoods: mealCtx?.excludedFoods ?? [],
@@ -61,6 +62,11 @@ export async function buildCoachContext(userId: string): Promise<CoachContext> {
       : null,
     hasPlan: Boolean(plan),
     weeklyScore: plan?.weeklyScore.score ?? null,
+    weekMealNames:
+      plan?.days.map((d) => ({
+        day: d.label,
+        meals: d.meals.map((m) => `${m.name} (${m.slot})`),
+      })) ?? null,
   };
 }
 

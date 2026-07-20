@@ -67,6 +67,15 @@ function isValidPhone(raw: string): boolean {
   return raw.replace(/\D/g, '').length >= 10;
 }
 
+/** Format digits-as-typed into a US phone number: (555) 123-4567. */
+function formatPhoneInput(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 10);
+  if (digits.length === 0) return '';
+  if (digits.length < 4) return `(${digits}`;
+  if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 /** Blocking, cross-platform notice that resolves once acknowledged. */
 function confirmNotice(title: string, message: string): Promise<void> {
   return new Promise((resolve) => {
@@ -199,8 +208,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             Choose your plan
           </Text>
           <Text className="text-content-muted mt-2 text-center text-sm">
-            Start with a 7-day free trial. Cancel anytime before it ends and you
-            won't be charged.
+            Both plans include a 7-day free trial.
           </Text>
         </View>
 
@@ -281,12 +289,13 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             ref={phoneInputRef}
             value={phone}
             onChangeText={(t) => {
-              setPhone(t);
+              setPhone(formatPhoneInput(t));
               if (phoneError) setPhoneError(false);
             }}
             placeholder="(555) 123-4567"
             placeholderTextColor="#6B7280"
             keyboardType="phone-pad"
+            maxLength={14}
             className="text-content rounded-xl border bg-surface-card px-4 py-3 text-base"
             style={
               phoneError
@@ -300,7 +309,8 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             </Text>
           ) : (
             <Text className="text-content-muted mt-1.5 text-xs">
-              Used to secure your account and your free trial.
+              US number, no country code needed — used to secure your account
+              and your free trial.
             </Text>
           )}
         </View>
@@ -363,7 +373,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text className="text-center text-base font-bold text-white">
-                  Start 7-day free trial
+                  Start free trial
                 </Text>
               )}
             </TouchableOpacity>
@@ -371,8 +381,9 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
         ))}
 
         <Text className="text-content-muted mt-2 text-center text-xs">
-          You'll be charged {`${PLANS[0].price}`}–{`${PLANS[1].price}`}/month
-          after the trial unless you cancel. Secure checkout by Stripe.
+          After the trial, you'll be charged {`${PLANS[0].price}`}–
+          {`${PLANS[1].price}`}/month unless you cancel first. Secure checkout
+          by Stripe.
         </Text>
 
         {/* Invited by a client? A chef/trainer doesn't subscribe — they connect

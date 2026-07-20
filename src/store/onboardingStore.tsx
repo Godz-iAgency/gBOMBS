@@ -13,9 +13,12 @@ import type {
 type OnboardingState = {
   dietMode: DietMode;
   healthGoal: HealthGoal | null;
+  /** Optional second focus area — up to 2 goals total during onboarding. */
+  healthGoalSecondary: HealthGoal | null;
   cookingStyle: CookingStyle | null;
   setDietMode: (m: DietMode) => void;
-  setHealthGoal: (g: HealthGoal) => void;
+  setHealthGoal: (g: HealthGoal | null) => void;
+  setHealthGoalSecondary: (g: HealthGoal | null) => void;
   setCookingStyle: (c: CookingStyle) => void;
   reset: () => void;
 };
@@ -25,23 +28,28 @@ const OnboardingContext = createContext<OnboardingState | undefined>(undefined);
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [dietMode, setDietMode] = useState<DietMode>('vegan');
   const [healthGoal, setHealthGoal] = useState<HealthGoal | null>(null);
+  const [healthGoalSecondary, setHealthGoalSecondary] =
+    useState<HealthGoal | null>(null);
   const [cookingStyle, setCookingStyle] = useState<CookingStyle | null>(null);
 
   const value = useMemo<OnboardingState>(
     () => ({
       dietMode,
       healthGoal,
+      healthGoalSecondary,
       cookingStyle,
       setDietMode,
       setHealthGoal,
+      setHealthGoalSecondary,
       setCookingStyle,
       reset: () => {
         setDietMode('vegan');
         setHealthGoal(null);
+        setHealthGoalSecondary(null);
         setCookingStyle(null);
       },
     }),
-    [dietMode, healthGoal, cookingStyle]
+    [dietMode, healthGoal, healthGoalSecondary, cookingStyle]
   );
 
   return (
