@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import OnboardingScaffold from '@/components/onboarding/OnboardingScaffold';
 import FoodCategorySection from '@/components/FoodCategorySection';
+import FoodLibraryModal from '@/components/FoodLibraryModal';
 import DietModeBottomSheet from '@/components/DietModeBottomSheet';
 import { GBOMBS_PRESETS, GBOMBS_CATEGORIES } from '@/utils/gbombsPresets';
 import type { GBombsCategoryKey } from '@/utils/gbombsPresets';
+import { GBOMBS_LIBRARY } from '@/utils/gbombsLibrary';
 import { normalizeFood } from '@/utils/foodValidation';
 import { useOnboarding } from '@/store/onboardingStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,6 +55,9 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
     useState<Record<GBombsCategoryKey, CategoryState>>(initialState);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [libraryOpenFor, setLibraryOpenFor] = useState<GBombsCategoryKey | null>(
+    null
+  );
 
   const selectedCount = useMemo(
     () =>
@@ -88,6 +94,20 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
       next[key] = { chips, customs, selected };
       return next;
     });
+  }
+
+  // Library items are pre-vetted (GBOMBS_LIBRARY), so no validation round-trip
+  // — just add-and-select if new, or toggle if it's already a chip (e.g. one
+  // of the starter presets that also appears in the fuller library list).
+  function toggleFromLibrary(key: GBombsCategoryKey, label: string) {
+    const alreadyChip = cats[key].chips.some(
+      (c) => normalizeFood(c) === normalizeFood(label)
+    );
+    if (alreadyChip) {
+      toggle(key, label);
+    } else {
+      addCustom(key, label);
+    }
   }
 
   async function handleConfirm() {
@@ -167,18 +187,18 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
             {selectedCount} food{selectedCount === 1 ? '' : 's'} selected
           </Text>
         }
+        stickyHeader={
+          // Pinned above the scrollable category list — explains WHY a
+          // typed-in food sometimes gets rejected, before anyone hits that
+          // surprise, and stays visible the whole time (not just at the top).
+          <View className="mb-3 flex-row items-center rounded-xl border border-brand-greenBright/40 bg-brand-greenBright/10 px-3.5 py-2.5">
+            <Ionicons name="information-circle" size={16} color="#5A9A3A" />
+            <Text className="text-content ml-2 flex-1 text-xs leading-4">
+              Only whole, unprocessed foods count toward each gBOMBS group.
+            </Text>
+          </View>
+        }
       >
-        {/* Explains WHY a typed-in food sometimes gets rejected, before anyone
-            hits that surprise — gBOMBS is a curated whole-food system, not an
-            open free-text list. */}
-        <View className="mb-4 rounded-xl border border-surface-border bg-surface-card px-4 py-3">
-          <Text className="text-content-muted text-xs leading-5">
-            Each category only accepts whole, unprocessed foods that fit its
-            group (e.g. Greens = dark leafy greens, not every vegetable). If
-            something you add doesn't qualify, you'll see why.
-          </Text>
-        </View>
-
         {GBOMBS_CATEGORIES.map((config) => (
           <FoodCategorySection
             key={`${config.key}-${config.label}`}
@@ -188,6 +208,7 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
             dietMode={dietMode}
             onToggle={(label) => toggle(config.key, label)}
             onAddCustom={(label) => addCustom(config.key, label)}
+            onOpenLibrary={() => setLibraryOpenFor(config.key)}
           />
         ))}
 
@@ -203,6 +224,23 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
         onConfirm={handleConfirm}
         onClose={() => setSheetOpen(false)}
       />
+
+      {libraryOpenFor ? (
+        <FoodLibraryModal
+          visible={!!libraryOpenFor}
+          categoryLabel={
+            GBOMBS_CATEGORIES.find((c) => c.key === libraryOpenFor)?.label ?? ''
+          }
+          accentColor={
+            GBOMBS_CATEGORIES.find((c) => c.key === libraryOpenFor)?.chip ??
+            '#6FBF4A'
+          }
+          items={GBOMBS_LIBRARY[libraryOpenFor]}
+          selected={cats[libraryOpenFor].selected}
+          onToggle={(label) => toggleFromLibrary(libraryOpenFor, label)}
+          onClose={() => setLibraryOpenFor(null)}
+        />
+      ) : null}
     </>
   );
 }

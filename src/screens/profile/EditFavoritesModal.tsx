@@ -11,8 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FoodCategorySection from '@/components/FoodCategorySection';
+import FoodLibraryModal from '@/components/FoodLibraryModal';
 import { GBOMBS_CATEGORIES } from '@/utils/gbombsPresets';
 import type { GBombsCategoryKey } from '@/utils/gbombsPresets';
+import { GBOMBS_LIBRARY } from '@/utils/gbombsLibrary';
+import { normalizeFood } from '@/utils/foodValidation';
 import {
   loadFavorites,
   syncFavorites,
@@ -39,6 +42,9 @@ export default function EditFavoritesModal({
 }) {
   const [cats, setCats] = useState<FavoritesState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [libraryOpenFor, setLibraryOpenFor] = useState<GBombsCategoryKey | null>(
+    null
+  );
 
   useEffect(() => {
     if (!visible) {
@@ -83,6 +89,18 @@ export default function EditFavoritesModal({
       next[key] = { chips, customs, selected };
       return next;
     });
+  }
+
+  function toggleFromLibrary(key: GBombsCategoryKey, label: string) {
+    if (!cats) return;
+    const alreadyChip = cats[key].chips.some(
+      (c) => normalizeFood(c) === normalizeFood(label)
+    );
+    if (alreadyChip) {
+      toggle(key, label);
+    } else {
+      addCustom(key, label);
+    }
   }
 
   async function handleSave() {
@@ -150,11 +168,29 @@ export default function EditFavoritesModal({
                 dietMode={dietMode}
                 onToggle={(label) => toggle(config.key, label)}
                 onAddCustom={(label) => addCustom(config.key, label)}
+                onOpenLibrary={() => setLibraryOpenFor(config.key)}
               />
             ))}
           </ScrollView>
         )}
       </SafeAreaView>
+
+      {cats && libraryOpenFor ? (
+        <FoodLibraryModal
+          visible={!!libraryOpenFor}
+          categoryLabel={
+            GBOMBS_CATEGORIES.find((c) => c.key === libraryOpenFor)?.label ?? ''
+          }
+          accentColor={
+            GBOMBS_CATEGORIES.find((c) => c.key === libraryOpenFor)?.chip ??
+            '#6FBF4A'
+          }
+          items={GBOMBS_LIBRARY[libraryOpenFor]}
+          selected={cats[libraryOpenFor].selected}
+          onToggle={(label) => toggleFromLibrary(libraryOpenFor, label)}
+          onClose={() => setLibraryOpenFor(null)}
+        />
+      ) : null}
     </Modal>
   );
 }

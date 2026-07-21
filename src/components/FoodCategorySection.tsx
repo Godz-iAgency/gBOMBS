@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import FoodChip from './FoodChip';
 import LetterTile from './LetterTile';
 import {
@@ -27,10 +28,17 @@ export type CategoryConfig = {
   addPlaceholder: string;
 };
 
+/** First letter capitalized — for displaying the food name back to the user. */
+function capitalize(s: string): string {
+  return s.length ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+type RejectState = { food: string; message: string; suggestion: string };
+
 /**
  * One gBOMBS category block: colored letter badge + name, a wrapping grid of
- * chips (presets + any custom additions), and a free-text "add your own" row
- * with inline accept/reject messaging.
+ * chips (presets + any custom additions), a free-text "add your own" row
+ * with inline accept/reject messaging, and a link into the full library.
  */
 export default function FoodCategorySection({
   config,
@@ -39,6 +47,7 @@ export default function FoodCategorySection({
   dietMode,
   onToggle,
   onAddCustom,
+  onOpenLibrary,
 }: {
   config: CategoryConfig;
   /** All chips to render for this category (presets first, then customs). */
@@ -47,18 +56,37 @@ export default function FoodCategorySection({
   selected: Set<string>;
   dietMode: string;
   onToggle: (label: string) => void;
-  /** Called when a custom food passes checks. Parent adds + selects it. */
+  /** Called when a custom food passes checks, or a suggested/library food is added. */
   onAddCustom: (label: string) => void;
+  /** Opens the full searchable library for this category. */
+  onOpenLibrary: () => void;
 }) {
   const [input, setInput] = useState('');
   const [checking, setChecking] = useState(false);
-  const [reject, setReject] = useState('');
+  const [notice, setNotice] = useState('');
+  const [reject, setReject] = useState<RejectState | null>(null);
   const [accept, setAccept] = useState('');
 
-  function flashReject(msg: string) {
+  function flashNotice(msg: string) {
     setAccept('');
-    setReject(msg);
-    setTimeout(() => setReject(''), 3000);
+    setReject(null);
+    setNotice(msg);
+    setTimeout(() => setNotice(''), 3000);
+  }
+
+  // No auto-dismiss timeout — this state carries tappable actions (suggestion,
+  // see more), so it should stay until the user acts on it or starts typing again.
+  function flashReject(food: string, message: string, suggestion = '') {
+    setAccept('');
+    setNotice('');
+    setReject({ food, message, suggestion });
+  }
+
+  function quickAdd(label: string) {
+    onAddCustom(label);
+    setReject(null);
+    setAccept(`Added "${label}"`);
+    setTimeout(() => setAccept(''), 2500);
   }
 
   async function handleAdd() {
@@ -69,14 +97,14 @@ export default function FoodCategorySection({
 
     // Already present in this section?
     if (chips.some((c) => normalizeFood(c) === norm)) {
-      flashReject('Already added.');
+      flashNotice('Already added.');
       setInput('');
       return;
     }
 
     // Fast local block check — no API cost.
     if (isBlockedFood(raw)) {
-      flashReject(REJECTION_MESSAGES[config.key] ?? "That doesn't fit gBOMBS.");
+      flashReject(raw, REJECTION_MESSAGES[config.key] ?? "Doesn't fit this category.");
       setInput('');
       return;
     }
@@ -87,18 +115,12 @@ export default function FoodCategorySection({
     setChecking(false);
 
     if (!result.valid) {
-      const tip = result.suggested_alternative
-        ? ` ${result.suggested_alternative}`
-        : '';
-      flashReject((result.reason || "That doesn't fit gBOMBS.") + tip);
+      flashReject(raw, result.reason || '', result.suggested_alternative || '');
       setInput('');
       return;
     }
 
-    onAddCustom(raw);
-    setReject('');
-    setAccept(`Added "${raw}"`);
-    setTimeout(() => setAccept(''), 2500);
+    quickAdd(raw);
     setInput('');
   }
 
@@ -113,28 +135,38 @@ export default function FoodCategorySection({
       }}
     >
       {/* Header */}
-      <View className="mb-3 flex-row items-center">
-        {(() => {
-          const isLandscape =
-            config.key === 'berries' || config.key === 'seeds';
-          return (
-            <LetterTile
-              image={meta.image}
-              color={config.color}
-              glow={config.chip}
-              // Berries/Seeds (landscape) stay larger + cover. The portrait
-              // letters shrink 4px and use contain so the whole letter shows.
-              size={isLandscape ? 52 : 36}
-              resizeMode={isLandscape ? 'cover' : 'contain'}
-            />
-          );
-        })()}
-        <Text
-          className="ml-3 text-base font-extrabold tracking-wide"
-          style={{ color: config.chip }}
-        >
-          {config.label}
-        </Text>
+      <View className="mb-3 flex-row items-center justify-between">
+        <View className="flex-row items-center">
+          {(() => {
+            const isLandscape =
+              config.key === 'berries' || config.key === 'seeds';
+            return (
+              <LetterTile
+                image={meta.image}
+                color={config.color}
+                glow={config.chip}
+                // Berries/Seeds (landscape) stay larger + cover. The portrait
+                // letters shrink 4px and use contain so the whole letter shows.
+                size={isLandscape ? 52 : 36}
+                resizeMode={isLandscape ? 'cover' : 'contain'}
+              />
+            );
+          })()}
+          <Text
+            className="ml-3 text-base font-extrabold tracking-wide"
+            style={{ color: config.chip }}
+          >
+            {config.label}
+          </Text>
+        </View>
+
+        {/* Second entry point into the library — always available, not just
+            after a rejection, so people can browse proactively. */}
+        <TouchableOpacity onPress={onOpenLibrary} activeOpacity={0.7} hitSlop={8}>
+          <Text className="text-xs font-bold underline" style={{ color: config.chip }}>
+            See all
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Chips */}
@@ -154,7 +186,10 @@ export default function FoodCategorySection({
       <View className="mt-1 flex-row items-center">
         <TextInput
           value={input}
-          onChangeText={setInput}
+          onChangeText={(t) => {
+            setInput(t);
+            if (reject) setReject(null);
+          }}
           placeholder={config.addPlaceholder}
           placeholderTextColor="#6B7280"
           autoCapitalize="none"
@@ -179,9 +214,48 @@ export default function FoodCategorySection({
         </TouchableOpacity>
       </View>
 
-      {/* Inline messages */}
+      {/* Rejection — names the food, explains why, and offers two ways
+          forward instead of a dead end. */}
       {reject ? (
-        <Text className="mt-2 text-xs text-red-400">{reject}</Text>
+        <View className="mt-3 rounded-xl border border-red-400/30 bg-red-400/10 p-3">
+          {/* Flat single <Text> — a nested <Text className> renders as a
+              <span> on web and crashes NativeWind, so the food name is
+              emphasized with quotes + semibold on the whole line instead. */}
+          <Text className="text-sm font-semibold leading-5 text-red-300">
+            "{capitalize(reject.food)}" isn't part of the gBOMBS{' '}
+            {config.label.toLowerCase()} list.
+          </Text>
+          {reject.message ? (
+            <Text className="mt-1 text-xs font-normal text-red-300/80">
+              {reject.message}
+            </Text>
+          ) : null}
+          <View className="mt-2.5 flex-row flex-wrap items-center">
+            {reject.suggestion ? (
+              <TouchableOpacity
+                onPress={() => quickAdd(reject.suggestion)}
+                activeOpacity={0.85}
+                style={{ backgroundColor: config.chip + '26', borderColor: config.chip }}
+                className="mb-1 mr-3 flex-row items-center rounded-full border px-3 py-1.5"
+              >
+                <Ionicons name="add-circle" size={14} color={config.chip} />
+                <Text className="ml-1 text-xs font-bold" style={{ color: config.chip }}>
+                  Add {reject.suggestion} instead
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity onPress={onOpenLibrary} activeOpacity={0.7} className="mb-1">
+              <Text className="text-xs font-bold underline" style={{ color: config.chip }}>
+                See more options
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
+
+      {/* Inline notice/accept messages */}
+      {notice ? (
+        <Text className="mt-2 text-xs text-red-400">{notice}</Text>
       ) : null}
       {accept ? (
         <Text className="text-brand-green mt-2 text-xs">{accept}</Text>

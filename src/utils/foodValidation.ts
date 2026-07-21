@@ -16,16 +16,26 @@ export const BLOCKED_FOODS = [
 ];
 
 export const REJECTION_MESSAGES: Record<string, string> = {
-  greens: "That doesn't fit gBOMBS. Try a leafy green like kale, spinach, or arugula.",
-  beans: "That doesn't fit gBOMBS. Try a legume like lentils, chickpeas, or black beans.",
-  onion: "That doesn't fit gBOMBS. Try an allium like garlic, leeks, or shallots.",
-  mushroom: "That doesn't fit gBOMBS. Try a mushroom variety like shiitake or portobello.",
-  berries: "That doesn't fit gBOMBS. Try a berry like blueberries, raspberries, or acai.",
-  seeds: "That doesn't fit gBOMBS. Try a nut or seed like walnuts, chia, or pumpkin seeds.",
+  greens: 'Try a leafy green like kale, spinach, or arugula.',
+  beans: 'Try a legume like lentils, chickpeas, or black beans.',
+  onion: 'Try an allium like garlic, leeks, or shallots.',
+  mushroom: 'Try a mushroom variety like shiitake or portobello.',
+  berries: 'Try a berry like blueberries, raspberries, or acai.',
+  seeds: 'Try a nut or seed like walnuts, chia, or pumpkin seeds.',
 };
+
+// Whole-food compounds that would otherwise false-positive on the blocklist
+// below (e.g. "almond butter" contains "butter", "oat milk" contains "milk")
+// — these are legitimate whole-food fats/plant milks, not dairy/processed
+// foods, so they should skip the fast block and go to the full Gemini check.
+const SAFE_COMPOUND_PATTERNS = [
+  /\b(almond|cashew|walnut|peanut|sunflower|tahini|pistachio|hazelnut|seed)\s+butter\b/i,
+  /\b(almond|soy|oat|cashew|rice|hemp|coconut)\s+milk\b/i,
+];
 
 export const isBlockedFood = (input: string): boolean => {
   const normalized = input.toLowerCase().trim();
+  if (SAFE_COMPOUND_PATTERNS.some((p) => p.test(normalized))) return false;
   return BLOCKED_FOODS.some((blocked) => normalized.includes(blocked));
 };
 

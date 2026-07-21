@@ -26,6 +26,7 @@ export default function OnboardingScaffold({
   buttonLoading = false,
   footer,
   onBack,
+  stickyHeader,
 }: {
   step: number;
   totalSteps?: number;
@@ -38,6 +39,9 @@ export default function OnboardingScaffold({
   buttonLoading?: boolean;
   footer?: React.ReactNode;
   onBack?: () => void;
+  /** Rendered between the title block and the scrollable content, OUTSIDE the
+   *  ScrollView — stays pinned on screen no matter how far the user scrolls. */
+  stickyHeader?: React.ReactNode;
 }) {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
@@ -65,6 +69,8 @@ export default function OnboardingScaffold({
           <Text className="text-content-muted mt-1 text-base">{subtitle}</Text>
         ) : null}
       </View>
+
+      {stickyHeader ? <View className="px-6">{stickyHeader}</View> : null}
 
       {/* Content */}
       <ScrollView
