@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +23,17 @@ export default function RoleChoiceScreen({ navigation }: Props) {
   const { signOut } = useAuth();
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
-      <View className="flex-1 px-6">
+      {/* Scrollable: this screen used to be a fixed flex-1 View that assumed the
+          content always fits the viewport. On a real phone browser it often
+          doesn't — Chrome's "Save password?" prompt (and the URL bar) eat enough
+          vertical space to push the Professional card and the "Sign in" link
+          below the fold with no way to reach them. flex-grow keeps `mt-auto`
+          working (footer pinned to the bottom) when the content DOES fit. */}
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="flex-grow px-6"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Back to the landing page (signs this fresh session out) */}
         <TouchableOpacity
           onPress={signOut}
@@ -130,7 +140,7 @@ export default function RoleChoiceScreen({ navigation }: Props) {
             Sign in
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

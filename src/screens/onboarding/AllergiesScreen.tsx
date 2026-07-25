@@ -181,11 +181,15 @@ export default function AllergiesScreen({ navigation }: Props) {
           autoCapitalize="none"
           returnKeyType="done"
           onSubmitEditing={addCustom}
+          // See FoodCategorySection: min-width:auto on web would stop this
+          // shrinking and push the button off a narrow phone screen.
+          style={{ minWidth: 0 }}
           className="mr-2 flex-1 rounded-xl border border-surface-border bg-surface-card px-4 py-2.5 text-sm text-content"
         />
         <TouchableOpacity
           onPress={addCustom}
           activeOpacity={0.85}
+          style={{ flexShrink: 0 }}
           className="rounded-xl border border-brand-green px-4 py-2.5"
         >
           <Text className="text-sm font-bold text-brand-green">+ Add</Text>

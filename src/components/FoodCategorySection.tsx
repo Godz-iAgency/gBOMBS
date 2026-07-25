@@ -195,13 +195,20 @@ export default function FoodCategorySection({
           autoCapitalize="none"
           returnKeyType="done"
           onSubmitEditing={handleAdd}
+          // minWidth:0 is REQUIRED on web. A flex child defaults to
+          // `min-width:auto`, which refuses to shrink below the <input>'s
+          // intrinsic width (~20 chars) — so on a narrow phone the row grows
+          // wider than the card and pushes the "+ Add" button off the right
+          // edge. Harmless on native (0 is already the default there).
+          style={{ minWidth: 0 }}
           className="mr-2 flex-1 rounded-xl border border-surface-border bg-surface-card px-4 py-2.5 text-sm text-content"
         />
         <TouchableOpacity
           onPress={handleAdd}
           disabled={checking}
           activeOpacity={0.85}
-          style={{ borderColor: config.chip }}
+          // flex-shrink-0: never let the button be the thing that compresses.
+          style={{ borderColor: config.chip, flexShrink: 0 }}
           className="rounded-xl border px-4 py-2.5"
         >
           {checking ? (

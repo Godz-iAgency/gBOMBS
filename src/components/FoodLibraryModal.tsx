@@ -66,6 +66,10 @@ export default function FoodLibraryModal({
               placeholderTextColor="#6B7280"
               autoCapitalize="none"
               autoCorrect={false}
+              // See FoodCategorySection — without this the input can't shrink
+              // below its intrinsic width and overflows the search box on
+              // narrow phone screens.
+              style={{ minWidth: 0 }}
               className="text-content ml-2 flex-1 text-sm"
             />
           </View>
