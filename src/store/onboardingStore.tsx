@@ -11,11 +11,17 @@ import type {
  * Supabase as the user advances, so this is primarily for cross-screen UI state.
  */
 type OnboardingState = {
+  state: string;
+  city: string;
+  zipCode: string;
   dietMode: DietMode;
   healthGoal: HealthGoal | null;
   /** Optional second focus area — up to 2 goals total during onboarding. */
   healthGoalSecondary: HealthGoal | null;
   cookingStyle: CookingStyle | null;
+  setState: (s: string) => void;
+  setCity: (c: string) => void;
+  setZipCode: (z: string) => void;
   setDietMode: (m: DietMode) => void;
   setHealthGoal: (g: HealthGoal | null) => void;
   setHealthGoalSecondary: (g: HealthGoal | null) => void;
@@ -26,6 +32,9 @@ type OnboardingState = {
 const OnboardingContext = createContext<OnboardingState | undefined>(undefined);
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState('');
+  const [city, setCity] = useState('');
+  const [zipCode, setZipCode] = useState('');
   const [dietMode, setDietMode] = useState<DietMode>('vegan');
   const [healthGoal, setHealthGoal] = useState<HealthGoal | null>(null);
   const [healthGoalSecondary, setHealthGoalSecondary] =
@@ -34,22 +43,31 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const value = useMemo<OnboardingState>(
     () => ({
+      state,
+      city,
+      zipCode,
       dietMode,
       healthGoal,
       healthGoalSecondary,
       cookingStyle,
+      setState,
+      setCity,
+      setZipCode,
       setDietMode,
       setHealthGoal,
       setHealthGoalSecondary,
       setCookingStyle,
       reset: () => {
+        setState('');
+        setCity('');
+        setZipCode('');
         setDietMode('vegan');
         setHealthGoal(null);
         setHealthGoalSecondary(null);
         setCookingStyle(null);
       },
     }),
-    [dietMode, healthGoal, healthGoalSecondary, cookingStyle]
+    [state, city, zipCode, dietMode, healthGoal, healthGoalSecondary, cookingStyle]
   );
 
   return (

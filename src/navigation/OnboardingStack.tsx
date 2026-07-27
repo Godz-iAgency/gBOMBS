@@ -4,6 +4,7 @@ import RoleChoiceScreen from '@/screens/onboarding/RoleChoiceScreen';
 import ProfessionalConnectScreen from '@/screens/onboarding/ProfessionalConnectScreen';
 import ProfessionalNameScreen from '@/screens/onboarding/ProfessionalNameScreen';
 import WelcomeScreen from '@/screens/onboarding/WelcomeScreen';
+import LocationScreen from '@/screens/onboarding/LocationScreen';
 import DietModeScreen from '@/screens/onboarding/DietModeScreen';
 import HealthGoalScreen from '@/screens/onboarding/HealthGoalScreen';
 import CookingStyleScreen from '@/screens/onboarding/CookingStyleScreen';
@@ -15,6 +16,7 @@ export type OnboardingStackParamList = {
   ProfessionalConnect: undefined;
   ProfessionalName: { roleLabel: string };
   Welcome: undefined;
+  Location: undefined;
   DietMode: undefined;
   HealthGoal: undefined;
   CookingStyle: undefined;
@@ -45,6 +47,7 @@ export default function OnboardingStack() {
           component={ProfessionalNameScreen}
         />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        <Stack.Screen name="Location" component={LocationScreen} />
         <Stack.Screen name="DietMode" component={DietModeScreen} />
         <Stack.Screen name="HealthGoal" component={HealthGoalScreen} />
         <Stack.Screen name="CookingStyle" component={CookingStyleScreen} />

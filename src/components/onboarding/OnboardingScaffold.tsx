@@ -11,12 +11,12 @@ import { Ionicons } from '@expo/vector-icons';
 import ProgressDots from './ProgressDots';
 
 /**
- * Shared layout for onboarding steps: progress dots + "Step X of 6" + title +
+ * Shared layout for onboarding steps: progress dots + "Step X of 7" + title +
  * subtitle + scrollable content + a fixed bottom primary button.
  */
 export default function OnboardingScaffold({
   step,
-  totalSteps = 6,
+  totalSteps = 7,
   title,
   subtitle,
   children,

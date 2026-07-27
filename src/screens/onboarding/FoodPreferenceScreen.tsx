@@ -171,7 +171,7 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
   return (
     <>
       <OnboardingScaffold
-        step={5}
+        step={6}
         title="Your whole foods"
         subtitle="Select foods you love — or add your own"
         buttonLabel={

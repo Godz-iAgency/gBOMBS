@@ -74,7 +74,7 @@ export default function HealthGoalScreen({ navigation }: Props) {
 
   return (
     <OnboardingScaffold
-      step={3}
+      step={4}
       title="Your health goal"
       subtitle="Pick up to 2 — we'll tune your meals toward both."
       buttonLabel="Continue"

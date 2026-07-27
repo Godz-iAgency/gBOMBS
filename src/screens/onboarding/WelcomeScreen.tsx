@@ -90,7 +90,7 @@ export default function WelcomeScreen({ navigation }: Props) {
       {/* CTA */}
       <View className="border-t border-surface-border px-6 pb-4 pt-4">
         <TouchableOpacity
-          onPress={() => navigation.navigate('DietMode')}
+          onPress={() => navigation.navigate('Location')}
           activeOpacity={0.85}
           className="rounded-xl bg-brand-green py-4"
         >

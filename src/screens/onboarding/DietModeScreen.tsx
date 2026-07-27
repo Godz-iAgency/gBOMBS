@@ -12,7 +12,7 @@ export default function DietModeScreen({ navigation }: Props) {
 
   return (
     <OnboardingScaffold
-      step={2}
+      step={3}
       title="Your diet mode"
       subtitle="You can revisit this later when you save your foods."
       buttonLabel="Continue"

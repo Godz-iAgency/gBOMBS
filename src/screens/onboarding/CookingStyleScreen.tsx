@@ -49,7 +49,7 @@ export default function CookingStyleScreen({ navigation }: Props) {
 
   return (
     <OnboardingScaffold
-      step={4}
+      step={5}
       title="Your cooking style"
       subtitle="How do you like to cook?"
       buttonLabel="Continue"

@@ -129,7 +129,7 @@ export default function AllergiesScreen({ navigation }: Props) {
 
   return (
     <OnboardingScaffold
-      step={6}
+      step={7}
       title="Anything to avoid?"
       subtitle="Allergies, intolerances, or foods you just hate"
       buttonLabel={
