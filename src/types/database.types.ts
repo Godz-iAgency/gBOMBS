@@ -93,6 +93,16 @@ export interface Database {
           customer_id: string | null;
           revenuecat_id: string | null;
           phone_number: string | null;
+          /** Location captured in onboarding — used to resolve a grocery provider. */
+          state: string | null;
+          city: string | null;
+          zip_code: string | null;
+          /** Resolved grocery provider (set by detect-grocery-provider). */
+          provider_type: 'kroger' | 'instacart' | null;
+          /** Kroger banner for this ZIP, e.g. "Ralphs" (null for Instacart). */
+          banner_name: string | null;
+          /** Kroger locationId for the nearest store (null for Instacart). */
+          kroger_store_id: string | null;
           onboarding_completed: boolean;
           chef_access_enabled: boolean;
           auto_order_enabled: boolean;
@@ -120,6 +130,12 @@ export interface Database {
           health_goal_secondary?: HealthGoal | null;
           cooking_style?: CookingStyle;
           phone_number?: string | null;
+          state?: string | null;
+          city?: string | null;
+          zip_code?: string | null;
+          provider_type?: 'kroger' | 'instacart' | null;
+          banner_name?: string | null;
+          kroger_store_id?: string | null;
           onboarding_completed?: boolean;
         };
         Update: Partial<Database['public']['Tables']['users']['Row']>;
@@ -208,6 +224,26 @@ export interface Database {
         Update: Partial<
           Database['public']['Tables']['food_preference_history']['Row']
         >;
+        Relationships: [];
+      };
+      // Per-user Kroger OAuth2 tokens. Service-role only (no client RLS) — the
+      // browser never reads this; only Edge Functions touch it.
+      kroger_tokens: {
+        Row: {
+          user_id: string;
+          access_token: string | null;
+          refresh_token: string | null;
+          expires_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          access_token?: string | null;
+          refresh_token?: string | null;
+          expires_at?: string | null;
+          updated_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['kroger_tokens']['Row']>;
         Relationships: [];
       };
       daily_scores: {
