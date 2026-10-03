@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,13 @@ import type { AuthStackParamList } from '@/navigation/AuthStack';
 
 const introSource = require('../../../assets/images/brand/sixplants-landing.mp4');
 
+// The intro clip is 9:16 (only the aspect ratio matters here, so a higher
+// resolution export with the same filename drops in unchanged). BOTTOM_EDGE was
+// sampled from the clip's bottom edge so the area under it blends in.
+const VIDEO_W = 9;
+const VIDEO_H = 16;
+const BOTTOM_EDGE = '#0d2613';
+
 type Props = NativeStackScreenProps<AuthStackParamList, 'Landing'>;
 
 export default function LandingScreen({ navigation }: Props) {
@@ -23,15 +29,15 @@ export default function LandingScreen({ navigation }: Props) {
     p.muted = true;
   });
 
-  // The source video is a narrow, phone-shaped 720x1280 clip. `contain` (no
-  // cropping, ever) was chosen specifically because on a narrow PHONE,
-  // `cover` cropped the outer edges of the animation. On a tablet the screen
-  // is wide enough that the crop is minimal, and `contain` there instead
-  // shows visible black letterbox bars on both sides — worse than a small
-  // crop for a full-bleed landing page. 600px is the same phone/tablet
-  // breakpoint used elsewhere in this app (e.g. RecipeModal's font scaling).
-  const { width: windowWidth } = useWindowDimensions();
-  const videoContentFit = windowWidth >= 600 ? 'cover' : 'contain';
+  // Fit the whole video (never crop — the wordmark spans nearly the full
+  // width), pinned to the TOP of the screen. Phones taller than 9:16 get the
+  // leftover space below the video, behind the buttons, so there is never a gap
+  // above it. Desktop/tablet get a phone-width column on the dark page.
+  const { width: winW, height: winH } = useWindowDimensions();
+  const scale = Math.min(winW / VIDEO_W, winH / VIDEO_H);
+  const frameW = Math.round(VIDEO_W * scale);
+  const videoH = Math.round(VIDEO_H * scale);
+  const belowH = Math.max(0, winH - videoH);
 
   // Start playback after the view is mounted (web autoplay needs the
   // player fully attached before play() will take effect).
@@ -40,49 +46,33 @@ export default function LandingScreen({ navigation }: Props) {
   }, [player]);
 
   return (
-    // Page background — fills the whole window; on desktop the dark
-    // surface shows on the sides of the centered phone-width frame.
     <View className="flex-1 bg-surface">
-      {/* Matches the video's own top/bottom greens so the letterbox bars on
-          taller phones blend into the video instead of showing as black. */}
-      <LinearGradient
-        colors={['#2a4d34', '#0e2714']}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-      {/* Width-capped frame, centered — keeps a giant desktop monitor from
-          stretching this into an absurdly wide single column. 480 was sized
-          for that desktop case but also caught tablets (e.g. a ~497-1024px
-          iPad/Galaxy Tab), squeezing them into the same narrow phone-width
-          column instead of using their real screen width, and forcing the
-          `contentFit="contain"` video to shrink dramatically to fit that
-          narrow-but-full-height box — which is what read as a large empty/
-          black area top and bottom on tablet. 900 comfortably covers tablet
-          widths as full-bleed while still capping true desktop. */}
       <View
-        className="flex-1 w-full self-center overflow-hidden"
-        style={{ maxWidth: 900 }}
+        className="flex-1 self-center overflow-hidden"
+        style={{ width: frameW }}
       >
-        {/* Full-screen animation. contentFit is width-conditional (see
-            videoContentFit above): `contain` on phones so the crop-prone
-            `cover` mode doesn't cut into the outer edges of the narrow source
-            video, `cover` on tablets so the wider screen fills edge-to-edge
-            instead of showing letterbox bars (the crop is minor there since
-            the aspect ratio gap is much smaller). Any letterbox area that
-            does show falls back to the dark page background, which blends
-            with the gradients below. width/height:'100%' are explicit here
-            (not just absoluteFill's
-            top/left/right/bottom:0) because expo-video's web implementation
-            renders an actual <video> tag with its native pixel dimensions
-            (e.g. 720x1280) as literal CSS width/height — which, in CSS, wins
-            over inset-based sizing even with all four offsets at 0. Confirmed
-            on the live tablet build: the video rendered unscaled at its native
-            720x1280 instead of filling the container, leaving a gap on the
-            right and running 256px past the bottom of the screen. */}
+        {/* Fills the space below the video on phones taller than 9:16. */}
+        {belowH > 0 && (
+          <View
+            style={{
+              position: 'absolute',
+              top: videoH - 1,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: BOTTOM_EDGE,
+            }}
+            pointerEvents="none"
+          />
+        )}
+
+        {/* Explicit width/height because expo-video's web implementation
+            renders a <video> with its native pixel size as literal CSS
+            width/height, which beats inset-based sizing. */}
         <VideoView
           player={player}
-          style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-          contentFit={videoContentFit}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: videoH }}
+          contentFit="contain"
           nativeControls={false}
         />
 
