@@ -1,3 +1,4 @@
+import { BRAND_DISPLAY_NAME } from '@/utils/brand';
 import { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -157,13 +158,13 @@ export default function CheckInScreen({
               <ActivityIndicator size="large" color="#5A9A3A" />
               <Text style={styles.loadingText}>Scoring your day…</Text>
               <Text style={styles.loadingSub}>
-                Checking which gBOMBS you hit.
+                Checking which plant groups you hit.
               </Text>
             </View>
           ) : result ? (
             // ---- Result ----
             <>
-              <Text style={styles.scoreLabel}>TODAY'S gBOMBS</Text>
+              <Text style={styles.scoreLabel}>{`TODAY'S ${BRAND_DISPLAY_NAME}`}</Text>
               <ScoreBadges hit={result.categoriesHit} />
               <Text style={styles.scoreBig}>
                 {result.score}/6 {result.score === 6 ? '🔥' : ''}
@@ -191,7 +192,7 @@ export default function CheckInScreen({
             <>
               <Text style={styles.prompt}>What did you eat today?</Text>
               <Text style={styles.promptSub}>
-                List your meals and I'll score your gBOMBS coverage.
+                List your meals and I'll score your coverage of the six plant groups.
               </Text>
 
               <TextInput

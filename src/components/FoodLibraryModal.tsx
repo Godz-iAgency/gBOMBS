@@ -46,7 +46,7 @@ export default function FoodLibraryModal({
                 {categoryLabel} options
               </Text>
               <Text className="text-content-muted mt-1 text-sm">
-                Tap to add or remove — all of these fit gBOMBS.
+                Tap to add or remove — all of these fit the six plant groups.
               </Text>
             </View>
             <TouchableOpacity

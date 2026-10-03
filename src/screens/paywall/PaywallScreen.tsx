@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 import { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -35,20 +36,20 @@ type PlanCard = {
 const PLANS: PlanCard[] = [
   {
     key: 'starter',
-    name: 'gBOMBS Starter',
+    name: `${BRAND_NAME} Starter`,
     price: '$19.99',
     tagline: 'Everything you need to eat well.',
     features: [
       'AI-personalized weekly meal plans',
-      'Daily gBOMBS score tracking',
+      'Daily six-plant score tracking',
       'Auto-built grocery lists',
-      'One-tap Instacart delivery',
+      'Grocery lists with check-off progress',
       'Recipes, badges & progress reports',
     ],
   },
   {
     key: 'premium',
-    name: 'gBOMBS Premium',
+    name: `${BRAND_NAME} Premium`,
     price: '$49.99',
     tagline: 'Add your own expert team.',
     highlighted: true,

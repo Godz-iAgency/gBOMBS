@@ -123,7 +123,7 @@ function RecipeLoading() {
         <Animated.View style={[styles.progressFill, { width: barWidth }]} />
       </View>
       <Text style={styles.loadingSub}>
-        Crafting a fresh Nutritarian recipe
+        Crafting a fresh plant-based recipe
       </Text>
     </View>
   );
@@ -580,10 +580,10 @@ export default function RecipeModal({
               ))}
             </View>
 
-            {/* Nutritarian tip — Wellness Pro only */}
+            {/* Plant-based tip — Wellness Pro only */}
             {showTips ? (
               <View style={styles.tipBox}>
-                <Text style={styles.tipLabel}>💡 NUTRITARIAN TIP</Text>
+                <Text style={styles.tipLabel}>💡 PLANT-BASED TIP</Text>
                 <Text style={styles.tipText}>{recipe.tips}</Text>
               </View>
             ) : null}

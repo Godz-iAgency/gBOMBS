@@ -1,9 +1,9 @@
 /**
  * Prompt 2 — Recipe Card Generator (+ gBOMBS scoring, Prompt 3).
  * ------------------------------------------------------------------
- * Turns a meal from the weekly plan into a full, original Fuhrman-inspired
- * recipe: ingredients (tagged by gBOMBS category), steps, times, and a
- * Nutritarian tip. The gBOMBS score is derived from the ingredient tags so the
+ * Turns a meal from the weekly plan into a full, original whole-food, plant-based
+ * recipe: ingredients (tagged by plant group), steps, times, and a
+ * whole-food, plant-based tip. The gBOMBS score is derived from the ingredient tags so the
  * score always reflects what's actually in the dish.
  */
 
@@ -89,7 +89,7 @@ export async function generateRecipe(
   const model = getModel(isSmoothie ? 'smoothie' : 'recipe', tier);
   const userBlock = renderUserContext(ctx);
 
-  const dishPrompt = `Write a complete, original Nutritarian recipe for this dish.
+  const dishPrompt = `Write a complete, original whole-food, plant-based recipe for this dish.
 
 DISH: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}` : ''}
 
@@ -99,9 +99,9 @@ REQUIREMENTS:
 - Stay true to the dish name above.
 - No oil, no refined flour/sugar; use whole-food techniques (water/broth sauté,
   blended nuts/seeds, etc.).
-- Tag each ingredient with its gBOMBS category if it is one of the six, else null.
+- Tag each ingredient with its plant group if it is one of the six, else null.
 - Steps should be clear and numbered in order.
-- "tips" = one short Nutritarian insight about why this dish is healthful.
+- "tips" = one short whole-food, plant-based insight about why this dish is healthful.
 
 Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 {
@@ -120,7 +120,7 @@ Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 
 Use ONLY these category values (or null): greens, beans, onion, mushroom, berries, seeds.`;
 
-  const smoothiePrompt = `Write a complete, original Nutritarian smoothie recipe.
+  const smoothiePrompt = `Write a complete, original whole-food, plant-based smoothie recipe.
 
 SMOOTHIE: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}` : ''}
 
@@ -132,11 +132,11 @@ REQUIREMENTS:
   Sweeten only with whole fruit or dates.
 - Build it like a real smoothie: a liquid base (plant milk, water, or coconut water),
   fruit (fresh or frozen), leafy greens, and seeds/nuts for healthy fat and creaminess.
-- Tag each ingredient with its gBOMBS category if it is one of the six, else null.
+- Tag each ingredient with its plant group if it is one of the six, else null.
 - Steps describe BLENDING ONLY (add to blender, blend until smooth, pour, serve).
   Never sauté, roast, simmer, bake, or cook in any way.
 - "cookMinutes" MUST be 0.
-- "tips" = one short Nutritarian insight about why this smoothie is healthful.
+- "tips" = one short whole-food, plant-based insight about why this smoothie is healthful.
 
 Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 {
@@ -161,14 +161,14 @@ Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 
 Use ONLY these category values (or null): greens, beans, onion, mushroom, berries, seeds.`;
 
-  const dessertPrompt = `Write a complete, original Nutritarian dessert recipe.
+  const dessertPrompt = `Write a complete, original whole-food, plant-based dessert recipe.
 
 DESSERT: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}` : ''}
 
 ${userBlock}
 
 REQUIREMENTS:
-- Stay true to the dessert name above. This is a HEALTHY, Nutritarian treat — a
+- Stay true to the dessert name above. This is a HEALTHY, whole-food, plant-based treat — a
   reward that still follows whole-food principles, not a cheat.
 - Sweeten ONLY with whole foods: Medjool dates, bananas, berries, or other ripe
   fruit. NEVER use refined sugar, brown sugar, maple syrup, honey, agave, coconut
@@ -179,13 +179,13 @@ REQUIREMENTS:
 - NO-BAKE is strongly preferred (mix, blend, process, chill, or freeze). Only call
   for baking when the dish genuinely needs it (e.g. bean-based brownies), and keep
   it simple.
-- Build the dessert around at least one gBOMBS category — favor berries and seeds;
+- Build the dessert around at least one plant group — favor berries and seeds;
   beans (black beans, chickpeas) make an excellent creative base.
-- Tag each ingredient with its gBOMBS category if it is one of the six, else null.
+- Tag each ingredient with its plant group if it is one of the six, else null.
 - Steps should be clear and numbered in order.
 - "prepMinutes" = hands-on time only. "cookMinutes" = active baking time, or 0 for
   a no-bake dessert. NEVER count chilling or freezing time in either field.
-- "tips" = one short Nutritarian insight about why this treat is genuinely healthful.
+- "tips" = one short whole-food, plant-based insight about why this treat is genuinely healthful.
 
 Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
 {

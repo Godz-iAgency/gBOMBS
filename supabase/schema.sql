@@ -388,16 +388,15 @@ CREATE TABLE public.badges (
 );
 
 INSERT INTO public.badges (badge_key, badge_name, badge_description, badge_icon, badge_category, unlock_criteria) VALUES
-('first_gbombs_day', 'First gBOMBS Day', 'Logged your first complete gBOMBS day', '🌱', 'nutrition', '{"type": "daily_score", "value": 6, "count": 1}'),
+('first_gbombs_day', 'First Six Plants Day', 'Hit all six plant groups in a single day', '🌱', 'nutrition', '{"type": "daily_score", "value": 6, "count": 1}'),
 ('streak_7', '7 Day Streak', 'Logged meals 7 days in a row', '🔥', 'streak', '{"type": "daily_streak", "value": 7}'),
 ('streak_30', '30 Day Streak', 'Logged meals 30 days in a row', '🏆', 'streak', '{"type": "daily_streak", "value": 30}'),
-('perfect_week', 'Perfect Week', 'Hit all 6 gBOMBS categories every day for a full week', '⭐', 'nutrition', '{"type": "perfect_week", "value": 1}'),
+('perfect_week', 'Perfect Week', 'Hit all six plant groups every day for a full week', '⭐', 'nutrition', '{"type": "perfect_week", "value": 1}'),
 ('first_vegan_month', 'Vegan Month', 'Completed one full month of plant-based eating', '🥦', 'nutrition', '{"type": "vegan_days", "value": 30}'),
-('grocery_order_placed', 'First Order', 'Placed your first Instacart grocery order', '🛒', 'shopping', '{"type": "orders_placed", "value": 1}'),
 ('meal_swapper', 'Meal Swapper', 'Swapped 5 meals in your weekly plan', '🔄', 'engagement', '{"type": "meals_swapped", "value": 5}'),
 ('pantry_pro', 'Pantry Pro', 'Added 20 items to your pantry tracker', '🏠', 'engagement', '{"type": "pantry_items", "value": 20}'),
 ('nutrition_nerd', 'Nutrition Nerd', 'Viewed nutrition details on 10 different meals', '🔬', 'engagement', '{"type": "nutrition_views", "value": 10}'),
-('social_sharer', 'Social Sharer', 'Shared your first gBOMBS score to Instagram', '📱', 'social', '{"type": "shares", "value": 1}');
+('social_sharer', 'Social Sharer', 'Shared your first Six Plants score', '📱', 'social', '{"type": "shares", "value": 1}');
 
 -- Badges master list is readable by all authenticated users
 ALTER TABLE public.badges ENABLE ROW LEVEL SECURITY;

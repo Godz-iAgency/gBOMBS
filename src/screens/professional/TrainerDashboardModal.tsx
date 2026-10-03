@@ -319,7 +319,7 @@ export default function TrainerDashboardModal({
                 >
                   <Text className="text-content text-sm">
                     {plannedMeals} meals planned across {plan.days.length} days ·
-                    weekly gBOMBS {plan.weeklyScore.score}/
+                    weekly plant score {plan.weeklyScore.score}/
                     {plan.weeklyScore.total}.
                   </Text>
                 </View>

@@ -194,7 +194,7 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
           <View className="mb-3 flex-row items-center rounded-xl border border-brand-greenBright/40 bg-brand-greenBright/10 px-3.5 py-2.5">
             <Ionicons name="information-circle" size={16} color="#5A9A3A" />
             <Text className="text-content ml-2 flex-1 text-xs leading-4">
-              Only whole, unprocessed foods count toward each gBOMBS group.
+              Only whole, unprocessed foods count toward each plant group.
             </Text>
           </View>
         }

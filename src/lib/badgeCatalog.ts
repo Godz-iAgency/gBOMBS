@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 /**
  * Badge catalog — client-side metadata mirroring the `badges` master table.
  * ------------------------------------------------------------------
@@ -9,7 +10,7 @@
  *
  * `earnable` marks which badges the current build can actually award. The four
  * streak/score badges unlock from the daily check-in today; the rest depend on
- * features still to be built (Instacart orders, meal swaps, pantry, recipe
+ * features still to be built (meal swaps, pantry, recipe
  * views, social sharing) and show as "Coming soon" in the trophy case until then.
  */
 
@@ -29,11 +30,11 @@ export const BADGE_CATALOG: BadgeDef[] = [
   // ---- Earnable now (daily check-in) ----
   {
     key: 'first_gbombs_day',
-    name: 'First gBOMBS Day',
-    description: 'Hit all 6 gBOMBS categories in a single day',
+    name: `First ${BRAND_NAME} Day`,
+    description: 'Hit all six plant groups in a single day',
     icon: '🌱',
     unlockMessage:
-      'Your very first perfect gBOMBS day — all six categories in one day. This is exactly what longevity eating looks like.',
+      'Your very first perfect Six Plants day — all six categories in one day. This is exactly what longevity eating looks like.',
     earnable: true,
   },
   {
@@ -51,7 +52,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     description: 'Hit all 6 categories every day for 7 days straight',
     icon: '⭐',
     unlockMessage:
-      'A flawless week — all six gBOMBS, every single day. Elite consistency. Your body is thanking you.',
+      'A flawless week — all six plant groups, every single day. Elite consistency. Your body is thanking you.',
     earnable: true,
   },
   {
@@ -71,14 +72,6 @@ export const BADGE_CATALOG: BadgeDef[] = [
     description: 'Completed one full month of plant-based eating',
     icon: '🥦',
     unlockMessage: 'A full month of plant-based eating. Remarkable.',
-    earnable: false,
-  },
-  {
-    key: 'grocery_order_placed',
-    name: 'First Order',
-    description: 'Placed your first Instacart grocery order',
-    icon: '🛒',
-    unlockMessage: 'Groceries on the way — meal planning just got effortless.',
     earnable: false,
   },
   {
@@ -108,7 +101,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
   {
     key: 'social_sharer',
     name: 'Social Sharer',
-    description: 'Shared your first gBOMBS score',
+    description: `Shared your first ${BRAND_NAME} score`,
     icon: '📱',
     unlockMessage: 'Sharing the journey — inspiring others as you go.',
     earnable: false,

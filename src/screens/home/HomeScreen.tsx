@@ -263,7 +263,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Today's gBOMBS — hero card, opens the check-in overlay */}
+        {/* Today's Six Plants — hero card, opens the check-in overlay */}
         <TouchableOpacity
           onPress={() => setCheckInOpen(true)}
           activeOpacity={0.9}
@@ -271,7 +271,7 @@ export default function HomeScreen() {
           style={{ borderColor: '#5A9A3A66', backgroundColor: '#5A9A3A14' }}
         >
           <Text className="text-content-muted text-xs font-semibold uppercase tracking-wide">
-            Today's gBOMBS
+            Today's Six Plants
           </Text>
 
           {checkIn ? (
@@ -295,7 +295,7 @@ export default function HomeScreen() {
                 You haven't logged today
               </Text>
               <Text className="text-content-muted mt-1 text-sm">
-                Tell me what you ate and I'll score your gBOMBS coverage.
+                Tell me what you ate and I'll score your coverage of the six plant groups.
               </Text>
               <View className="mt-4 rounded-xl bg-brand-green py-3">
                 <Text className="text-center text-sm font-bold text-white">
@@ -393,7 +393,7 @@ export default function HomeScreen() {
                 No meal plan yet
               </Text>
               <Text className="text-content-muted mt-1 text-sm">
-                Generate an AI week built around your gBOMBS.
+                Generate an AI week built around your favorite plants.
               </Text>
               <View className="mt-4 rounded-xl bg-brand-green py-3">
                 <Text className="text-center text-sm font-bold text-white">
@@ -423,7 +423,7 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('MealPlan')}
           />
           <QuickAction
-            icon="cart"
+            icon="list"
             label="Grocery"
             color="#4A90D9"
             onPress={() => navigation.navigate('Grocery')}

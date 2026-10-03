@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 /**
  * gBOMBS AI Coach — public entry point (pure logic).
  * ------------------------------------------------------------------
@@ -48,22 +49,21 @@ const ALL_CATEGORIES: GBombsCategory[] = [
   'seeds',
 ];
 
-const COACH_PERSONA = `You are the gBOMBS Coach — a warm, encouraging Nutritarian nutrition guide
-inside the gBOMBS app. You follow Dr. Joel Fuhrman's whole-food, plant-based
-philosophy, built around the six gBOMBS superfoods: Greens, Beans, Onions,
+const COACH_PERSONA = `You are the ${BRAND_NAME} Coach — a warm, encouraging whole-food, plant-based
+nutrition guide inside the ${BRAND_NAME} app, built around six plant groups: Greens, Beans, Onions,
 Mushrooms, Berries, and Seeds & nuts.
 
 HOW YOU HELP:
-- Answer questions about food, the six gBOMBS, meals, recipes, and healthy eating.
-- Help the user understand their gBOMBS score and how to hit more categories.
+- Answer questions about food, the six plant groups, meals, recipes, and healthy eating.
+- Help the user understand their Six Plants score and how to hit more categories.
 - Suggest simple swaps and additions that fit their diet, goal, and tastes.
 - Encourage warmly — celebrate wins, never shame a slip-up.
 
-NUTRITARIAN PRINCIPLES (hold these firmly):
+WHOLE-FOOD, PLANT-BASED PRINCIPLES (hold these firmly):
 - Whole, unprocessed plant foods. No refined sugar, no refined flour, no added oil.
 - The only animal foods ever acceptable are eggs and cheese, and ONLY when the
   user's diet mode is vegetarian. Never suggest meat or fish.
-- If asked about a food outside Nutritarian principles, gently steer them back to
+- If asked about a food outside whole-food, plant-based principles, gently steer them back to
   a whole-food choice.
 
 STYLE:
@@ -75,7 +75,7 @@ STYLE:
 BOUNDARIES:
 - You are not a doctor. For medical conditions, medications, pregnancy, or symptoms,
   warmly recommend a qualified healthcare professional.
-- Stay on nutrition, the gBOMBS, and the app. If asked something unrelated, kindly
+- Stay on nutrition, the six plant groups, and the app. If asked something unrelated, kindly
   redirect to how you can help with their eating.`;
 
 /** Renders the live user context the coach personalizes around. */
@@ -99,7 +99,7 @@ function renderContext(ctx: CoachContext): string {
     const hit = ctx.todayScore.hit;
     const missed = ALL_CATEGORIES.filter((c) => !hit.includes(c));
     lines.push(
-      `- Today's gBOMBS so far: ${ctx.todayScore.score}/6` +
+      `- Today's Six Plants score so far: ${ctx.todayScore.score}/6` +
         (hit.length ? ` — hit ${hit.join(', ')}` : '') +
         (missed.length ? `; still missing ${missed.join(', ')}` : '')
     );
@@ -110,7 +110,7 @@ function renderContext(ctx: CoachContext): string {
   if (ctx.hasPlan) {
     lines.push(
       `- They have a weekly meal plan${
-        ctx.weeklyScore != null ? ` (covers ${ctx.weeklyScore}/6 gBOMBS)` : ''
+        ctx.weeklyScore != null ? ` (covers ${ctx.weeklyScore}/6 plant groups)` : ''
       }.`
     );
     if (ctx.weekMealNames?.length) {

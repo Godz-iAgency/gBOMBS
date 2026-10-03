@@ -3,7 +3,7 @@
  * ------------------------------------------------------------------
  * Turns the 7-day meal plan into ONE consolidated shopping list. The plan only
  * carries meal names + descriptions (full recipes are generated lazily), so
- * this prompt asks the model to infer realistic Nutritarian ingredients per
+ * this prompt asks the model to infer realistic whole-food, plant-based ingredients per
  * meal, merge them across the whole week, and convert to real shopping units.
  * Always runs on Flash (grocery is a flash-only task — see client.ts), so the
  * prompt carries the intelligence: explicit consolidation rules + a worked
@@ -103,7 +103,7 @@ export async function generateGroceryList(
   const mealLines = renderMealLines(plan);
   const mealCount = plan.days.reduce((n, d) => n + d.meals.length, 0);
 
-  const prompt = `Build ONE consolidated grocery shopping list for the 7-day Nutritarian meal plan below.
+  const prompt = `Build ONE consolidated grocery shopping list for the 7-day whole-food, plant-based meal plan below.
 
 ${userBlock}
 
@@ -111,7 +111,7 @@ THE WEEK'S MEALS (${mealCount} meals, assume 2 servings each):
 ${mealLines}
 
 YOUR TASK — think like a professional meal-prep chef writing a shopping list:
-1. INFER the realistic Nutritarian ingredients each meal needs from its name and
+1. INFER the realistic whole-food, plant-based ingredients each meal needs from its name and
    description (whole foods only — no oil, no refined flour, no refined sugar).
 2. CONSOLIDATE across the entire week: every ingredient appears EXACTLY ONCE in
    the final list, with one combined quantity that covers every meal using it.
@@ -159,7 +159,7 @@ HARD RULES:
 - Fresh produce goes in "Produce"; frozen fruit/vegetables go in "Frozen".
 - Plant milks and non-dairy yogurt go in "Dairy Alternatives".
 - Quantities must be generous enough to actually cook all ${mealCount} meals (2 servings each).
-- Tag each item's "category" with its gBOMBS group (greens, beans, onion, mushroom,
+- Tag each item's "category" with its plant group (greens, beans, onion, mushroom,
   berries, seeds) or null if it is none of the six.
 - DESSERT SWEETENERS: desserts are sweetened ONLY with whole foods (Medjool dates,
   bananas, berries, ripe fruit). NEVER list refined sugar, brown sugar, maple syrup,

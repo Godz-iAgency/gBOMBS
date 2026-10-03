@@ -30,9 +30,9 @@ import {
 } from '@/lib/coach';
 
 const STARTERS = [
-  'What should I eat to hit my missing gBOMBS today?',
+  'What should I eat to include my missing plant groups today?',
   'Give me a quick high-greens lunch idea',
-  'Why are mushrooms one of the gBOMBS?',
+  'Why are mushrooms one of the six plant groups?',
   'A healthy dessert I can make tonight?',
 ];
 
@@ -203,10 +203,10 @@ export default function CoachScreen() {
                   <Ionicons name="nutrition" size={26} color="#5A9A3A" />
                 </View>
                 <Text className="text-content mt-3 text-lg font-bold">
-                  Your Nutritarian coach
+                  Your plant-based coach
                 </Text>
                 <Text className="text-content-muted mt-1 text-center text-sm">
-                  Ask anything about your gBOMBS, meals, or healthy eating.
+                  Ask anything about your six plant groups, meals, or healthy eating.
                 </Text>
               </View>
               <View className="mt-6">

@@ -1,3 +1,4 @@
+import { BRAND_NAME, BRAND_TAGLINE } from '@/utils/brand';
 import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -51,14 +52,14 @@ export default function RoleChoiceScreen({ navigation }: Props) {
             resizeMode="contain"
           />
           <Text className="text-content-muted -mt-1 text-base">
-            Healthy Eating Made Simple
+            {BRAND_TAGLINE}
           </Text>
         </View>
 
         {/* Hero question — the biggest thing on the screen */}
         <View className="mt-10">
           <Text className="text-content text-center text-4xl font-extrabold leading-tight">
-            How will you use{'\n'}G-BOMBS?
+            How will you use{'\n'}{BRAND_NAME}?
           </Text>
         </View>
 

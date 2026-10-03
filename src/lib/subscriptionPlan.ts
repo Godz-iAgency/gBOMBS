@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 /**
  * Subscription plan state — the single source of truth for how a member's plan
  * is labeled across the app (Home badge + Profile block).
@@ -39,8 +40,8 @@ export const PLAN_BADGE_LABEL: Record<PlanState, string> = {
 /** Full plan name for the Profile subscription block. */
 export const PLAN_TITLE: Record<PlanState, string> = {
   trial: 'Free trial',
-  standard: 'gBOMBS Starter',
-  premium: 'gBOMBS Premium',
+  standard: `${BRAND_NAME} Starter`,
+  premium: `${BRAND_NAME} Premium`,
 };
 
 /** Profile CTA label per state. Trial/Premium → portal; Standard → upgrade. */

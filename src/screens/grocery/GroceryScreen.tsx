@@ -58,7 +58,7 @@ export default function GroceryScreen() {
     return (
       <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
         <View className="flex-1 items-center justify-center px-8">
-          <Ionicons name="cart-outline" size={48} color="#5A9A3A" />
+          <Ionicons name="list-outline" size={48} color="#5A9A3A" />
           <Text className="text-content mt-4 text-2xl font-bold">
             No grocery list yet
           </Text>

@@ -2,7 +2,7 @@
  * Prompt 6 — Daily Check-in Scorer.
  * ------------------------------------------------------------------
  * Takes a free-text description of what the user ate today and scores their
- * gBOMBS coverage: which of the six categories they hit, a 0–6 score, warm
+ * coverage of the six plant groups: which of the six categories they hit, a 0–6 score, warm
  * coaching feedback, and one concrete tip for a missed category. Runs on Pro
  * for Wellness Pro subscribers and Flash for Starter (checkin is tier-routed —
  * the gBOMBS detection is deterministic but the coaching benefits from Pro).
@@ -51,7 +51,7 @@ function todayLocalDate(): string {
 }
 
 /**
- * Score a day's eating against the six gBOMBS categories. Throws on no provider
+ * Score a day's eating against the six plant groups. Throws on no provider
  * / parse failure so the caller can surface a retry.
  */
 export async function scoreCheckIn(
@@ -62,14 +62,14 @@ export async function scoreCheckIn(
   const model = getModel('checkin', tier);
   const userBlock = renderUserContext(ctx);
 
-  const prompt = `Analyze what this person ate today and score their gBOMBS coverage.
+  const prompt = `Analyze what this person ate today and score their coverage of the six plant groups.
 
 ${userBlock}
 
 WHAT THEY ATE TODAY:
 "${mealsText}"
 
-THE SIX gBOMBS CATEGORIES (a category is HIT if any qualifying food appears, even as an ingredient):
+THE SIX PLANT GROUPS (a category is HIT if any qualifying food appears, even as an ingredient):
 - greens: leafy greens (kale, spinach, arugula, collards, chard, romaine, bok choy, etc.)
 - beans: legumes & pulses (lentils, chickpeas, black beans, edamame, tofu, tempeh, peas, etc.)
 - onion: alliums (onion, garlic, leeks, shallots, scallions, chives)
@@ -82,7 +82,7 @@ YOUR TASK:
    Never invent foods the person did not say. When unsure, mark false.
 2. Count how many distinct meals/items they described (mealsLogged).
 3. Write warm, specific, encouraging "feedback" (2-3 sentences) as a supportive
-   Nutritarian coach — name what they did well by category.
+   whole-food, plant-based coach — name what they did well by category.
 4. Give ONE concrete "missedTip": name a specific food for a category they MISSED
    and an easy way to add it tomorrow. If they hit all six, celebrate the perfect day.
 

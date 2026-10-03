@@ -1,3 +1,4 @@
+import { BRAND_TAGLINE } from '@/utils/brand';
 import { useCallback, useMemo, useState } from 'react';
 import {
   View,
@@ -81,7 +82,7 @@ export default function ProfessionalHomeScreen() {
             resizeMode="contain"
           />
           <Text className="text-content-muted -mt-1 text-xs">
-            Healthy Eating Made Simple
+            {BRAND_TAGLINE}
           </Text>
         </View>
         <TouchableOpacity

@@ -33,7 +33,7 @@ function slugify(s: string): string {
     .replace(/^-|-$/g, '');
 }
 
-/** Keep only the six valid gBOMBS categories, deduped. */
+/** Keep only the six valid plant groups, deduped. */
 function normalizeCategories(input: unknown): GBombsCategory[] {
   if (!Array.isArray(input)) return [];
   const seen = new Set<GBombsCategory>();
@@ -79,7 +79,7 @@ export async function swapMeal(
       ? '\n- This is a morning SMOOTHIE (blended drink). Lead with berries, greens, and seeds; keep it quick (~5 min).'
       : '';
 
-  const prompt = `Suggest ONE replacement meal for a single slot in this Nutritarian weekly plan.
+  const prompt = `Suggest ONE replacement meal for a single slot in this whole-food, plant-based weekly plan.
 
 ${userBlock}
 
@@ -92,7 +92,7 @@ ${otherNames.map((n) => `- ${n}`).join('\n')}
 YOUR TASK:
 - Create ONE original ${meal.slot} to take this slot's place.
 - It must be clearly DIFFERENT from "${meal.name}" and from every name listed above.
-- Maximize gBOMBS coverage (greens, beans, onion, mushroom, berries, seeds).
+- Maximize coverage of the six plant groups (greens, beans, onion, mushroom, berries, seeds).
 - Strictly respect the diet mode, exclusions, and favored foods above.
 - Keep prepMinutes realistic and matched to the user's cooking style.
 - The name must be original (never copy a published recipe title).${slotNote}

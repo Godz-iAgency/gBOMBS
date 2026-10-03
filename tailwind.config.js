@@ -15,7 +15,7 @@ module.exports = {
         extrabold: ['Poppins_800ExtraBold'],
       },
       colors: {
-        // ---- gBOMBS brand (colors pulled from the food-letter logo) ----
+        // ---- Six Plants brand (existing food-group palette) ----
         brand: {
           green: '#3A6B2A', // G — Kale/Greens — dominant primary
           greenBright: '#5A9A3A', // lighter leaf green for highlights/glows
@@ -36,7 +36,7 @@ module.exports = {
           DEFAULT: '#F5F5F0', // text primary (warm white)
           muted: '#A8A29E', // text secondary (warm grey)
         },
-        // ---- gBOMBS category colors (used for dots, tags, icons) ----
+        // ---- Plant-group colors (used for dots, tags, icons) ----
         gbombs: {
           greens: '#3A6B2A',
           beans: '#6B4423', // beans rendered lighter so it reads on dark bg

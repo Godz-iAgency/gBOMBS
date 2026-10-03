@@ -314,7 +314,7 @@ function EmptyState() {
         No progress yet
       </Text>
       <Text className="text-content-muted mt-2 text-center text-sm leading-5">
-        Log your gBOMBS for a few days and your score trend and category
+        Log your six plants for a few days and your score trend and category
         coverage will show up here.
       </Text>
     </View>

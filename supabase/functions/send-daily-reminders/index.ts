@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       to: u.push_token as string,
       sound: 'default',
       title: '🌱 Keep your streak alive',
-      body: "You haven't logged your gBOMBS today. Tap to check in before midnight.",
+      body: "You haven't logged your six plants today. Tap to check in before midnight.",
       data: { type: 'daily_reminder' },
       channelId: 'default',
     });

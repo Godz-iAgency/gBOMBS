@@ -53,7 +53,9 @@ export default function BadgeTrophyModal({
   }, [visible, userId]);
 
   const loading = earned === null;
-  const earnedCount = earned ? Object.keys(earned).length : 0;
+  const earnedCount = earned
+    ? BADGE_CATALOG.filter((badge) => Boolean(earned[badge.key])).length
+    : 0;
 
   return (
     <Modal

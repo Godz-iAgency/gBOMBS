@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
  */
 
 const STEPS = [
-  'Reading your goals & gBOMBS',
+  'Reading your goals & plant preferences',
   'Planning your week',
   'Balancing greens, beans & berries',
   'Writing your 35 meals',

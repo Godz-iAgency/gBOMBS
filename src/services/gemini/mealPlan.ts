@@ -1,8 +1,8 @@
 /**
  * Prompt 1 — Weekly Meal Plan Generator.
  * ------------------------------------------------------------------
- * Produces an original, Fuhrman-inspired 7-day plan (35 meals: a morning
- * smoothie, breakfast, lunch, dinner, and a Nutritarian dessert each day). Runs
+ * Produces an original, whole-food, plant-based 7-day plan (35 meals: a morning
+ * smoothie, breakfast, lunch, dinner, and a whole-food, plant-based dessert each day). Runs
  * on Pro for Wellness Pro subscribers and Flash for Starter (see getModel). The
  * smoothie always sorts to the top of each day (morning slot) and the dessert
  * always closes it.
@@ -72,7 +72,7 @@ function slugify(s: string): string {
     .replace(/^-|-$/g, '');
 }
 
-/** Keep only the six valid gBOMBS categories, deduped. */
+/** Keep only the six valid plant groups, deduped. */
 function normalizeCategories(input: unknown): GBombsCategory[] {
   if (!Array.isArray(input)) return [];
   const seen = new Set<GBombsCategory>();
@@ -97,7 +97,7 @@ function normalizeSlot(input: unknown): MealSlot {
   return 'breakfast';
 }
 
-/** Aggregate the distinct gBOMBS categories hit across the whole week. */
+/** Aggregate the distinct plant groups hit across the whole week. */
 export function computeWeeklyScore(days: DayPlan[]): GBombsScore {
   const set = new Set<GBombsCategory>();
   for (const d of days) {
@@ -124,7 +124,7 @@ export async function generateWeeklyMealPlan(
   ctx: UserMealContext,
   tier: string,
   /** Queued adjustments from the client's trainer/nutritionist, folded into
-   *  this generation (see queue_meal_adjustment). Honored within Nutritarian
+   *  this generation (see queue_meal_adjustment). Honored within whole-food, plant-based
    *  principles — the system prompt's guardrails still win. */
   adjustments?: string[]
 ): Promise<WeeklyMealPlan> {
@@ -136,12 +136,12 @@ export async function generateWeeklyMealPlan(
     .filter(Boolean);
   const adjustmentBlock =
     cleanAdjustments.length > 0
-      ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any Nutritarian rule above:\n${cleanAdjustments
+      ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any whole-food, plant-based rule above:\n${cleanAdjustments
           .map((a) => `- ${a}`)
           .join('\n')}\n`
       : '';
 
-  const prompt = `Create an original 7-day Nutritarian meal plan (Monday through Sunday).
+  const prompt = `Create an original 7-day whole-food, plant-based meal plan (Monday through Sunday).
 
 ${userBlock}
 ${adjustmentBlock}
@@ -150,21 +150,21 @@ REQUIREMENTS:
   smoothie, breakfast, lunch, dinner, dessert.
 - The smoothie is a morning drink (blended) and should lead with berries, greens,
   and seeds where possible — a nutrient-dense start to the day.
-- The dessert is a Nutritarian sweet — naturally sweetened with whole fruits
+- The dessert is a whole-food, plant-based sweet — naturally sweetened with whole fruits
   (dates, bananas, berries, ripe mango) ONLY. NO refined sugar, NO white flour,
   NO maple syrup/honey/agave, NO added oil. Build it from whole foods such as:
     • Date-based: date-nut energy balls, raw cacao-date-walnut bites, date-oat bars
     • Berry-based: frozen-berry "nice cream", warm berry compote, berry-chia parfait
     • Banana-based: banana soft-serve, banana-date pudding, banana-oat bites
     • Chia-based: chia pudding in oat/almond milk, topped with berries or a nut drizzle
-    • Bean-based (encouraged ~2–3×/week — a strong gBOMBS opportunity):
+    • Bean-based (encouraged ~2–3×/week — a strong plant-group opportunity):
       black bean brownies sweetened with dates, chickpea cookie-dough bites, lentil-date fudge
     • Cacao-based: avocado-cacao mousse sweetened with dates, raw cacao-almond truffles
-  Every dessert MUST hit at least one gBOMBS category (favor berries and seeds;
+  Every dessert MUST hit at least one plant group (favor berries and seeds;
   beans are the creative wildcard). Desserts should feel genuinely satisfying —
   rewards, not penalties. Keep prepMinutes 5–20 (no-bake preferred; chilling or
   freezing time is NOT counted in prepMinutes).
-- Maximize gBOMBS coverage across the week (greens, beans, onion, mushroom, berries, seeds).
+- Maximize coverage of the six plant groups across the week (greens, beans, onion, mushroom, berries, seeds).
 - Vary the meals — do NOT repeat any meal name across the week (smoothies and desserts included).
 - Strictly respect the diet mode, exclusions, and favored foods above.
 - Keep prepMinutes realistic and matched to the user's cooking style (smoothies are quick, ~5 min).

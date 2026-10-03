@@ -195,28 +195,27 @@ async function callGeminiJson<T>(
 // ---------------------------------------------------------------------------
 
 const FUHRMAN_SYSTEM_PROMPT = `
-You are a Nutritarian meal-planning expert who follows the whole-food,
-plant-based principles popularized by Dr. Joel Fuhrman's gBOMBS framework.
+You are a whole-food, plant-based meal-planning expert inside the Six Plants app.
 
-THE gBOMBS SUPERFOODS (prioritize these in every meal):
-- G — Greens: leafy greens (kale, spinach, arugula, collards, chard, etc.)
-- B — Beans: legumes & pulses (lentils, chickpeas, black beans, edamame, etc.)
-- O — Onions: alliums (onion, garlic, leeks, shallots, chives, scallions)
-- M — Mushrooms: edible fungi (shiitake, cremini, portobello, oyster, etc.)
-- B — Berries: berries & small fruits (blueberries, raspberries, goji, etc.)
-- S — Seeds & nuts: raw seeds/nuts (chia, flax, hemp, walnuts, almonds, etc.)
+THE SIX PLANT GROUPS (prioritize these in every meal):
+- Greens: leafy greens (kale, spinach, arugula, collards, chard, etc.)
+- Beans: legumes & pulses (lentils, chickpeas, black beans, edamame, etc.)
+- Onions: alliums (onion, garlic, leeks, shallots, chives, scallions)
+- Mushrooms: edible fungi (shiitake, cremini, portobello, oyster, etc.)
+- Berries: berries & small fruits (blueberries, raspberries, goji, etc.)
+- Seeds & nuts: raw seeds/nuts (chia, flax, hemp, walnuts, almonds, etc.)
 
-NUTRITARIAN RULES (follow strictly):
+WHOLE-FOOD, PLANT-BASED RULES (follow strictly):
 1. Whole, unprocessed foods only. No refined flour, no refined sugar.
 2. No added oil. Use water/broth sautéing, blended nuts/seeds, or whole-food
    fats (avocado, tahini, nut butters) instead.
 3. Keep added salt minimal; lean on herbs, spices, citrus, vinegar, alliums.
 4. Maximize micronutrient density per calorie (the "nutrient-dense" goal).
-5. Aim to include as many of the six gBOMBS categories as naturally fit a dish.
+5. Aim to include as many of the six plant groups as naturally fit a dish.
 
 ORIGINALITY (important):
 - Generate ORIGINAL recipes and meal names. Do NOT reproduce any published
-  recipe text. Write new content inspired by Nutritarian principles only.
+  recipe text. Write new content inspired by whole-food, plant-based principles only.
 
 OUTPUT DISCIPLINE:
 - When asked for JSON, return ONLY valid JSON — no markdown, no commentary.
@@ -326,12 +325,12 @@ async function generatePlan(
   const model = tier === 'wellness_pro' ? PRO_MODEL : FLASH_MODEL;
   const userBlock = renderUserContext(ctx);
   const adjustmentBlock = adjustments.length
-    ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any Nutritarian rule above:\n${adjustments
+    ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any whole-food, plant-based rule above:\n${adjustments
         .map((a) => `- ${a}`)
         .join('\n')}\n`
     : '';
 
-  const prompt = `Create an original 7-day Nutritarian meal plan (Monday through Sunday).
+  const prompt = `Create an original 7-day whole-food, plant-based meal plan (Monday through Sunday).
 
 ${userBlock}
 ${adjustmentBlock}
@@ -340,13 +339,13 @@ REQUIREMENTS:
   smoothie, breakfast, lunch, dinner, dessert.
 - The smoothie is a morning drink (blended) and should lead with berries, greens,
   and seeds where possible — a nutrient-dense start to the day.
-- The dessert is a Nutritarian sweet — naturally sweetened with whole fruits
+- The dessert is a whole-food, plant-based sweet — naturally sweetened with whole fruits
   (dates, bananas, berries, ripe mango) ONLY. NO refined sugar, NO white flour,
   NO maple syrup/honey/agave, NO added oil. Every dessert MUST hit at least one
-  gBOMBS category (favor berries and seeds; beans are the creative wildcard).
+  plant group (favor berries and seeds; beans are the creative wildcard).
   Desserts should feel genuinely satisfying — rewards, not penalties. Keep
   prepMinutes 5–20 (no-bake preferred; chilling/freezing time is NOT counted).
-- Maximize gBOMBS coverage across the week (greens, beans, onion, mushroom, berries, seeds).
+- Maximize coverage of the six plant groups across the week (greens, beans, onion, mushroom, berries, seeds).
 - Vary the meals — do NOT repeat any meal name across the week (smoothies and desserts included).
 - Strictly respect the diet mode, exclusions, and favored foods above.
 - Keep prepMinutes realistic and matched to the user's cooking style (smoothies are quick, ~5 min).
@@ -473,7 +472,7 @@ async function generateGrocery(
   }
   const mealCount = plan.days.reduce((n, d) => n + d.meals.length, 0);
 
-  const prompt = `Build ONE consolidated grocery shopping list for the 7-day Nutritarian meal plan below.
+  const prompt = `Build ONE consolidated grocery shopping list for the 7-day whole-food, plant-based meal plan below.
 
 ${userBlock}
 
@@ -481,7 +480,7 @@ THE WEEK'S MEALS (${mealCount} meals, assume 2 servings each):
 ${mealLines.join('\n')}
 
 YOUR TASK — think like a professional meal-prep chef writing a shopping list:
-1. INFER the realistic Nutritarian ingredients each meal needs from its name and
+1. INFER the realistic whole-food, plant-based ingredients each meal needs from its name and
    description (whole foods only — no oil, no refined flour, no refined sugar).
 2. CONSOLIDATE across the entire week: every ingredient appears EXACTLY ONCE in
    the final list, with one combined quantity that covers every meal using it.
@@ -503,7 +502,7 @@ HARD RULES:
 - Fresh produce goes in "Produce"; frozen fruit/vegetables go in "Frozen".
 - Plant milks and non-dairy yogurt go in "Dairy Alternatives".
 - Quantities must be generous enough to actually cook all ${mealCount} meals (2 servings each).
-- Tag each item's "category" with its gBOMBS group (greens, beans, onion, mushroom,
+- Tag each item's "category" with its plant group (greens, beans, onion, mushroom,
   berries, seeds) or null if it is none of the six.
 - DESSERT SWEETENERS: desserts are sweetened ONLY with whole foods (Medjool dates,
   bananas, berries, ripe fruit). NEVER list refined sugar, brown sugar, maple syrup,

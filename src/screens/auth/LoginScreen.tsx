@@ -1,3 +1,4 @@
+import { BRAND_TAGLINE } from '@/utils/brand';
 import { useState } from 'react';
 import {
   View,
@@ -82,7 +83,7 @@ export default function LoginScreen({ navigation }: Props) {
               resizeMode="contain"
             />
             <Text className="text-content-muted mt-4 text-base">
-              Healthy Eating Made Simple
+              {BRAND_TAGLINE}
             </Text>
           </View>
 

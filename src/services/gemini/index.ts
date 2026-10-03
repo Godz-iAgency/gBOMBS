@@ -35,7 +35,7 @@ export type FoodValidationResult = {
 };
 
 /**
- * Validate a custom food against a gBOMBS category using Gemini (Prompt 8).
+ * Validate a custom food against a plant group using Gemini (Prompt 8).
  *
  * Always runs on Flash (validation is a flash-only task — cheap + deterministic),
  * so tier is irrelevant here. Runs AFTER the local isBlockedFood() check. If no
@@ -52,9 +52,9 @@ export async function validateCustomFood(
   }
 
   const prompt = `
-You are a whole food nutrition validator for the gBOMBS system.
+You are a whole food nutrition validator for Six Plants.
 
-gBOMBS CATEGORIES AND WHAT QUALIFIES:
+SIX PLANT GROUPS AND WHAT QUALIFIES:
 - greens: leafy green vegetables only (kale, spinach, arugula, collards, bok choy, swiss chard, romaine, watercress, microgreens, etc.)
 - beans: all legumes, pulses, and soy products (lentils, chickpeas, black beans, kidney beans, edamame, split peas, mung beans, etc.)
 - onion: allium family only (onion, garlic, leeks, shallots, chives, scallions, escallion, ramps, etc.)

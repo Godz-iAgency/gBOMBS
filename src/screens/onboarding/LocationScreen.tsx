@@ -46,7 +46,7 @@ export default function LocationScreen({ navigation }: Props) {
     <OnboardingScaffold
       step={2}
       title="Where are you?"
-      subtitle="We use this to find your nearest grocery store for checkout."
+      subtitle="Enter your state, city, and ZIP code to continue."
       buttonLabel="Continue"
       buttonDisabled={!canContinue}
       buttonLoading={saving}

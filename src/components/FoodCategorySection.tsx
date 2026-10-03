@@ -229,7 +229,7 @@ export default function FoodCategorySection({
               <span> on web and crashes NativeWind, so the food name is
               emphasized with quotes + semibold on the whole line instead. */}
           <Text className="text-sm font-semibold leading-5 text-red-300">
-            "{capitalize(reject.food)}" isn't part of the gBOMBS{' '}
+            "{capitalize(reject.food)}" isn't part of the{' '}
             {config.label.toLowerCase()} list.
           </Text>
           {reject.message ? (

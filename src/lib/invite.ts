@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 /**
  * Professional-invite helpers.
  * ------------------------------------------------------------------
@@ -34,7 +35,7 @@ export async function shareInvite(code: string, roleLabel: string): Promise<{
   copied: boolean;
 }> {
   const link = inviteDeepLink(code);
-  const message = `Connect to me as my ${roleLabel} on gBOMBS.\n\nInvite code: ${code}\n${link}`;
+  const message = `Connect to me as my ${roleLabel} on ${BRAND_NAME}.\n\nInvite code: ${code}\n${link}`;
 
   if (Platform.OS === 'web') {
     const nav = typeof navigator !== 'undefined' ? (navigator as Navigator) : undefined;

@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,7 +81,12 @@ export default function AppNavigator() {
 
   return (
     <>
-      <NavigationContainer theme={navTheme}>{content}</NavigationContainer>
+      <NavigationContainer
+        theme={navTheme}
+        documentTitle={{ formatter: () => BRAND_NAME }}
+      >
+        {content}
+      </NavigationContainer>
 
       {/* Deep-link invite: once signed in, surface the accept flow over whatever
           stack is mounted, with the code prefilled. A signed-OUT user's code is

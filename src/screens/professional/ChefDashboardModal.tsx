@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,11 +19,8 @@ import {
 } from '@/lib/professional';
 import { buildClientMealContext } from '@/lib/mealContext';
 import { notify } from '@/utils/dialog';
-import {
-  groceryListToLineItems,
-  createInstacartList,
-  openInstacart,
-} from '@/lib/instacart';
+import { formatGroceryList } from '@/lib/groceryShare';
+import { BRAND_NAME } from '@/utils/brand';
 import {
   DIET_LABEL,
   GOAL_LABEL,
@@ -46,8 +45,7 @@ import type { DietMode, HealthGoal, CookingStyle } from '@/types/database.types'
  * The chef executes the plan. Three-level drill-down: the week as an accordion
  * of days (one open at a time) → that day's five meals → tap a meal to generate
  * & read its full recipe (cooked against the CLIENT's diet, cached per client).
- * Plus the client's constraints and the consolidated grocery list with a
- * "Send to Instacart" action they can fire on the client's behalf.
+ * Plus the client's constraints and a plain shareable grocery checklist.
  */
 export default function ChefDashboardModal({
   visible,
@@ -64,7 +62,7 @@ export default function ChefDashboardModal({
   const [plan, setPlan] = useState<WeeklyMealPlan | null>(null);
   const [grocery, setGrocery] = useState<GroceryList | null>(null);
   const [loading, setLoading] = useState(true);
-  const [instacartBusy, setInstacartBusy] = useState(false);
+  const [groceryBusy, setGroceryBusy] = useState(false);
   // Accordion: which day is expanded (null = all collapsed). Single value, so
   // opening one day implicitly closes the previously open one.
   const [openDay, setOpenDay] = useState<number | null>(null);
@@ -99,20 +97,25 @@ export default function ChefDashboardModal({
     };
   }, [visible, clientId]);
 
-  async function handleInstacart() {
+  async function handleShareGrocery() {
     if (!grocery) return;
-    setInstacartBusy(true);
+    setGroceryBusy(true);
     try {
-      const items = groceryListToLineItems(grocery);
-      const url = await createInstacartList(
-        items,
-        `${clientName}'s gBOMBS Grocery List`
-      );
-      await openInstacart(url);
+      const title = `${clientName}'s ${BRAND_NAME} Grocery List`;
+      const message = formatGroceryList(grocery, title);
+      if (Platform.OS === 'web') {
+        if (!navigator.clipboard?.writeText) {
+          throw new Error('Copying is unavailable in this browser. Please try another browser.');
+        }
+        await navigator.clipboard.writeText(message);
+        notify('Copied', 'The grocery list is ready to paste.');
+      } else {
+        await Share.share({ title, message });
+      }
     } catch (e) {
-      notify('Instacart', (e as Error).message);
+      notify('Could not share grocery list', (e as Error).message);
     } finally {
-      setInstacartBusy(false);
+      setGroceryBusy(false);
     }
   }
 
@@ -178,8 +181,8 @@ export default function ChefDashboardModal({
               </View>
             )}
 
-            {/* Grocery + Instacart */}
-            <SectionLabel icon="cart" color="#D4A84E">
+            {/* Grocery checklist */}
+            <SectionLabel icon="list" color="#D4A84E">
               Grocery list
             </SectionLabel>
             <View
@@ -193,18 +196,18 @@ export default function ChefDashboardModal({
                     sections.
                   </Text>
                   <TouchableOpacity
-                    onPress={handleInstacart}
-                    disabled={instacartBusy}
+                    onPress={handleShareGrocery}
+                    disabled={groceryBusy}
                     activeOpacity={0.85}
                     className="mt-3 flex-row items-center justify-center rounded-xl bg-brand-green py-3"
                   >
-                    {instacartBusy ? (
+                    {groceryBusy ? (
                       <ActivityIndicator color="#FFFFFF" />
                     ) : (
                       <>
-                        <Ionicons name="cart-outline" size={18} color="#FFFFFF" />
+                        <Ionicons name={Platform.OS === 'web' ? 'copy-outline' : 'share-outline'} size={18} color="#FFFFFF" />
                         <Text className="ml-2 text-sm font-bold text-white">
-                          Send to Instacart
+                          {Platform.OS === 'web' ? 'Copy grocery list' : 'Share grocery list'}
                         </Text>
                       </>
                     )}

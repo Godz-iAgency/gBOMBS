@@ -11,7 +11,7 @@
 // themselves are real USDA data; only the gram conversion is approximate.
 //
 // The USDA_API_KEY is a secret held only here (no EXPO_PUBLIC_ prefix), never
-// shipped to the app — same pattern as create-instacart-list. Auth: verify_jwt
+// shipped to the app. Auth: verify_jwt
 // is off in config.toml; we validate the caller's Supabase JWT here so only
 // signed-in users can spend our key.
 // ---------------------------------------------------------------------------

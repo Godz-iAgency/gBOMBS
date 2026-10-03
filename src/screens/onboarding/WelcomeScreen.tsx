@@ -1,3 +1,4 @@
+import { BRAND_TAGLINE } from '@/utils/brand';
 import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -41,7 +42,7 @@ export default function WelcomeScreen({ navigation }: Props) {
             resizeMode="contain"
           />
           <Text className="text-content-muted -mt-1 text-base">
-            Healthy Eating Made Simple
+            {BRAND_TAGLINE}
           </Text>
         </View>
 

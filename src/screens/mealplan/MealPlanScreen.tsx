@@ -50,7 +50,7 @@ function WeeklyScoreBar({
   return (
     <View className="mb-4 rounded-2xl bg-surface-card p-4">
       <Text className="text-content-muted mb-2 text-xs font-semibold uppercase tracking-wide">
-        Weekly gBOMBS Score
+        Weekly Six Plants Score
       </Text>
       <View className="flex-row items-center justify-between">
         <View className="flex-row">
@@ -240,8 +240,8 @@ export default function MealPlanScreen() {
             Your Meal Plan
           </Text>
           <Text className="text-content-muted mt-2 text-center text-sm">
-            Generate a personalized 7-day Nutritarian plan built around your
-            gBOMBS superfoods.
+            Generate a personalized 7-day whole-food, plant-based plan built around your
+            favorite plants.
           </Text>
           {error ? (
             <Text className="mt-4 text-center text-sm text-red-400">{error}</Text>
@@ -276,7 +276,7 @@ export default function MealPlanScreen() {
               onPress={() => setGroceryOpen(true)}
               className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-surface-card"
             >
-              <Ionicons name="cart-outline" size={20} color="#5A9A3A" />
+              <Ionicons name="list-outline" size={20} color="#5A9A3A" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleGenerate}

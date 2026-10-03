@@ -1,3 +1,4 @@
+import { BRAND_NAME } from '@/utils/brand';
 import { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -226,7 +227,7 @@ export default function ProfileScreen() {
     }
     Alert.alert(
       'Premium feature',
-      'Connecting a Personal Chef or Trainer/Nutritionist is part of gBOMBS Premium. Upgrade to invite your professionals.',
+      `Connecting a Personal Chef or Trainer/Nutritionist is part of ${BRAND_NAME} Premium. Upgrade to invite your professionals.`,
       [
         { text: 'Not now', style: 'cancel' },
         { text: 'Upgrade', onPress: handlePortal },
