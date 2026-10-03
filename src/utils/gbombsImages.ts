@@ -10,6 +10,8 @@ import type { GBombsCategoryKey } from './gbombsPresets';
 
 export const LOGO_WITH_BG: ImageSourcePropType = require('../../assets/images/brand/sixplants-wordmark.png');
 export const LOGO_NO_BG: ImageSourcePropType = require('../../assets/images/brand/sixplants-wordmark.png');
+export const BRAND_ICON: ImageSourcePropType = require('../../assets/images/brand/sixplants-icon.png');
+export const BRAND_TAGLINE_IMAGE: ImageSourcePropType = require('../../assets/images/brand/sixplants-tagline.jpg');
 
 export type GBombsLetterMeta = {
   key: GBombsCategoryKey;

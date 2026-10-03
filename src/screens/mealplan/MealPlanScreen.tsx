@@ -59,7 +59,7 @@ function WeeklyScoreBar({
             return (
               <View
                 key={meta.key}
-                className="mr-1.5 h-8 w-8 items-center justify-center rounded-full border"
+                className="mr-1 h-7 w-7 items-center justify-center rounded-full border"
                 style={{
                   backgroundColor: isHit ? meta.glow : 'transparent',
                   borderColor: isHit ? meta.glow : '#2D2D2D',
@@ -75,7 +75,9 @@ function WeeklyScoreBar({
             );
           })}
         </View>
-        <Text className="text-content text-sm font-bold">{score}/6 {score >= 5 ? '🔥' : ''}</Text>
+        <Text className="text-content ml-2 text-sm font-bold" numberOfLines={1} style={{ flexShrink: 0 }}>
+          {score}/6 {score >= 5 ? '🔥' : ''}
+        </Text>
       </View>
     </View>
   );
@@ -265,6 +267,7 @@ export default function MealPlanScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
+        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
@@ -274,12 +277,16 @@ export default function MealPlanScreen() {
           <View className="flex-row">
             <TouchableOpacity
               onPress={() => setGroceryOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Open grocery list"
               className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-surface-card"
             >
               <Ionicons name="list-outline" size={20} color="#5A9A3A" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleGenerate}
+              accessibilityRole="button"
+              accessibilityLabel="Regenerate meal plan"
               className="h-11 w-11 items-center justify-center rounded-full bg-surface-card"
             >
               <Ionicons name="refresh" size={20} color="#5A9A3A" />
@@ -312,7 +319,7 @@ export default function MealPlanScreen() {
               <TouchableOpacity
                 key={d.day}
                 onPress={() => setSelectedDay(i)}
-                className="mr-1 rounded-full px-2 py-1.5"
+                className="mr-1 rounded-full px-1.5 py-1.5"
                 style={{
                   backgroundColor: isActive ? '#5A9A3A' : '#161616',
                 }}

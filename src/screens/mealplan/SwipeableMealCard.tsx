@@ -7,10 +7,13 @@ import {
   PanResponder,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { MealSummary, GBombsCategory } from '@/services/gemini';
 import { LETTER_BY_KEY } from '@/utils/gbombsImages';
+import { MEAL_WALLPAPERS } from '@/utils/mealWallpapers';
 
 const SLOT_LABEL: Record<string, string> = {
   breakfast: 'BREAKFAST',
@@ -145,19 +148,35 @@ export default function SwipeableMealCard({
           onPress={handlePress}
           style={styles.card}
         >
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Image
+              source={MEAL_WALLPAPERS[meal.slot]}
+              style={[StyleSheet.absoluteFill, styles.wallpaper]}
+              resizeMode="cover"
+              accessible={false}
+              testID={`meal-wallpaper-${meal.slot}`}
+            />
+            <LinearGradient
+              colors={['rgba(8,18,11,0.95)', 'rgba(8,18,11,0.83)', 'rgba(8,18,11,0.64)']}
+              locations={[0, 0.5, 1]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
           <Text style={styles.slot}>
             {SLOT_LABEL[meal.slot] ?? meal.slot.toUpperCase()}
           </Text>
           <View style={styles.titleRow}>
             <Text style={styles.title}>{meal.name}</Text>
-            <Ionicons name="chevron-forward" size={18} color="#A8A29E" />
+            <Ionicons name="chevron-forward" size={18} color="#D2D9C7" />
           </View>
           {meal.description ? (
             <Text style={styles.desc}>{meal.description}</Text>
           ) : null}
           <View style={styles.metaRow}>
             <View style={styles.timeRow}>
-              <Ionicons name="time-outline" size={14} color="#A8A29E" />
+              <Ionicons name="time-outline" size={14} color="#C6D2BC" />
               <Text style={styles.time}>{meal.prepMinutes} min</Text>
             </View>
             <CategoryDots cats={meal.gbombs} />
@@ -207,7 +226,12 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#161616',
     borderRadius: 16,
+    overflow: 'hidden',
     padding: 16,
+  },
+  wallpaper: {
+    width: '100%',
+    height: '100%',
   },
   swapOverlay: {
     position: 'absolute',
@@ -228,7 +252,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   slot: {
-    color: '#A8A29E',
+    color: '#C6D2BC',
     marginBottom: 4,
     fontSize: 11,
     fontWeight: 'bold',
@@ -246,7 +270,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   desc: {
-    color: '#A8A29E',
+    color: '#D2D9C7',
     marginTop: 4,
     fontSize: 14,
   },
@@ -261,7 +285,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   time: {
-    color: '#A8A29E',
+    color: '#C6D2BC',
     marginLeft: 4,
     fontSize: 12,
   },

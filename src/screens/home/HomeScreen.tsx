@@ -175,6 +175,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
+        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >

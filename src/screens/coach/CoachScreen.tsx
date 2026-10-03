@@ -2,17 +2,20 @@ import { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { BRAND_TAGLINE_IMAGE } from '@/utils/gbombsImages';
 import {
   sendCoachMessage,
   isCoachConfigured,
@@ -47,7 +50,7 @@ function Bubble({ turn }: { turn: CoachTurn }) {
     >
       <Text
         className="text-[15px] leading-5"
-        style={{ color: isUser ? '#0A0A0A' : '#F5F5F0' }}
+        style={{ color: '#F5F5F0' }}
       >
         {turn.content}
       </Text>
@@ -57,6 +60,8 @@ function Bubble({ turn }: { turn: CoachTurn }) {
 
 export default function CoachScreen() {
   const { user, profile } = useAuth();
+  const { width } = useWindowDimensions();
+  const taglineHeight = Math.min(Math.max(width - 40, 0), 540) / 3;
   const tier = profile?.subscription_tier ?? 'standard';
 
   const [messages, setMessages] = useState<CoachTurn[]>([]);
@@ -165,27 +170,38 @@ export default function CoachScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       {/* Header */}
-      <View className="flex-row items-center justify-between px-5 pb-3 pt-1">
-        <View>
-          <Text className="text-content text-2xl font-extrabold">Coach</Text>
-          {usage ? (
-            <Text className="text-content-muted text-xs">
-              {usage.remaining} of {usage.limit} messages left today
-            </Text>
-          ) : null}
+      <View
+        className="px-5 pb-3 pt-3"
+        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
+      >
+        <View
+          className="overflow-hidden rounded-2xl"
+          style={{ backgroundColor: '#FFFFFF', alignSelf: 'center', width: '100%', maxWidth: 540 }}
+        >
+          <Image
+            source={BRAND_TAGLINE_IMAGE}
+            resizeMode="contain"
+            style={{ width: '100%', height: taglineHeight }}
+            accessibilityLabel="Healthy Eating Made Simple"
+          />
         </View>
         {messages.length > 0 ? (
           <TouchableOpacity
             onPress={handleClear}
-            className="h-9 w-9 items-center justify-center rounded-full bg-surface-card"
+            disabled={sending}
+            accessibilityRole="button"
+            accessibilityLabel="Clear coach conversation"
+            className="mt-2 flex-row items-center self-end rounded-full bg-surface-card px-3 py-2"
           >
-            <Ionicons name="trash-outline" size={18} color="#A8A29E" />
+            <Ionicons name="trash-outline" size={16} color="#A8A29E" />
+            <Text className="text-content-muted ml-1.5 text-xs">Clear chat</Text>
           </TouchableOpacity>
         ) : null}
       </View>
 
       <KeyboardAvoidingView
         className="flex-1"
+        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
@@ -199,10 +215,7 @@ export default function CoachScreen() {
           {messages.length === 0 ? (
             <View className="mt-4">
               <View className="items-center">
-                <View className="h-14 w-14 items-center justify-center rounded-full bg-surface-card">
-                  <Ionicons name="nutrition" size={26} color="#5A9A3A" />
-                </View>
-                <Text className="text-content mt-3 text-lg font-bold">
+                <Text className="text-content text-lg font-bold">
                   Your plant-based coach
                 </Text>
                 <Text className="text-content-muted mt-1 text-center text-sm">
@@ -270,28 +283,45 @@ export default function CoachScreen() {
             </Text>
           </View>
         ) : (
-          <View className="flex-row items-end border-t border-surface-border px-4 py-3">
-            <TextInput
-              value={input}
-              onChangeText={setInput}
-              placeholder="Ask your coach…"
-              placeholderTextColor="#6B7280"
-              multiline
-              className="text-content max-h-28 flex-1 rounded-2xl bg-surface-card px-4 py-3 text-[15px]"
-              style={{ borderColor: '#2D2D2D', borderWidth: 1 }}
-              onSubmitEditing={() => send(input)}
-            />
-            <TouchableOpacity
-              onPress={() => send(input)}
-              disabled={sending || !input.trim()}
-              activeOpacity={0.85}
-              className="ml-2 h-12 w-12 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: input.trim() && !sending ? '#5A9A3A' : '#2D2D2D',
-              }}
-            >
-              <Ionicons name="arrow-up" size={22} color="#0A0A0A" />
-            </TouchableOpacity>
+          <View className="border-t border-surface-border px-4 py-3">
+            <View className="mb-2 flex-row flex-wrap items-center justify-between">
+              <Text className="text-content-muted mr-2 text-xs font-semibold">Ask your coach</Text>
+              {usage ? (
+                <Text
+                  className="text-content-muted text-xs"
+                  accessibilityLiveRegion="polite"
+                  testID="coach-messages-remaining"
+                >
+                  {usage.remaining} {usage.remaining === 1 ? 'message' : 'messages'} left today
+                </Text>
+              ) : null}
+            </View>
+            <View className="flex-row items-end">
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Ask your coach…"
+                accessibilityLabel="Ask your coach"
+                placeholderTextColor="#6B7280"
+                multiline
+                className="text-content max-h-28 flex-1 rounded-2xl bg-surface-card px-4 py-3 text-[15px]"
+                style={{ borderColor: '#2D2D2D', borderWidth: 1 }}
+                onSubmitEditing={() => send(input)}
+              />
+              <TouchableOpacity
+                onPress={() => send(input)}
+                disabled={sending || !input.trim()}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Send message"
+                className="ml-2 h-12 w-12 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: input.trim() && !sending ? '#5A9A3A' : '#2D2D2D',
+                }}
+              >
+                <Ionicons name="arrow-up" size={22} color="#0A0A0A" />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>

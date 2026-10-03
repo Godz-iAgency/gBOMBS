@@ -99,7 +99,8 @@ function SettingRow({
       <View className="ml-3 flex-1 flex-row items-center justify-end">
         <Text
           className="text-content-muted text-sm"
-          numberOfLines={1}
+          numberOfLines={2}
+          style={{ flexShrink: 1, textAlign: 'right' }}
         >
           {value}
         </Text>
@@ -341,6 +342,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
+        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -18,7 +19,7 @@ import {
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedGrocery, saveCachedGrocery } from '@/lib/groceryCache';
-import { LETTER_BY_KEY } from '@/utils/gbombsImages';
+import { BRAND_ICON, LETTER_BY_KEY } from '@/utils/gbombsImages';
 
 // Safe area top padding — avoids react-native-safe-area-context on web
 // (its inset style arrays can trigger a CSSStyleDeclaration indexed-property
@@ -174,17 +175,28 @@ export default function GroceryScreen({
       {/* Header */}
       <View style={styles.header}>
         {onClose ? (
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Close grocery list"
+          >
             <Ionicons name="close" size={22} color="#F5F5F0" />
           </TouchableOpacity>
         ) : (
-          <View style={styles.closeBtn} />
+          <Image
+            source={BRAND_ICON}
+            style={styles.brandIcon}
+            accessibilityLabel="Six Plants"
+          />
         )}
         <Text style={styles.headerTitle}>Grocery List</Text>
         <TouchableOpacity
           onPress={generate}
           style={styles.closeBtn}
           disabled={loading}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh grocery list"
         >
           <Ionicons name="refresh" size={20} color="#5A9A3A" />
         </TouchableOpacity>
@@ -252,6 +264,9 @@ const styles = StyleSheet.create({
     elevation: 50,
   },
   header: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -270,6 +285,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 20,
     backgroundColor: '#161616',
+  },
+  brandIcon: {
+    height: 40,
+    width: 40,
+    borderRadius: 12,
   },
   centered: {
     flex: 1,
@@ -307,6 +327,9 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   progressRow: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     paddingHorizontal: 20,
     paddingBottom: 8,
   },
@@ -316,6 +339,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   scroll: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
     backgroundColor: '#0A0A0A',
   },
   scrollContent: {
