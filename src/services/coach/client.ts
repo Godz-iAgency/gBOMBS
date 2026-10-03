@@ -1,36 +1,24 @@
 /**
- * OpenRouter chat client — the AI Coach's ONLY provider.
+ * AI Coach chat client — Gemini only.
  * ------------------------------------------------------------------
- * Deliberately isolated from the Gemini/Groq meal-planning layer (services/
- * gemini/client.ts). The coach is a conversational feature with its own model,
- * its own key, and its own failure handling, so a change to meal-plan routing
- * can never affect chat and vice-versa.
+ * Uses the same Gemini key and Flash-Lite model as the meal-plan layer
+ * (services/gemini/client.ts), but is kept as its own small client because chat
+ * is multi-turn and has its own retry/fallback handling.
  *
- * Provider: OpenRouter (https://openrouter.ai) — OpenAI-compatible chat API.
- * Model:    openai/gpt-4o-mini — fast + inexpensive, strong for chat.
- * Fallback: meta-llama/llama-3.3-70b-instruct — used only when the primary model
- *           is unavailable. Same endpoint + key, different model string. Strong
- *           instruction-follower so it honors the Nutritarian system prompt, and
- *           cheap (~$0.10/1M tokens) — it only fires when gpt-4o-mini is down.
- *           (The :free tier is avoided: it shares a global pool and 429s often.)
+ * Model:    EXPO_PUBLIC_GEMINI_FLASH_MODEL (gemini-3.5-flash-lite).
+ * Fallback: a second Flash-Lite model on the same key, used only if the primary
+ *           is unavailable after its retries.
  */
 
-const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
-const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+const GEMINI_ENDPOINT =
+  'https://generativelanguage.googleapis.com/v1beta/models';
 
-// Chat model. Overridable via env without touching code.
 const COACH_MODEL =
-  process.env.EXPO_PUBLIC_OPENROUTER_MODEL ?? 'openai/gpt-4o-mini';
+  process.env.EXPO_PUBLIC_GEMINI_FLASH_MODEL ?? 'gemini-3.5-flash-lite';
 
-// Fallback model, used only if the primary errors out after its retries.
 const COACH_FALLBACK_MODEL =
-  process.env.EXPO_PUBLIC_OPENROUTER_FALLBACK_MODEL ??
-  'meta-llama/llama-3.3-70b-instruct';
-
-// OpenRouter asks every request to identify the calling app. These are plain
-// labels — no registration needed — and show up in the OpenRouter dashboard.
-const APP_REFERER = 'https://gbombs.app';
-const APP_TITLE = 'gBOMBS Coach';
+  process.env.EXPO_PUBLIC_GEMINI_COACH_FALLBACK_MODEL ?? 'gemini-3.1-flash-lite';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -39,10 +27,10 @@ export interface ChatMessage {
 
 /** True when the coach has an API key configured. */
 export function isCoachConfigured(): boolean {
-  return Boolean(OPENROUTER_API_KEY);
+  return Boolean(GEMINI_API_KEY);
 }
 
-/** Thrown when no OpenRouter key is set, so the screen can degrade gracefully. */
+/** Thrown when no Gemini key is set, so the screen can degrade gracefully. */
 export class CoachNotConfiguredError extends Error {
   constructor() {
     super('The Coach is not available right now.');
@@ -61,9 +49,12 @@ class CoachHttpError extends Error {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** 429/5xx clear in seconds and are worth a retry; other 4xx are fatal. */
+/** 429/5xx clear in seconds and are worth a retry; other 4xx are fatal. The
+ *  Gemini free tier also answers intermittently with 403 under load, which
+ *  succeeds on retry, so 403 counts as transient too. */
 function isTransientStatus(status: number): boolean {
   return (
+    status === 403 ||
     status === 429 ||
     status === 500 ||
     status === 502 ||
@@ -77,40 +68,60 @@ interface ChatOptions {
   maxTokens?: number;
 }
 
-/** One OpenRouter attempt against a given model. Throws CoachHttpError on HTTP failure. */
+/** Map our chat messages onto Gemini's systemInstruction + user/model turns. */
+function toGeminiPayload(messages: ChatMessage[]) {
+  const system = messages
+    .filter((m) => m.role === 'system')
+    .map((m) => m.content)
+    .join('\n\n');
+
+  const contents = messages
+    .filter((m) => m.role !== 'system')
+    .map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+  // Gemini expects the conversation to open with a user turn.
+  while (contents.length > 0 && contents[0].role === 'model') contents.shift();
+
+  return { system, contents };
+}
+
+/** One Gemini attempt against a given model. Throws CoachHttpError on HTTP failure. */
 async function chatOnce(
   model: string,
   messages: ChatMessage[],
   opts: ChatOptions
 ): Promise<string> {
   const { temperature = 0.6, maxTokens = 600 } = opts;
+  const { system, contents } = toGeminiPayload(messages);
 
-  const res = await fetch(OPENROUTER_ENDPOINT, {
+  const body: Record<string, unknown> = {
+    contents,
+    generationConfig: { temperature, maxOutputTokens: maxTokens },
+  };
+  if (system) body.systemInstruction = { parts: [{ text: system }] };
+
+  const res = await fetch(`${GEMINI_ENDPOINT}/${model}:generateContent`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': APP_REFERER,
-      'X-Title': APP_TITLE,
+      'x-goog-api-key': GEMINI_API_KEY as string,
     },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
     throw new CoachHttpError(
       res.status,
-      `OpenRouter HTTP ${res.status}: ${detail.slice(0, 200)}`
+      `Gemini ${model} HTTP ${res.status}: ${detail.slice(0, 200)}`
     );
   }
 
   const data = await res.json();
-  return data?.choices?.[0]?.message?.content ?? '';
+  const parts: { text?: string }[] = data?.candidates?.[0]?.content?.parts ?? [];
+  return parts.map((p) => p.text ?? '').join('');
 }
 
 /** Run one model with transient-failure retries (3x, short backoff). */
@@ -138,8 +149,8 @@ async function chatWithRetries(
 /**
  * Send a full message list to the coach and return the reply text.
  * Tries the primary model (with retries); if it's unavailable, falls back once
- * to the free model (with its own retries). Throws only if BOTH fail, surfacing
- * the primary error so the screen can show a retry affordance.
+ * to the second model (with its own retries). Throws only if BOTH fail,
+ * surfacing the primary error so the screen can show a retry affordance.
  */
 export async function coachChat(
   messages: ChatMessage[],
@@ -150,7 +161,6 @@ export async function coachChat(
   try {
     return await chatWithRetries(COACH_MODEL, messages, opts);
   } catch (primaryErr) {
-    // Primary unavailable — try the free fallback model once on the same key.
     if (COACH_FALLBACK_MODEL && COACH_FALLBACK_MODEL !== COACH_MODEL) {
       try {
         return await chatWithRetries(COACH_FALLBACK_MODEL, messages, opts);

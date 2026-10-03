@@ -33,10 +33,10 @@ const GROQ_MODEL =
 const FLASH_MODEL =
   process.env.EXPO_PUBLIC_GEMINI_FLASH_MODEL ??
   process.env.GEMINI_MODEL ??
-  'gemini-2.5-flash';
+  'gemini-3.5-flash-lite';
 
 const PRO_MODEL =
-  process.env.EXPO_PUBLIC_GEMINI_PRO_MODEL ?? 'gemini-2.5-flash';
+  process.env.EXPO_PUBLIC_GEMINI_PRO_MODEL ?? 'gemini-3.5-flash-lite';
 
 /** Tasks that always run on Flash no matter the subscription tier. */
 const FLASH_ONLY_TASKS: GeminiTask[] = ['scoring', 'grocery', 'validation'];
@@ -96,9 +96,11 @@ export interface GeminiCallOptions {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** 429/5xx are worth retrying / failing over; 4xx (except 429) are fatal. */
+/** 429/5xx are worth retrying / failing over; other 4xx are fatal. The Gemini
+ *  free tier also answers intermittently with 403 PERMISSION_DENIED under load,
+ *  which succeeds on retry, so 403 counts as transient too. */
 function isTransientStatus(status: number): boolean {
-  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+  return status === 403 || status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
 }
 
 // ---- Single-attempt provider calls ----

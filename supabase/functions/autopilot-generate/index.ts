@@ -40,8 +40,8 @@ const admin = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE_ROLE_KEY);
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
 const GEMINI_ENDPOINT =
   'https://generativelanguage.googleapis.com/v1beta/models';
-const FLASH_MODEL = Deno.env.get('GEMINI_FLASH_MODEL') ?? 'gemini-2.5-flash';
-const PRO_MODEL = Deno.env.get('GEMINI_PRO_MODEL') ?? 'gemini-2.5-flash';
+const FLASH_MODEL = Deno.env.get('GEMINI_FLASH_MODEL') ?? 'gemini-3.5-flash-lite';
+const PRO_MODEL = Deno.env.get('GEMINI_PRO_MODEL') ?? 'gemini-3.5-flash-lite';
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 
@@ -167,7 +167,7 @@ async function callGeminiJson<T>(
       lastErr = e;
       const status = (e as { status?: number }).status ?? 0;
       const transient =
-        status === 0 || status === 429 || (status >= 500 && status <= 504);
+        status === 0 || status === 403 || status === 429 || (status >= 500 && status <= 504);
       if (!transient || attempt === 3) throw e;
       await sleep(attempt * 1500);
     }
