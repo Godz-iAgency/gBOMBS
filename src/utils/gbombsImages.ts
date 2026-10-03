@@ -8,8 +8,8 @@
 import type { ImageSourcePropType } from 'react-native';
 import type { GBombsCategoryKey } from './gbombsPresets';
 
-export const LOGO_WITH_BG: ImageSourcePropType = require('../../assets/images/logo/G-bombs logo with background.png');
-export const LOGO_NO_BG: ImageSourcePropType = require('../../assets/images/logo/G-bombs logo no background.png');
+export const LOGO_WITH_BG: ImageSourcePropType = require('../../assets/images/brand/sixplants-wordmark.png');
+export const LOGO_NO_BG: ImageSourcePropType = require('../../assets/images/brand/sixplants-wordmark.png');
 
 export type GBombsLetterMeta = {
   key: GBombsCategoryKey;

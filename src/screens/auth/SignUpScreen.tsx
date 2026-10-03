@@ -121,7 +121,7 @@ export default function SignUpScreen({ navigation }: Props) {
         >
           <View className="mb-12 mt-4 items-center">
             <Image
-              source={require('../../../assets/images/logo/G-bombs logo with background.png')}
+              source={require('../../../assets/images/brand/sixplants-wordmark.png')}
               style={{ width: '100%', height: 126 }}
               resizeMode="contain"
             />

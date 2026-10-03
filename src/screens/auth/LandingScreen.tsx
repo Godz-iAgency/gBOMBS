@@ -12,14 +12,14 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '@/navigation/AuthStack';
 
-const introSource = require('../../../assets/images/gbombs-landing.mp4');
+const introSource = require('../../../assets/images/brand/sixplants-landing.mp4');
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Landing'>;
 
 export default function LandingScreen({ navigation }: Props) {
-  // Loops continuously as a muted background animation.
+  // Plays once, muted, and holds on the final Six Plants logo frame.
   const player = useVideoPlayer(introSource, (p) => {
-    p.loop = true;
+    p.loop = false;
     p.muted = true;
   });
 
@@ -43,6 +43,13 @@ export default function LandingScreen({ navigation }: Props) {
     // Page background — fills the whole window; on desktop the dark
     // surface shows on the sides of the centered phone-width frame.
     <View className="flex-1 bg-surface">
+      {/* Matches the video's own top/bottom greens so the letterbox bars on
+          taller phones blend into the video instead of showing as black. */}
+      <LinearGradient
+        colors={['#2a4d34', '#0e2714']}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       {/* Width-capped frame, centered — keeps a giant desktop monitor from
           stretching this into an absurdly wide single column. 480 was sized
           for that desktop case but also caught tablets (e.g. a ~497-1024px
@@ -79,20 +86,6 @@ export default function LandingScreen({ navigation }: Props) {
           nativeControls={false}
         />
 
-        {/* Dark scrim so the slogan + buttons stay readable */}
-        <View
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-          className="bg-black/30"
-        />
-
-        {/* Top gradient — makes the headline pop */}
-        <LinearGradient
-          colors={['rgba(0,0,0,0.65)', 'transparent']}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30%' }}
-          pointerEvents="none"
-        />
-
         {/* Bottom gradient — makes the buttons pop */}
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.8)']}
@@ -104,10 +97,7 @@ export default function LandingScreen({ navigation }: Props) {
           className="flex-1 justify-between"
           edges={['top', 'bottom']}
         >
-          {/* Slogan — top zone, big text */}
-          <Text className="px-6 pt-10 text-center text-4xl font-extrabold uppercase tracking-wide text-white">
-            Healthy Eating Made Simple
-          </Text>
+          <View />
 
           {/* Actions — bottom zone */}
           <View className="px-6 pb-10">
