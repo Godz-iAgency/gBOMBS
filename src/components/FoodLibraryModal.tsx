@@ -46,7 +46,7 @@ export default function FoodLibraryModal({
                 {categoryLabel} options
               </Text>
               <Text className="text-content-muted mt-1 text-sm">
-                Tap to add or remove — all of these fit the six plant groups.
+                Tap to add or remove. All of these fit the six plant groups.
               </Text>
             </View>
             <TouchableOpacity
@@ -87,7 +87,7 @@ export default function FoodLibraryModal({
               ))}
               {filtered.length === 0 ? (
                 <Text className="text-content-muted text-sm">
-                  No matches — try a different search.
+                  No matches. Try a different search.
                 </Text>
               ) : null}
             </View>

@@ -29,7 +29,7 @@ const OPEN_THRESHOLD = ACTIONS_TOTAL * 0.4;
 /** Row of small colored letter dots for the gBOMBS a meal hits. */
 function CategoryDots({ cats }: { cats: GBombsCategory[] }) {
   if (cats.length === 0) {
-    return <Text style={styles.dash}>—</Text>;
+    return <Text style={styles.dash}>None</Text>;
   }
   return (
     <View style={styles.dotsRow}>

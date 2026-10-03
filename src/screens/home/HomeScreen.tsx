@@ -333,7 +333,7 @@ export default function HomeScreen() {
             <Text className="text-content-muted mt-1 text-xs">
               {streak === 0
                 ? 'Log today to start one.'
-                : 'Keep it going — log every day.'}
+                : 'Keep it going. Log every day.'}
             </Text>
           </View>
           <View

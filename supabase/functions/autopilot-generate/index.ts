@@ -218,7 +218,8 @@ ORIGINALITY (important):
   recipe text. Write new content inspired by whole-food, plant-based principles only.
 
 OUTPUT DISCIPLINE:
-- When asked for JSON, return ONLY valid JSON — no markdown, no commentary.
+- Use commas, colons, or periods instead of em dashes in text shown to users.
+- When asked for JSON, return ONLY valid JSON: no markdown, no commentary.
 `.trim();
 
 interface UserMealContext {
@@ -325,7 +326,7 @@ async function generatePlan(
   const model = tier === 'wellness_pro' ? PRO_MODEL : FLASH_MODEL;
   const userBlock = renderUserContext(ctx);
   const adjustmentBlock = adjustments.length
-    ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any whole-food, plant-based rule above:\n${adjustments
+    ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS: the client's professional requested these; honor them as much as possible WITHOUT breaking any whole-food, plant-based rule above:\n${adjustments
         .map((a) => `- ${a}`)
         .join('\n')}\n`
     : '';
@@ -338,20 +339,20 @@ REQUIREMENTS:
 - Each day has EXACTLY five items in this order:
   smoothie, breakfast, lunch, dinner, dessert.
 - The smoothie is a morning drink (blended) and should lead with berries, greens,
-  and seeds where possible — a nutrient-dense start to the day.
-- The dessert is a whole-food, plant-based sweet — naturally sweetened with whole fruits
+  and seeds where possible for a nutrient-dense start to the day.
+- The dessert is a whole-food, plant-based sweet, naturally sweetened with whole fruits
   (dates, bananas, berries, ripe mango) ONLY. NO refined sugar, NO white flour,
   NO maple syrup/honey/agave, NO added oil. Every dessert MUST hit at least one
   plant group (favor berries and seeds; beans are the creative wildcard).
-  Desserts should feel genuinely satisfying — rewards, not penalties. Keep
+  Desserts should feel genuinely satisfying: rewards, not penalties. Keep
   prepMinutes 5–20 (no-bake preferred; chilling/freezing time is NOT counted).
 - Maximize coverage of the six plant groups across the week (greens, beans, onion, mushroom, berries, seeds).
-- Vary the meals — do NOT repeat any meal name across the week (smoothies and desserts included).
+- Vary the meals. Do NOT repeat any meal name across the week (smoothies and desserts included).
 - Strictly respect the diet mode, exclusions, and favored foods above.
 - Keep prepMinutes realistic and matched to the user's cooking style (smoothies are quick, ~5 min).
 - Names must be original (never copy a published recipe title).
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "days": [
     {
@@ -466,7 +467,7 @@ async function generateGrocery(
   const mealLines: string[] = [];
   for (const day of plan.days) {
     for (const meal of day.meals) {
-      const desc = meal.description ? ` — ${meal.description}` : '';
+      const desc = meal.description ? `: ${meal.description}` : '';
       mealLines.push(`- ${day.label} ${meal.slot}: ${meal.name}${desc}`);
     }
   }
@@ -479,24 +480,24 @@ ${userBlock}
 THE WEEK'S MEALS (${mealCount} meals, assume 2 servings each):
 ${mealLines.join('\n')}
 
-YOUR TASK — think like a professional meal-prep chef writing a shopping list:
+YOUR TASK: think like a professional meal-prep chef writing a shopping list:
 1. INFER the realistic whole-food, plant-based ingredients each meal needs from its name and
-   description (whole foods only — no oil, no refined flour, no refined sugar).
+   description (whole foods only: no oil, no refined flour, no refined sugar).
 2. CONSOLIDATE across the entire week: every ingredient appears EXACTLY ONCE in
    the final list, with one combined quantity that covers every meal using it.
 3. CONVERT to real shopping units people buy at a store (bunches, bags, cans,
-   lbs, containers, cartons) — never recipe units like "3.5 cups chopped".
+   lbs, containers, cartons): never recipe units like "3.5 cups chopped".
 4. ORGANIZE into store sections so the list follows a natural path through the store.
 
-SECTIONS — use ONLY these titles, in this order, omitting any empty section:
+SECTIONS: use ONLY these titles, in this order, omitting any empty section:
 "Produce", "Beans & Proteins", "Whole Grains", "Nuts & Seeds", "Frozen", "Pantry", "Spices & Herbs", "Dairy Alternatives"
 
 HARD RULES:
-- QUANTITY FORMAT: every "quantity" MUST be a number followed by a real unit —
+- QUANTITY FORMAT: every "quantity" MUST be a number followed by a real unit:
   never a bare number. Items sold by count (onions, garlic, avocados, peppers,
   lemons) use "6 medium", "2 heads", "4 large". Items sold by weight/volume use
   "1 lb bag", "2 cans (15 oz)", "10 oz bag". "6" alone is always WRONG.
-- Every ingredient appears exactly once across the ENTIRE list — never in two sections.
+- Every ingredient appears exactly once across the ENTIRE list: never in two sections.
 - Strictly respect the user context: excluded foods must NOT appear anywhere.
 - No oil of any kind, no refined sugar/flour, no processed or packaged prepared foods.
 - Fresh produce goes in "Produce"; frozen fruit/vegetables go in "Frozen".
@@ -508,7 +509,7 @@ HARD RULES:
   bananas, berries, ripe fruit). NEVER list refined sugar, brown sugar, maple syrup,
   honey, agave, coconut sugar, or any packaged sweetener.
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "sections": [
     {
@@ -662,7 +663,7 @@ async function generateForUser(u: CandidateUser): Promise<void> {
             to: u.push_token,
             sound: 'default',
             title: '🥗 Your fresh week is ready',
-            body: 'Autopilot just planned your next 7 days — meals and grocery list included.',
+            body: 'Autopilot just planned your next 7 days, with meals and grocery list included.',
             data: { type: 'autopilot_plan' },
             channelId: 'default',
           },

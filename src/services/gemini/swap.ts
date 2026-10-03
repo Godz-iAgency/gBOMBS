@@ -84,7 +84,7 @@ export async function swapMeal(
 ${userBlock}
 
 THE MEAL TO REPLACE (${dayLabel}, ${meal.slot}):
-"${meal.name}"${meal.description ? ` — ${meal.description}` : ''}
+"${meal.name}"${meal.description ? `: ${meal.description}` : ''}
 
 ALL OTHER MEAL NAMES ALREADY IN THIS WEEK (your replacement must NOT duplicate any of these):
 ${otherNames.map((n) => `- ${n}`).join('\n')}
@@ -97,7 +97,7 @@ YOUR TASK:
 - Keep prepMinutes realistic and matched to the user's cooking style.
 - The name must be original (never copy a published recipe title).${slotNote}
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "name": "original dish name",
   "description": "one short appetizing sentence",
@@ -119,7 +119,7 @@ ONLY these exact values: greens, beans, onion, mushroom, berries, seeds.`;
 
   const name = (raw.name ?? '').trim();
   if (!name) {
-    throw new Error('Swap came back empty — please try again.');
+    throw new Error('Swap came back empty. Please try again.');
   }
 
   // Keep the original slot — the swap never changes where the meal sits.

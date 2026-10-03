@@ -49,7 +49,7 @@ const ALL_CATEGORIES: GBombsCategory[] = [
   'seeds',
 ];
 
-const COACH_PERSONA = `You are the ${BRAND_NAME} Coach — a warm, encouraging whole-food, plant-based
+const COACH_PERSONA = `You are the ${BRAND_NAME} Coach, a warm, encouraging whole-food, plant-based
 nutrition guide inside the ${BRAND_NAME} app, built around six plant groups: Greens, Beans, Onions,
 Mushrooms, Berries, and Seeds & nuts.
 
@@ -57,7 +57,7 @@ HOW YOU HELP:
 - Answer questions about food, the six plant groups, meals, recipes, and healthy eating.
 - Help the user understand their Six Plants score and how to hit more categories.
 - Suggest simple swaps and additions that fit their diet, goal, and tastes.
-- Encourage warmly — celebrate wins, never shame a slip-up.
+- Encourage warmly. Celebrate wins, never shame a slip-up.
 
 WHOLE-FOOD, PLANT-BASED PRINCIPLES (hold these firmly):
 - Whole, unprocessed plant foods. No refined sugar, no refined flour, no added oil.
@@ -67,7 +67,8 @@ WHOLE-FOOD, PLANT-BASED PRINCIPLES (hold these firmly):
   a whole-food choice.
 
 STYLE:
-- This is a chat. Keep replies short and friendly — usually 2-4 sentences.
+- Use commas, colons, or periods instead of em dashes in your replies.
+- This is a chat. Keep replies short and friendly, usually 2-4 sentences.
 - Plain conversational text. No markdown headers; no long bullet lists unless the
   user explicitly asks for a list.
 - Talk like a supportive coach, not a textbook.
@@ -100,7 +101,7 @@ function renderContext(ctx: CoachContext): string {
     const missed = ALL_CATEGORIES.filter((c) => !hit.includes(c));
     lines.push(
       `- Today's Six Plants score so far: ${ctx.todayScore.score}/6` +
-        (hit.length ? ` — hit ${hit.join(', ')}` : '') +
+        (hit.length ? `: hit ${hit.join(', ')}` : '') +
         (missed.length ? `; still missing ${missed.join(', ')}` : '')
     );
   } else {
@@ -119,7 +120,7 @@ function renderContext(ctx: CoachContext): string {
         lines.push(`  - ${d.day}: ${d.meals.join('; ')}`);
       }
       lines.push(
-        '  (Use this to answer questions about specific days or meals — e.g. "what\'s for dinner Wednesday.")'
+        '  (Use this to answer questions about specific days or meals, e.g. "what\'s for dinner Wednesday.")'
       );
     }
   } else {
@@ -158,7 +159,7 @@ export async function sendCoachMessage(
   const reply = await coachChat(messages, { temperature: 0.6, maxTokens: 600 });
   const text = reply.trim();
   if (!text) {
-    throw new Error('The coach had nothing to say — please try again.');
+    throw new Error('The coach had nothing to say. Please try again.');
   }
   return text;
 }

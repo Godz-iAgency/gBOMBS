@@ -63,7 +63,7 @@ export default function GroceryScreen() {
             No grocery list yet
           </Text>
           <Text className="text-content-muted mt-2 text-center text-sm">
-            Generate a weekly meal plan first — your grocery list is built from
+            Generate a weekly meal plan first. Your grocery list is built from
             it automatically.
           </Text>
           <TouchableOpacity

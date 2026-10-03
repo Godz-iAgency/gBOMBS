@@ -10,7 +10,7 @@ import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
 
 const BLURBS: Record<string, string> = {
-  greens: 'Leafy greens — the most nutrient-dense food on earth',
+  greens: 'Leafy greens, the most nutrient-dense food on earth',
   beans: 'Legumes for steady energy, fiber, and plant protein',
   onion: 'Alliums that defend every cell in your body',
   mushroom: 'Fungi that supercharge your immune system',

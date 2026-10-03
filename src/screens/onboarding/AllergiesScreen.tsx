@@ -147,7 +147,7 @@ export default function AllergiesScreen({ navigation }: Props) {
           className="mb-3 self-center"
         >
           <Text className="text-content-muted text-sm underline">
-            Skip — no exclusions
+            Skip (no exclusions)
           </Text>
         </TouchableOpacity>
       }

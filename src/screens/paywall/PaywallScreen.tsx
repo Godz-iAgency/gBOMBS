@@ -310,7 +310,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             </Text>
           ) : (
             <Text className="text-content-muted mt-1.5 text-xs">
-              US number, no country code needed — used to secure your account
+              US number, no country code needed. Used to secure your account
               and your free trial.
             </Text>
           )}
@@ -414,7 +414,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             className="mt-6 py-2"
           >
             <Text className="text-content-muted text-center text-sm underline">
-              Not now — sign out
+              Sign out for now
             </Text>
           </TouchableOpacity>
         )}

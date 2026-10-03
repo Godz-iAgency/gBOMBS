@@ -122,7 +122,7 @@ export default function RoleChoiceScreen({ navigation }: Props) {
         {/* Gentle nudge — most people are clients. (Flat single <Text>: a
             nested <Text> renders as a <span> on web and crashes NativeWind.) */}
         <Text className="text-content-muted mt-auto text-center text-xs leading-5">
-          No invite code? Choose Client — professionals join free with a
+          No invite code? Choose Client. Professionals join free with a
           client's code, no subscription needed.
         </Text>
 

@@ -173,7 +173,7 @@ export default function FoodPreferenceScreen({ navigation }: Props) {
       <OnboardingScaffold
         step={6}
         title="Your whole foods"
-        subtitle="Select foods you love — or add your own"
+        subtitle="Select foods you love or add your own"
         buttonLabel={
           selectedCount > 0
             ? 'Save my food preferences'

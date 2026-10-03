@@ -103,7 +103,7 @@ REQUIREMENTS:
 - Steps should be clear and numbered in order.
 - "tips" = one short whole-food, plant-based insight about why this dish is healthful.
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "name": "${meal.name}",
   "description": "one appetizing sentence",
@@ -127,7 +127,7 @@ SMOOTHIE: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}
 ${userBlock}
 
 REQUIREMENTS:
-- Stay true to the smoothie name above. This is a blended drink — there is NO cooking.
+- Stay true to the smoothie name above. This is a blended drink. There is NO cooking.
 - Whole foods only: no added oil, no refined sugar, no protein powders, no syrups.
   Sweeten only with whole fruit or dates.
 - Build it like a real smoothie: a liquid base (plant milk, water, or coconut water),
@@ -138,7 +138,7 @@ REQUIREMENTS:
 - "cookMinutes" MUST be 0.
 - "tips" = one short whole-food, plant-based insight about why this smoothie is healthful.
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "name": "${meal.name}",
   "description": "one appetizing sentence",
@@ -168,7 +168,7 @@ DESSERT: "${meal.name}"${meal.description ? `\nDESCRIPTION: ${meal.description}`
 ${userBlock}
 
 REQUIREMENTS:
-- Stay true to the dessert name above. This is a HEALTHY, whole-food, plant-based treat — a
+- Stay true to the dessert name above. This is a HEALTHY, whole-food, plant-based treat, a
   reward that still follows whole-food principles, not a cheat.
 - Sweeten ONLY with whole foods: Medjool dates, bananas, berries, or other ripe
   fruit. NEVER use refined sugar, brown sugar, maple syrup, honey, agave, coconut
@@ -179,7 +179,7 @@ REQUIREMENTS:
 - NO-BAKE is strongly preferred (mix, blend, process, chill, or freeze). Only call
   for baking when the dish genuinely needs it (e.g. bean-based brownies), and keep
   it simple.
-- Build the dessert around at least one plant group — favor berries and seeds;
+- Build the dessert around at least one plant group. Favor berries and seeds;
   beans (black beans, chickpeas) make an excellent creative base.
 - Tag each ingredient with its plant group if it is one of the six, else null.
 - Steps should be clear and numbered in order.
@@ -187,7 +187,7 @@ REQUIREMENTS:
   a no-bake dessert. NEVER count chilling or freezing time in either field.
 - "tips" = one short whole-food, plant-based insight about why this treat is genuinely healthful.
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "name": "${meal.name}",
   "description": "one appetizing sentence",

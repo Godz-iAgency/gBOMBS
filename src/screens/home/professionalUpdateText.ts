@@ -19,7 +19,7 @@ export function goalValueLabel(
   field: string | null,
   value: string | null
 ): string {
-  if (!value) return '—';
+  if (!value) return 'Not set';
   if (field === 'diet_mode') return DIET_LABEL[value as DietMode] ?? value;
   if (field === 'health_goal') return GOAL_LABEL[value as HealthGoal] ?? value;
   if (field === 'cooking_style') {

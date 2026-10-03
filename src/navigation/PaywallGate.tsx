@@ -144,7 +144,7 @@ export default function PaywallGate() {
             Finalizing your subscription
           </Text>
           <Text className="text-content-muted mt-1.5 text-center text-sm">
-            Hang tight — this only takes a moment.
+            Hang tight. This only takes a moment.
           </Text>
         </View>
 

@@ -82,11 +82,11 @@ YOUR TASK:
    Never invent foods the person did not say. When unsure, mark false.
 2. Count how many distinct meals/items they described (mealsLogged).
 3. Write warm, specific, encouraging "feedback" (2-3 sentences) as a supportive
-   whole-food, plant-based coach — name what they did well by category.
+   whole-food, plant-based coach. Name what they did well by category.
 4. Give ONE concrete "missedTip": name a specific food for a category they MISSED
    and an easy way to add it tomorrow. If they hit all six, celebrate the perfect day.
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "greens": true,
   "beans": true,

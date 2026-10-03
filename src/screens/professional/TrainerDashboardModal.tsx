@@ -261,14 +261,14 @@ export default function TrainerDashboardModal({
 
             {/* Adherence */}
             <SectionLabel icon="pulse" color="#D4A84E">
-              Adherence — last 7 days
+              Adherence: last 7 days
             </SectionLabel>
             <View
               className="rounded-2xl border border-surface-border bg-surface-card p-4"
               style={{ borderLeftWidth: 3, borderLeftColor: '#D4A84E' }}
             >
               <View className="flex-row justify-between">
-                <Stat label="Avg score" value={report ? `${report.avgScore}/6` : '—'} />
+                <Stat label="Avg score" value={report ? `${report.avgScore}/6` : 'N/A'} />
                 <Stat
                   label="Day streak"
                   value={streak ? `${streak.current_daily_streak}` : '0'}

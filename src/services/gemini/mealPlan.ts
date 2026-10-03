@@ -136,7 +136,7 @@ export async function generateWeeklyMealPlan(
     .filter(Boolean);
   const adjustmentBlock =
     cleanAdjustments.length > 0
-      ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS — the client's professional requested these; honor them as much as possible WITHOUT breaking any whole-food, plant-based rule above:\n${cleanAdjustments
+      ? `\nTRAINER / NUTRITIONIST ADJUSTMENTS: the client's professional requested these; honor them as much as possible WITHOUT breaking any whole-food, plant-based rule above:\n${cleanAdjustments
           .map((a) => `- ${a}`)
           .join('\n')}\n`
       : '';
@@ -149,28 +149,28 @@ REQUIREMENTS:
 - Each day has EXACTLY five items in this order:
   smoothie, breakfast, lunch, dinner, dessert.
 - The smoothie is a morning drink (blended) and should lead with berries, greens,
-  and seeds where possible — a nutrient-dense start to the day.
-- The dessert is a whole-food, plant-based sweet — naturally sweetened with whole fruits
+  and seeds where possible for a nutrient-dense start to the day.
+- The dessert is a whole-food, plant-based sweet, naturally sweetened with whole fruits
   (dates, bananas, berries, ripe mango) ONLY. NO refined sugar, NO white flour,
   NO maple syrup/honey/agave, NO added oil. Build it from whole foods such as:
     • Date-based: date-nut energy balls, raw cacao-date-walnut bites, date-oat bars
     • Berry-based: frozen-berry "nice cream", warm berry compote, berry-chia parfait
     • Banana-based: banana soft-serve, banana-date pudding, banana-oat bites
     • Chia-based: chia pudding in oat/almond milk, topped with berries or a nut drizzle
-    • Bean-based (encouraged ~2–3×/week — a strong plant-group opportunity):
+    • Bean-based (encouraged ~2–3×/week: a strong plant-group opportunity):
       black bean brownies sweetened with dates, chickpea cookie-dough bites, lentil-date fudge
     • Cacao-based: avocado-cacao mousse sweetened with dates, raw cacao-almond truffles
   Every dessert MUST hit at least one plant group (favor berries and seeds;
-  beans are the creative wildcard). Desserts should feel genuinely satisfying —
+  beans are the creative wildcard). Desserts should feel genuinely satisfying:
   rewards, not penalties. Keep prepMinutes 5–20 (no-bake preferred; chilling or
   freezing time is NOT counted in prepMinutes).
 - Maximize coverage of the six plant groups across the week (greens, beans, onion, mushroom, berries, seeds).
-- Vary the meals — do NOT repeat any meal name across the week (smoothies and desserts included).
+- Vary the meals. Do NOT repeat any meal name across the week (smoothies and desserts included).
 - Strictly respect the diet mode, exclusions, and favored foods above.
 - Keep prepMinutes realistic and matched to the user's cooking style (smoothies are quick, ~5 min).
 - Names must be original (never copy a published recipe title).
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "days": [
     {
@@ -214,7 +214,7 @@ ONLY these exact values: greens, beans, onion, mushroom, berries, seeds.`;
 
   const rawDays = Array.isArray(raw.days) ? raw.days : [];
   if (rawDays.length === 0) {
-    throw new Error('Meal plan came back empty — please try again.');
+    throw new Error('Meal plan came back empty. Please try again.');
   }
 
   const days: DayPlan[] = rawDays.slice(0, 7).map((rd, i) => {

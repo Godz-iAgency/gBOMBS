@@ -34,7 +34,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     description: 'Hit all six plant groups in a single day',
     icon: '🌱',
     unlockMessage:
-      'Your very first perfect Six Plants day — all six categories in one day. This is exactly what longevity eating looks like.',
+      'Your very first perfect Six Plants day: all six categories in one day. This is exactly what longevity eating looks like.',
     earnable: true,
   },
   {
@@ -43,7 +43,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     description: 'Logged your meals 7 days in a row',
     icon: '🔥',
     unlockMessage:
-      'Seven days straight! You\'ve turned healthy eating into a habit — this is where real change starts.',
+      'Seven days straight! You\'ve turned healthy eating into a habit. This is where real change starts.',
     earnable: true,
   },
   {
@@ -52,7 +52,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     description: 'Hit all 6 categories every day for 7 days straight',
     icon: '⭐',
     unlockMessage:
-      'A flawless week — all six plant groups, every single day. Elite consistency. Your body is thanking you.',
+      'A flawless week: all six plant groups, every single day. Elite consistency. Your body is thanking you.',
     earnable: true,
   },
   {
@@ -61,7 +61,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     description: 'Logged your meals 30 days in a row',
     icon: '🏆',
     unlockMessage:
-      'Thirty days. This isn\'t a streak anymore — it\'s who you are now. Incredible discipline.',
+      'Thirty days. This isn\'t a streak anymore. It\'s who you are now. Incredible discipline.',
     earnable: true,
   },
 
@@ -79,7 +79,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     name: 'Meal Swapper',
     description: 'Swapped 5 meals in your weekly plan',
     icon: '🔄',
-    unlockMessage: 'Five swaps in — you\'re making this plan truly yours.',
+    unlockMessage: 'Five swaps in! You\'re making this plan truly yours.',
     earnable: false,
   },
   {
@@ -87,7 +87,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     name: 'Pantry Pro',
     description: 'Added 20 items to your pantry tracker',
     icon: '🏠',
-    unlockMessage: 'Your pantry is dialed in — smarter lists ahead.',
+    unlockMessage: 'Your pantry is dialed in. Smarter lists ahead.',
     earnable: false,
   },
   {
@@ -95,7 +95,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     name: 'Nutrition Nerd',
     description: 'Viewed nutrition details on 10 different meals',
     icon: '🔬',
-    unlockMessage: 'You love the details — that knowledge compounds.',
+    unlockMessage: 'You love the details. That knowledge compounds.',
     earnable: false,
   },
   {
@@ -103,7 +103,7 @@ export const BADGE_CATALOG: BadgeDef[] = [
     name: 'Social Sharer',
     description: `Shared your first ${BRAND_NAME} score`,
     icon: '📱',
-    unlockMessage: 'Sharing the journey — inspiring others as you go.',
+    unlockMessage: 'Sharing the journey and inspiring others as you go.',
     earnable: false,
   },
 ];

@@ -142,7 +142,7 @@ export default function ChefDashboardModal({
             <View className="flex-row items-center">
               <Ionicons name="restaurant" size={12} color="#5A9A3A" />
               <Text className="text-content-muted ml-1 text-xs">
-                Personal Chef — kitchen view
+                Personal Chef: kitchen view
               </Text>
             </View>
           </View>
@@ -215,7 +215,7 @@ export default function ChefDashboardModal({
                 </>
               ) : (
                 <Text className="text-content-muted text-sm">
-                  No grocery list yet — generated once {clientName.split(' ')[0]}{' '}
+                  No grocery list yet. It will be generated once {clientName.split(' ')[0]}{' '}
                   builds their plan.
                 </Text>
               )}

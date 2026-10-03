@@ -82,7 +82,7 @@ function renderMealLines(plan: WeeklyMealPlan): string {
   const lines: string[] = [];
   for (const day of plan.days) {
     for (const meal of day.meals) {
-      const desc = meal.description ? ` — ${meal.description}` : '';
+      const desc = meal.description ? `: ${meal.description}` : '';
       lines.push(`- ${day.label} ${meal.slot}: ${meal.name}${desc}`);
     }
   }
@@ -110,13 +110,13 @@ ${userBlock}
 THE WEEK'S MEALS (${mealCount} meals, assume 2 servings each):
 ${mealLines}
 
-YOUR TASK — think like a professional meal-prep chef writing a shopping list:
+YOUR TASK: think like a professional meal-prep chef writing a shopping list:
 1. INFER the realistic whole-food, plant-based ingredients each meal needs from its name and
-   description (whole foods only — no oil, no refined flour, no refined sugar).
+   description (whole foods only: no oil, no refined flour, no refined sugar).
 2. CONSOLIDATE across the entire week: every ingredient appears EXACTLY ONCE in
    the final list, with one combined quantity that covers every meal using it.
 3. CONVERT to real shopping units people buy at a store (bunches, bags, cans,
-   lbs, containers, cartons) — never recipe units like "3.5 cups chopped".
+   lbs, containers, cartons): never recipe units like "3.5 cups chopped".
 4. ORGANIZE into store sections so the list follows a natural path through the store.
 
 CONSOLIDATION EXAMPLES (follow this pattern exactly):
@@ -135,25 +135,25 @@ CONSOLIDATION EXAMPLES (follow this pattern exactly):
   RIGHT (in Frozen): { "item": "frozen mixed berries", "quantity": "2 bags (12 oz)", "category": "berries" }
 - Several desserts are sweetened with dates (sold in pantry bags, never by count).
   RIGHT (in Pantry): { "item": "Medjool dates", "quantity": "1 lb bag", "category": null }
-- Bananas appear in a smoothie AND a banana-date dessert — merge into ONE entry.
+- Bananas appear in a smoothie AND a banana-date dessert: merge into ONE entry.
   WRONG: { "item": "bananas", "quantity": "8" }  ← bare number, no unit.
   RIGHT (in Produce): { "item": "bananas", "quantity": "8 medium", "category": null }
-- Chia seeds appear in a smoothie AND a chia-pudding dessert — ONE combined entry.
+- Chia seeds appear in a smoothie AND a chia-pudding dessert: ONE combined entry.
   RIGHT (in Nuts & Seeds): { "item": "chia seeds", "quantity": "1 bag (12 oz)", "category": "seeds" }
 - A dessert uses black beans (e.g. black bean brownies) and a dinner also uses them.
   RIGHT (in Beans & Proteins): { "item": "black beans", "quantity": "4 cans (15 oz)", "category": "beans" }
 - A chocolate dessert uses raw cacao powder.
   RIGHT (in Pantry): { "item": "raw cacao powder", "quantity": "1 bag (8 oz)", "category": null }
 
-SECTIONS — use ONLY these titles, in this order, omitting any empty section:
+SECTIONS: use ONLY these titles, in this order, omitting any empty section:
 "Produce", "Beans & Proteins", "Whole Grains", "Nuts & Seeds", "Frozen", "Pantry", "Spices & Herbs", "Dairy Alternatives"
 
 HARD RULES:
-- QUANTITY FORMAT: every "quantity" MUST be a number followed by a real unit —
+- QUANTITY FORMAT: every "quantity" MUST be a number followed by a real unit:
   never a bare number. Items sold by count (onions, garlic, avocados, peppers,
   lemons) use "6 medium", "2 heads", "4 large". Items sold by weight/volume use
   "1 lb bag", "2 cans (15 oz)", "10 oz bag". "6" alone is always WRONG.
-- Every ingredient appears exactly once across the ENTIRE list — never in two sections.
+- Every ingredient appears exactly once across the ENTIRE list: never in two sections.
 - Strictly respect the user context: excluded foods must NOT appear anywhere.
 - No oil of any kind, no refined sugar/flour, no processed or packaged prepared foods.
 - Fresh produce goes in "Produce"; frozen fruit/vegetables go in "Frozen".
@@ -163,15 +163,15 @@ HARD RULES:
   berries, seeds) or null if it is none of the six.
 - DESSERT SWEETENERS: desserts are sweetened ONLY with whole foods (Medjool dates,
   bananas, berries, ripe fruit). NEVER list refined sugar, brown sugar, maple syrup,
-  honey, agave, coconut sugar, or any packaged sweetener — they must not appear anywhere.
+  honey, agave, coconut sugar, or any packaged sweetener: they must not appear anywhere.
 - DESSERT INGREDIENT ROUTING: dates, raw cacao powder, unsweetened coconut flakes,
   nut/seed butters, vanilla, and rolled oats → "Pantry" (oats may go in "Whole Grains").
   Fresh bananas → "Produce". Pre-frozen fruit used for "nice cream" → "Frozen".
 - CROSS-MEAL CONSOLIDATION: ingredients shared between desserts and other meals
   (chia seeds, black beans, oats, nut butters, berries, bananas) appear EXACTLY ONCE
-  with a combined quantity — never as separate dessert vs. meal lines.
+  with a combined quantity: never as separate dessert vs. meal lines.
 
-Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
+Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
 {
   "sections": [
     {
@@ -218,7 +218,7 @@ Return ONLY valid JSON in EXACTLY this shape — no markdown, no extra keys:
   ).map((t) => ({ title: t, items: bySection.get(t)! }));
 
   if (sections.length === 0) {
-    throw new Error('Grocery list came back empty — please try again.');
+    throw new Error('Grocery list came back empty. Please try again.');
   }
 
   return {

@@ -32,12 +32,12 @@ export const ROLE_META: Record<
 > = {
   chef: {
     label: 'Personal Chef',
-    blurb: 'Cooks your plan — sees recipes, prep timing & your grocery list.',
+    blurb: 'Cooks your plan and sees recipes, prep timing & your grocery list.',
     icon: 'restaurant',
   },
   trainer_nutritionist: {
     label: 'Trainer / Nutritionist',
-    blurb: 'Tunes your plan & goals — also sees your scores and streaks.',
+    blurb: 'Tunes your plan & goals and sees your scores and streaks.',
     icon: 'fitness',
   },
 };

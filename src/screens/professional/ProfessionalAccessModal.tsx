@@ -131,7 +131,7 @@ export default function ProfessionalAccessModal({
       willDelete
         ? {
             title: 'Remove and delete account?',
-            message: `You're ${who}'s only client. Removing them will PERMANENTLY DELETE their professional account and erase all their data — they'll have to start from scratch if you ever reconnect. This cannot be undone. Continue?`,
+            message: `You're ${who}'s only client. Removing them will PERMANENTLY DELETE their professional account and erase all their data. They'll have to start from scratch if you ever reconnect. This cannot be undone. Continue?`,
             confirmLabel: 'Remove & delete',
             cancelLabel: 'Keep',
             destructive: true,
@@ -274,7 +274,7 @@ function SlotCard({
           <View className="flex-row items-center rounded-xl bg-surface-cardAlt px-3 py-2.5">
             <Ionicons name="checkmark-circle" size={18} color="#5A9A3A" />
             <Text className="text-content ml-2 flex-1 text-sm font-semibold">
-              Connected{conn.professional_name ? ` — ${conn.professional_name}` : ''}
+              Connected{conn.professional_name ? `: ${conn.professional_name}` : ''}
             </Text>
           </View>
           <TouchableOpacity

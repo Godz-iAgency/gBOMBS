@@ -304,7 +304,7 @@ export default function ProfileScreen() {
         : modal === 'goalSecondary'
           ? {
               title: 'Secondary goal',
-              subtitle: 'Optional — a second focus area alongside your primary goal.',
+              subtitle: 'Optional: a second focus area alongside your primary goal.',
               options: secondaryGoalOptions,
               current: settings?.healthGoalSecondary ?? 'none',
             }
@@ -408,7 +408,7 @@ export default function ProfileScreen() {
                   Auto-generate weekly
                 </Text>
                 <Text className="text-content-muted mt-0.5 text-xs leading-4">
-                  A fresh plan + grocery list every week, automatically — in
+                  Automatically create a fresh plan and grocery list every week in
                   the evening, your local time.
                 </Text>
               </View>
@@ -429,7 +429,7 @@ export default function ProfileScreen() {
                 value={
                   AUTOPILOT_DAY_LABEL[
                     String(settings.autopilotDay ?? new Date().getDay())
-                  ] ?? '—'
+                  ] ?? 'Not set'
                 }
                 onPress={() => setModal('autopilotDay')}
               />

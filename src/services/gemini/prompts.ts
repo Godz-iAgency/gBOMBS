@@ -31,7 +31,8 @@ ORIGINALITY (important):
   recipe text. Write new content inspired by whole-food, plant-based principles only.
 
 OUTPUT DISCIPLINE:
-- When asked for JSON, return ONLY valid JSON — no markdown, no commentary.
+- Use commas, colons, or periods instead of em dashes in text shown to users.
+- When asked for JSON, return ONLY valid JSON: no markdown, no commentary.
 `.trim();
 
 /**
