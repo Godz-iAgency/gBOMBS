@@ -41,7 +41,7 @@ const PLANS: PlanCard[] = [
     tagline: 'Everything you need to eat well.',
     features: [
       'AI-personalized weekly meal plans',
-      'Daily six-plant score tracking',
+      `Daily ${BRAND_NAME} score tracking`,
       'Auto-built grocery lists',
       'Grocery lists with check-off progress',
       'Recipes, badges & progress reports',
