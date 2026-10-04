@@ -14,7 +14,8 @@
  */
 
 import { supabase } from './supabase';
-import { todayLocalDate } from './dailyCheckIn';
+import { loadTodayCheckIn, todayLocalDate } from './dailyCheckIn';
+import type { CheckInResult } from '@/services/gemini';
 import type { GBombsCategoryKey } from '@/utils/gbombsPresets';
 
 export type ReportRange = 7 | 30;
@@ -43,7 +44,7 @@ export interface ReportData {
 }
 
 /** Raw shape we read from daily_scores (only the columns reports need). */
-interface ScoreRow {
+export interface ScoreRow {
   score_date: string;
   gbombs_score: number;
   greens_hit: boolean;
@@ -52,6 +53,18 @@ interface ScoreRow {
   mushroom_hit: boolean;
   berries_hit: boolean;
   seeds_hit: boolean;
+}
+
+/** Keep charts consistent with today's locally saved check-in when offline. */
+export function mergeLocalCheckIn(rows: ScoreRow[], checkIn: CheckInResult | null): ScoreRow[] {
+  if (!checkIn) return rows;
+  const hit = new Set(checkIn.categoriesHit);
+  return [...rows.filter(row => row.score_date !== checkIn.scoreDate), {
+    score_date: checkIn.scoreDate, gbombs_score: checkIn.score,
+    greens_hit: hit.has('greens'), beans_hit: hit.has('beans'),
+    onion_hit: hit.has('onion'), mushroom_hit: hit.has('mushroom'),
+    berries_hit: hit.has('berries'), seeds_hit: hit.has('seeds'),
+  }];
 }
 
 /** Category → its boolean "hit" column, in canonical gBOMBS order. */
@@ -149,5 +162,5 @@ export async function loadReport(
   } catch {
     rows = [];
   }
-  return computeReport(rows, today, range);
+  return computeReport(mergeLocalCheckIn(rows, await loadTodayCheckIn(userId)), today, range);
 }

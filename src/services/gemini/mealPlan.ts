@@ -243,7 +243,7 @@ ONLY these exact values: greens, beans, onion, mushroom, berries, seeds.`;
   return {
     generatedAt: new Date().toISOString(),
     tierUsed: tier,
-    modelUsed: model,
+    modelUsed: raw.modelUsed,
     days,
     weeklyScore: computeWeeklyScore(days),
   };

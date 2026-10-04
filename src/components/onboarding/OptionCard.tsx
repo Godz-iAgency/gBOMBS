@@ -21,9 +21,15 @@ export default function OptionCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  const outline = `${icon}-outline` as keyof typeof Ionicons.glyphMap;
+  const displayIcon = outline in Ionicons.glyphMap ? outline : icon;
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      aria-checked={selected}
+      accessibilityLabel={title}
       activeOpacity={0.85}
       style={selected ? { borderColor: iconColor } : undefined}
       className={
@@ -41,13 +47,13 @@ export default function OptionCard({
           borderColor: iconColor + '59',
         }}
       >
-        <Ionicons name={icon} size={24} color={iconColor} />
+        <Ionicons name={displayIcon} size={24} color={iconColor} />
       </View>
 
       <View className="flex-1">
         <Text
           className={selected ? 'text-base font-bold' : 'text-base font-bold text-content'}
-          style={selected ? { color: iconColor } : undefined}
+          style={selected ? { color: '#FAFAF9' } : undefined}
         >
           {title}
         </Text>

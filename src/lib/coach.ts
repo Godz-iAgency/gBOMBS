@@ -6,14 +6,14 @@
  *   - history: persist the visible conversation per user (AsyncStorage).
  *   - daily limit: count messages/day per subscription tier to cap API cost.
  *
- * NOTE: the limit is enforced client-side (AsyncStorage), consistent with the
- * app's existing client-side AI keys. It controls honest usage and cost; a
- * server-side proxy would be the hardening step before a public launch.
+ * Daily limits are enforced atomically by the authenticated AI gateway.
+ * AsyncStorage keeps conversation history only, never the authoritative count.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { buildUserMealContext } from './mealContext';
-import { loadTodayCheckIn, todayLocalDate } from './dailyCheckIn';
+import { loadTodayCheckIn } from './dailyCheckIn';
+import { cachedCoachUsage, fetchCoachUsage, type AiUsage } from '@/services/ai/client';
 import { loadCachedPlan } from './mealPlanCache';
 import type { CoachContext, CoachTurn } from '@/services/coach';
 
@@ -30,9 +30,7 @@ export function dailyLimitForTier(tier: string): number {
 
 // ---- Storage keys (per user so accounts don't collide on a shared device) ----
 const HISTORY_PREFIX = 'gbombs_coach_history_v1_';
-const USAGE_PREFIX = 'gbombs_coach_usage_v1_';
 const historyKey = (userId: string) => `${HISTORY_PREFIX}${userId}`;
-const usageKey = (userId: string) => `${USAGE_PREFIX}${userId}`;
 
 // Keep stored history bounded; the model only replays the last several turns
 // anyway, and this keeps the AsyncStorage entry small.
@@ -105,61 +103,14 @@ export async function clearCoachHistory(userId: string): Promise<void> {
 
 // ---- Daily usage / rate limit ----
 
-export interface CoachUsage {
-  used: number;
-  limit: number;
-  remaining: number;
+export type CoachUsage = AiUsage;
+
+/** The server derives identity and tier from the session and subscription. */
+export async function getCoachUsage(_userId: string, _tier: string): Promise<CoachUsage> {
+  return fetchCoachUsage();
 }
 
-interface StoredUsage {
-  date: string; // YYYY-MM-DD (local) the count belongs to
-  count: number;
-}
-
-async function readUsage(userId: string): Promise<StoredUsage> {
-  const today = todayLocalDate();
-  try {
-    const raw = await AsyncStorage.getItem(usageKey(userId));
-    if (raw) {
-      const parsed = JSON.parse(raw) as StoredUsage;
-      // A count from an earlier day is stale — a new day starts fresh.
-      if (parsed.date === today) return parsed;
-    }
-  } catch {
-    // fall through to a fresh count
-  }
-  return { date: today, count: 0 };
-}
-
-/** How many messages the user has used today and how many remain for their tier. */
-export async function getCoachUsage(
-  userId: string,
-  tier: string
-): Promise<CoachUsage> {
-  const limit = dailyLimitForTier(tier);
-  const { count } = await readUsage(userId);
-  return { used: count, limit, remaining: Math.max(0, limit - count) };
-}
-
-/**
- * Record one sent message (call AFTER a successful reply) and return the
- * updated usage. Resets automatically across a local-day boundary.
- */
-export async function recordCoachMessage(
-  userId: string,
-  tier: string
-): Promise<CoachUsage> {
-  const limit = dailyLimitForTier(tier);
-  const current = await readUsage(userId);
-  const next: StoredUsage = { date: current.date, count: current.count + 1 };
-  try {
-    await AsyncStorage.setItem(usageKey(userId), JSON.stringify(next));
-  } catch {
-    // Non-fatal: a failed write just means this message wasn't counted.
-  }
-  return {
-    used: next.count,
-    limit,
-    remaining: Math.max(0, limit - next.count),
-  };
+/** The successful reply has already been counted by the server. */
+export async function recordCoachMessage(userId: string, _tier: string): Promise<CoachUsage> {
+  return cachedCoachUsage(userId) ?? fetchCoachUsage();
 }

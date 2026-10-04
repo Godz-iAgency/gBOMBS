@@ -86,7 +86,7 @@ export default function BadgeTrophyModal({
             {/* Streak stats */}
             <View className="-mx-1 flex-row">
               <StatCard
-                value={`${stats?.currentDailyStreak ?? 0} 🔥`}
+                value={`${stats?.currentDailyStreak ?? 0}`}
                 label="Current streak"
               />
               <StatCard
@@ -94,7 +94,7 @@ export default function BadgeTrophyModal({
                 label="Longest streak"
               />
               <StatCard
-                value={`${stats?.totalPerfectDays ?? 0} ⭐`}
+                value={`${stats?.totalPerfectDays ?? 0}`}
                 label="Perfect days"
               />
             </View>

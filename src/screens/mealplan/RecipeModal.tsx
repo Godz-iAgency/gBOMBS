@@ -33,6 +33,7 @@ import { fetchRecipeNutrition, NUTRITION_VERSION } from '@/services/usda';
 import { loadCachedRecipe, saveCachedRecipe } from '@/lib/recipeCache';
 import { addChefNote, loadMealNote } from '@/lib/professional';
 import { notify } from '@/utils/dialog';
+import { PlantIcon } from '@/components/PlantGroups';
 import { GBOMBS_LETTERS, LETTER_BY_KEY } from '@/utils/gbombsImages';
 
 /** Chef-note context for a recipe. The chef (editable) attaches a note to a
@@ -161,15 +162,7 @@ function ScoreRow({ hit, score }: { hit: GBombsCategory[]; score: number }) {
                 borderColor: isHit ? meta.glow : '#2D2D2D',
               }}
             >
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontWeight: 'bold',
-                  color: isHit ? '#000' : '#A8A29E',
-                }}
-              >
-                {meta.letter}
-              </Text>
+              <PlantIcon category={meta.key} size={18} color={isHit ? '#0A0A0A' : '#A8A29E'} />
             </View>
           );
         })}
@@ -469,7 +462,7 @@ export default function RecipeModal({
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+        <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close recipe" style={styles.closeBtn}>
           <Ionicons name="close" size={22} color="#F5F5F0" />
         </TouchableOpacity>
       </View>
@@ -521,7 +514,7 @@ export default function RecipeModal({
                 thing they see, never buried. (The chef's editor is at the end.) */}
             {note && !note.editable && savedNote ? (
               <View style={[styles.noteBox, { marginTop: 16 }]}>
-                <Text style={styles.noteLabel}>👨‍🍳 CHEF'S NOTE</Text>
+                <Text style={styles.noteLabel}>CHEF'S NOTE</Text>
                 <Text style={styles.noteText}>{savedNote}</Text>
               </View>
             ) : null}
@@ -536,9 +529,10 @@ export default function RecipeModal({
 
             {/* Prep / cook / servings — smoothies have no cook time */}
             <View style={styles.metaRow}>
+              <Ionicons name="time-outline" size={14} color="#A8A29E" style={{ marginRight: 6 }} />
               <Text style={styles.metaText}>
                 {meal.slot === 'smoothie'
-                  ? `⏱  ${recipe.prepMinutes} min · ${recipe.servings} servings`
+                  ? `${recipe.prepMinutes} min · ${recipe.servings} servings`
                   : `⏱  ${recipe.prepMinutes} min prep · ${recipe.cookMinutes} min cook · ${recipe.servings} servings`}
               </Text>
             </View>
@@ -583,7 +577,7 @@ export default function RecipeModal({
             {/* Plant-based tip — Wellness Pro only */}
             {showTips ? (
               <View style={styles.tipBox}>
-                <Text style={styles.tipLabel}>💡 PLANT-BASED TIP</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}><Ionicons name="bulb-outline" size={16} color="#D4C24E" /><Text style={styles.tipLabel}>PLANT-BASED TIP</Text></View>
                 <Text style={styles.tipText}>{recipe.tips}</Text>
               </View>
             ) : null}

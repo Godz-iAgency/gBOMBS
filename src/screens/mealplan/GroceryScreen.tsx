@@ -58,7 +58,7 @@ function ItemRow({
   onToggle: () => void;
 }) {
   return (
-    <TouchableOpacity onPress={onToggle} activeOpacity={0.7} style={styles.itemRow}>
+    <TouchableOpacity onPress={onToggle} accessibilityRole="checkbox" accessibilityState={{ checked: item.checked }} aria-checked={item.checked} accessibilityLabel={`${item.quantity ?? ''} ${item.item}`} activeOpacity={0.7} style={styles.itemRow}>
       <Ionicons
         name={item.checked ? 'checkbox' : 'square-outline'}
         size={22}

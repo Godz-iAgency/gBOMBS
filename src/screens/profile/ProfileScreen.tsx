@@ -86,28 +86,13 @@ function SettingRow({
   value: string;
   onPress: () => void;
 }) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      className="flex-row items-center justify-between px-4 py-3.5"
-    >
-      <View className="flex-row items-center">
-        <Ionicons name={icon} size={20} color="#5A9A3A" />
-        <Text className="text-content ml-3 text-base">{label}</Text>
-      </View>
-      <View className="ml-3 flex-1 flex-row items-center justify-end">
-        <Text
-          className="text-content-muted text-sm"
-          numberOfLines={2}
-          style={{ flexShrink: 1, textAlign: 'right' }}
-        >
-          {value}
-        </Text>
-        <Ionicons name="chevron-forward" size={18} color="#6B7280" />
-      </View>
-    </TouchableOpacity>
-  );
+  return <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} activeOpacity={0.85}
+    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14, minHeight: 72 }}>
+    <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#8CB56912', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={icon} size={20} color="#A8D38D" /></View>
+    <View style={{ flex: 1 }}><Text style={{ color: '#FAFAF9', fontSize: 14, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ color: '#A8A29E', fontSize: 12, marginTop: 4 }} numberOfLines={2}>{value}</Text></View>
+    <Ionicons name="chevron-forward-outline" size={17} color="#92988B" />
+  </TouchableOpacity>;
 }
 
 function SectionLabel({ children }: { children: string }) {

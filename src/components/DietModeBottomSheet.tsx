@@ -8,11 +8,12 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { DietMode } from '@/types/database.types';
 
-const DIET_META: Record<DietMode, { emoji: string; label: string }> = {
-  vegan: { emoji: '🌱', label: 'Vegan' },
-  vegetarian: { emoji: '🥚', label: 'Vegetarian' },
+const DIET_META: Record<DietMode, { icon: keyof typeof Ionicons.glyphMap; label: string }> = {
+  vegan: { icon: 'leaf-outline', label: 'Vegan' },
+  vegetarian: { icon: 'egg-outline', label: 'Vegetarian' },
 };
 
 /**
@@ -109,7 +110,7 @@ export default function DietModeBottomSheet({
               </Text>
               <View className="mt-3 flex-row gap-3">
                 <DietButton
-                  emoji="🌱"
+                  icon="leaf-outline"
                   label="Vegan"
                   active={dietMode === 'vegan'}
                   onPress={() => {
@@ -118,7 +119,7 @@ export default function DietModeBottomSheet({
                   }}
                 />
                 <DietButton
-                  emoji="🥚"
+                  icon="egg-outline"
                   label="Vegetarian"
                   active={dietMode === 'vegetarian'}
                   onPress={() => {
@@ -131,7 +132,7 @@ export default function DietModeBottomSheet({
           ) : (
             <View className="mt-4 flex-row items-center justify-between rounded-xl border border-surface-border bg-surface-card px-4 py-3">
               <Text className="text-content text-base font-semibold">
-                {DIET_META[dietMode].emoji} {DIET_META[dietMode].label}
+                {DIET_META[dietMode].label}
               </Text>
               <TouchableOpacity onPress={() => setEditingDiet(true)} hitSlop={8}>
                 <Text className="text-sm font-bold" style={{ color: '#5A9A3A' }}>
@@ -173,12 +174,12 @@ export default function DietModeBottomSheet({
 }
 
 function DietButton({
-  emoji,
+  icon,
   label,
   active,
   onPress,
 }: {
-  emoji: string;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   active: boolean;
   onPress: () => void;
@@ -193,7 +194,7 @@ function DietButton({
           : 'flex-1 flex-row items-center justify-center rounded-xl border-2 border-surface-border bg-surface-card py-3'
       }
     >
-      <Text className="mr-2 text-lg">{emoji}</Text>
+      <Ionicons name={icon} size={20} color={active ? '#A8D38D' : '#A8A29E'} style={{ marginRight: 8 }} />
       <Text
         className={
           active

@@ -1,3 +1,5 @@
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '@/screens/home/HomeScreen';
@@ -29,23 +31,28 @@ const ICONS: Record<
 };
 
 export default function MainTabNavigator() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#5A9A3A',
+        tabBarActiveTintColor: '#A8D38D',
         tabBarInactiveTintColor: '#A8A29E',
         tabBarStyle: {
           backgroundColor: '#0A0A0A',
           borderTopColor: '#2D2D2D',
           borderTopWidth: 1,
+          width: '100%',
+          maxWidth: 760,
+          alignSelf: 'center',
+          height: 68 + insets.bottom,
+          paddingTop: 5,
+          paddingBottom: Math.max(6, insets.bottom),
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        tabBarIcon: ({ focused, color, size }) => {
-          const name = focused
-            ? ICONS[route.name].active
-            : ICONS[route.name].inactive;
-          return <Ionicons name={name} size={size} color={color} />;
+        tabBarLabelPosition: 'below-icon',
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', lineHeight: 16 },
+        tabBarIcon: ({ focused, color }) => {
+          return <View style={{ width: 44, height: 30, borderRadius: 10, backgroundColor: focused ? '#8CB56918' : 'transparent', alignItems: 'center', justifyContent: 'center' }}><Ionicons name={ICONS[route.name].inactive} size={22} color={color} /></View>;
         },
       })}
     >

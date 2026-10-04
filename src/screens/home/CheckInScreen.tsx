@@ -22,7 +22,7 @@ import { loadTodayCheckIn, saveCheckIn } from '@/lib/dailyCheckIn';
 import { updateStreaksAndBadges } from '@/lib/streaks';
 import type { BadgeDef } from '@/lib/badgeCatalog';
 import BadgeUnlockModal from '@/components/BadgeUnlockModal';
-import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
+import { PlantGroupTiles } from '@/components/PlantGroups';
 
 // Manual safe-area top pad — avoids react-native-safe-area-context on web.
 const TOP_PAD = Platform.OS === 'web' ? 48 : 44;
@@ -30,34 +30,7 @@ const TOP_PAD = Platform.OS === 'web' ? 48 : 44;
 const PLACEHOLDER =
   'e.g. Oatmeal with blueberries and walnuts, a big kale & chickpea salad with red onion, mushroom-lentil stir-fry with garlic…';
 
-/** All six gBOMBS letters, lit when that category was hit today. */
-function ScoreBadges({ hit }: { hit: GBombsCategory[] }) {
-  return (
-    <View style={styles.badgeRow}>
-      {GBOMBS_LETTERS.map((meta) => {
-        const isHit = hit.includes(meta.key as GBombsCategory);
-        return (
-          <View
-            key={meta.key}
-            style={[
-              styles.badge,
-              {
-                backgroundColor: isHit ? meta.glow : 'transparent',
-                borderColor: isHit ? meta.glow : '#2D2D2D',
-              },
-            ]}
-          >
-            <Text
-              style={[styles.badgeText, { color: isHit ? '#000' : '#A8A29E' }]}
-            >
-              {meta.letter}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
+function ScoreBadges({ hit }: { hit: GBombsCategory[] }) { return <PlantGroupTiles hit={hit} logged />; }
 
 export default function CheckInScreen({
   visible,
@@ -137,11 +110,11 @@ export default function CheckInScreen({
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.iconBtn}>
+        <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close daily check-in" style={styles.iconBtn}>
           <Ionicons name="close" size={22} color="#F5F5F0" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Daily Check-in</Text>
-        <View style={styles.iconBtn} />
+        <View style={{ width: 40, height: 40 }} />
       </View>
 
       <KeyboardAvoidingView
@@ -149,6 +122,7 @@ export default function CheckInScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
+          style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -167,7 +141,7 @@ export default function CheckInScreen({
               <Text style={styles.scoreLabel}>{`TODAY'S ${BRAND_DISPLAY_NAME}`}</Text>
               <ScoreBadges hit={result.categoriesHit} />
               <Text style={styles.scoreBig}>
-                {result.score}/6 {result.score === 6 ? '🔥' : ''}
+                {result.score} of 6 groups logged
               </Text>
 
               <View style={styles.card}>
@@ -348,7 +322,7 @@ const styles = StyleSheet.create({
   },
   scoreBig: {
     color: '#F5F5F0',
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '800',
     textAlign: 'center',
     marginTop: 14,

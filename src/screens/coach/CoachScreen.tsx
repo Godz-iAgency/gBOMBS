@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { BRAND_TAGLINE_IMAGE } from '@/utils/gbombsImages';
+import { AiServiceError } from '@/services/ai/client';
 import {
   sendCoachMessage,
   isCoachConfigured,
@@ -74,6 +75,18 @@ export default function CoachScreen() {
   const ctxRef = useRef<CoachContext | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
+  useEffect(() => {
+    if (!user?.id || !usage?.resetsAt) return;
+    const delay = Date.parse(usage.resetsAt) - Date.now();
+    if (!Number.isFinite(delay)) return;
+    const timer = setTimeout(() => {
+      getCoachUsage(user.id, tier).then(setUsage).catch(() => {
+        setError('Unable to refresh your message allowance. Please reopen Coach.');
+      });
+    }, Math.max(1000, delay + 1000));
+    return () => clearTimeout(timer);
+  }, [user?.id, tier, usage?.resetsAt]);
+
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
   }, []);
@@ -89,7 +102,10 @@ export default function CoachScreen() {
       (async () => {
         const [history, use, ctx] = await Promise.all([
           loadCoachHistory(user.id),
-          getCoachUsage(user.id, tier),
+          getCoachUsage(user.id, tier).catch((e: unknown) => {
+            if (active) setError(e instanceof Error ? e.message : 'Unable to check your message allowance.');
+            return null;
+          }),
           buildCoachContext(user.id),
         ]);
         if (!active) return;
@@ -135,6 +151,7 @@ export default function CoachScreen() {
         setUsage(nextUsage);
         scrollToEnd();
       } catch (e) {
+        if (e instanceof AiServiceError && e.usage) setUsage(e.usage);
         setError(
           (e as Error).message ||
             'The coach is unavailable right now. Please try again.'
@@ -278,7 +295,7 @@ export default function CoachScreen() {
               You've used all {usage?.limit} messages for today
             </Text>
             <Text className="text-content-muted mt-1 text-center text-xs">
-              Your messages refresh tomorrow.
+              Your messages renew {usage?.resetsAt ? new Date(usage.resetsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'each day'}.
               {tier !== 'wellness_pro' ? ' Upgrade to Premium for more.' : ''}
             </Text>
           </View>

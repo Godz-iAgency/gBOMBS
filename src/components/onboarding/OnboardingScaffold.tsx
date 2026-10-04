@@ -45,6 +45,7 @@ export default function OnboardingScaffold({
 }) {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
+      <View style={{ flex: 1, width: '100%', maxWidth: 640, alignSelf: 'center' }}>
       {/* Header */}
       <View className="px-6 pb-2 pt-4">
         {/* Back arrow row */}
@@ -52,6 +53,8 @@ export default function OnboardingScaffold({
           {onBack ? (
             <TouchableOpacity
               onPress={onBack}
+              accessibilityRole="button"
+              accessibilityLabel="Previous step"
               activeOpacity={0.7}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               className="w-8 items-center justify-center"
@@ -87,6 +90,7 @@ export default function OnboardingScaffold({
         {footer}
         <TouchableOpacity
           onPress={onPressButton}
+          accessibilityRole="button"
           disabled={buttonDisabled || buttonLoading}
           activeOpacity={0.85}
           className={
@@ -109,6 +113,7 @@ export default function OnboardingScaffold({
             </Text>
           )}
         </TouchableOpacity>
+      </View>
       </View>
     </SafeAreaView>
   );

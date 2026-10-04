@@ -56,3 +56,11 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/usda-nutrition/deno.json"
 entrypoint = "./functions/usda-nutrition/index.ts"
+
+# CORS preflight is public. EVERY POST verifies a real user via auth.getUser
+# inside the handler, then checks server-owned subscription and usage records.
+[functions.ai-generate]
+enabled = true
+verify_jwt = false
+import_map = "./functions/ai-generate/deno.json"
+entrypoint = "./functions/ai-generate/index.ts"

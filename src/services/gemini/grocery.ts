@@ -224,7 +224,7 @@ Return ONLY valid JSON in EXACTLY this shape: no markdown, no extra keys:
   return {
     generatedAt: new Date().toISOString(),
     planGeneratedAt: plan.generatedAt,
-    modelUsed: model,
+    modelUsed: raw.modelUsed,
     sections,
   };
 }

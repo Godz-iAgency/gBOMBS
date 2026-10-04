@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Image,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,7 +44,7 @@ const PLANS: PlanCard[] = [
       'AI-personalized weekly meal plans',
       `Daily ${BRAND_NAME} score tracking`,
       'Auto-built grocery lists',
-      'Grocery lists with check-off progress',
+      '20 Coach messages per day',
       'Recipes, badges & progress reports',
     ],
   },
@@ -55,6 +56,7 @@ const PLANS: PlanCard[] = [
     highlighted: true,
     features: [
       'Everything in Starter',
+      '50 Coach messages per day',
       'Connect a personal chef',
       'Connect a trainer or nutritionist',
       'Pro dashboards for your team',
@@ -93,6 +95,8 @@ function confirmNotice(title: string, message: string): Promise<void> {
 }
 
 export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
+  const { width } = useWindowDimensions();
+  const wide = width >= 720;
   const [loadingPlan, setLoadingPlan] = useState<Plan | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [phone, setPhone] = useState('');
@@ -194,6 +198,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
     <SafeAreaView className="flex-1 bg-surface" edges={['top', 'bottom']}>
       <ScrollView
         ref={scrollRef}
+        style={{ width: '100%', maxWidth: 900, alignSelf: 'center' }}
         contentContainerClassName="px-5 py-8"
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -202,7 +207,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
         <View className="mb-6 items-center">
           <Image
             source={LOGO_WITH_BG}
-            style={{ width: '90%', height: 90 }}
+            style={{ width: '90%', maxWidth: 280, height: 90 }}
             resizeMode="contain"
           />
           <Text className="text-content mt-4 text-center text-2xl font-extrabold">
@@ -288,6 +293,7 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
           </Text>
           <TextInput
             ref={phoneInputRef}
+            accessibilityLabel="Phone number"
             value={phone}
             onChangeText={(t) => {
               setPhone(formatPhoneInput(t));
@@ -317,23 +323,25 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
         </View>
 
         {/* Plan cards */}
+        <View style={{ flexDirection: wide ? 'row' : 'column', gap: 16 }}>
         {PLANS.map((plan) => (
           <View
             key={plan.key}
-            className={`mb-4 rounded-2xl border p-5 ${
-              plan.highlighted
-                ? 'border-brand-greenBright bg-surface-cardAlt'
-                : 'border-surface-border bg-surface-card'
-            }`}
+            style={{ flex: wide ? 1 : undefined, borderWidth: 1, borderColor: plan.highlighted ? '#6C7249' : '#34392F', backgroundColor: plan.highlighted ? '#181D13' : '#161816', borderRadius: 22, padding: 24 }}
           >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, minHeight: 36 }}>
+              <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#8CB56918', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name={plan.highlighted ? 'sparkles-outline' : 'leaf-outline'} color={plan.highlighted ? '#D4C78C' : '#A8D38D'} size={20} />
+              </View>
             {plan.highlighted && (
-              <View className="mb-3 self-start rounded-full bg-brand-greenBright px-3 py-1">
-                <Text className="text-xs font-bold uppercase tracking-wide text-white">
+              <View style={{ borderRadius: 99, backgroundColor: '#D4C78C18', borderColor: '#D4C78C33', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 5 }}>
+                <Text style={{ fontSize: 10, color: '#D4C78C', fontWeight: '700', letterSpacing: 0.7 }}>
                   Most popular
                 </Text>
               </View>
             )}
 
+            </View>
             <Text className="text-content text-lg font-bold">{plan.name}</Text>
             <Text className="text-content-muted mt-0.5 text-sm">
               {plan.tagline}
@@ -347,13 +355,13 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             </View>
 
             {/* Features */}
-            <View className="mt-4">
+            <View style={{ marginTop: 22, paddingTop: 20, borderTopWidth: 1, borderColor: '#34392F', flex: wide ? 1 : undefined }}>
               {plan.features.map((f) => (
                 <View key={f} className="mb-2 flex-row items-start">
                   <Ionicons
-                    name="checkmark-circle"
+                    name="checkmark-outline"
                     size={18}
-                    color="#5A9A3A"
+                    color="#A8D38D"
                     style={{ marginTop: 1 }}
                   />
                   <Text className="text-content ml-2 flex-1 text-sm">{f}</Text>
@@ -364,11 +372,11 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
             {/* CTA */}
             <TouchableOpacity
               onPress={() => handleChoose(plan.key)}
+              accessibilityRole="button"
+              accessibilityLabel={`Start ${plan.name} free trial`}
               disabled={loadingPlan !== null}
               activeOpacity={0.85}
-              className={`mt-5 rounded-xl py-4 ${
-                plan.highlighted ? 'bg-brand-greenBright' : 'bg-brand-green'
-              }`}
+              style={{ marginTop: 22, minHeight: 52, borderRadius: 12, paddingVertical: 15, backgroundColor: '#3A6B2A', opacity: loadingPlan !== null ? 0.65 : 1 }}
             >
               {loadingPlan === plan.key ? (
                 <ActivityIndicator color="#FFFFFF" />
@@ -378,13 +386,14 @@ export default function PaywallScreen({ gated = false }: { gated?: boolean }) {
                 </Text>
               )}
             </TouchableOpacity>
+            <Text style={{ color: '#B3B7AB', fontSize: 11, textAlign: 'center', marginTop: 12 }}>7 days free, then {plan.price}/month.</Text>
           </View>
         ))}
+        </View>
 
+        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 22 }}><Ionicons name="lock-closed-outline" size={14} color="#A8A29E" /><Text style={{ color: '#A8A29E', fontSize: 12 }}>Secure checkout by Stripe</Text></View>
         <Text className="text-content-muted mt-2 text-center text-xs">
-          After the trial, you'll be charged {`${PLANS[0].price}`}–
-          {`${PLANS[1].price}`}/month unless you cancel first. Secure checkout
-          by Stripe.
+          Cancel before your trial ends to avoid the monthly charge for your chosen plan.
         </Text>
 
         {/* Invited by a client? A chef/trainer doesn't subscribe — they connect

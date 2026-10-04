@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import LetterTile from '@/components/LetterTile';
+import { PlantIcon } from '@/components/PlantGroups';
 import { GBOMBS_LETTERS, LOGO_WITH_BG } from '@/utils/gbombsImages';
 import type { OnboardingStackParamList } from '@/navigation/OnboardingStack';
 
@@ -31,6 +31,7 @@ export default function WelcomeScreen({ navigation }: Props) {
       </TouchableOpacity>
 
       <ScrollView
+        style={{ width: '100%', maxWidth: 640, alignSelf: 'center' }}
         contentContainerClassName="px-6 pb-4 pt-2"
         showsVerticalScrollIndicator={false}
       >
@@ -61,17 +62,7 @@ export default function WelcomeScreen({ navigation }: Props) {
                 backgroundColor: g.color + '14',
               }}
             >
-              <LetterTile
-                image={g.image}
-                color={g.color}
-                glow={g.glow}
-                // Berries/Seeds (landscape) stay larger + cover. Portrait letters
-                // shrink 4px and use contain so the whole letter shows.
-                size={g.key === 'berries' || g.key === 'seeds' ? 66 : 50}
-                resizeMode={
-                  g.key === 'berries' || g.key === 'seeds' ? 'cover' : 'contain'
-                }
-              />
+              <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: g.glow + '14', borderWidth: 1, borderColor: g.glow + '33', alignItems: 'center', justifyContent: 'center' }}><PlantIcon category={g.key} color={g.glow} size={28} /></View>
               <View className="ml-4 flex-1">
                 <Text
                   className="text-lg font-extrabold"
@@ -89,7 +80,7 @@ export default function WelcomeScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* CTA */}
-      <View className="border-t border-surface-border px-6 pb-4 pt-4">
+      <View style={{ width: '100%', maxWidth: 640, alignSelf: 'center' }} className="border-t border-surface-border px-6 pb-4 pt-4">
         <TouchableOpacity
           onPress={() => navigation.navigate('Location')}
           activeOpacity={0.85}

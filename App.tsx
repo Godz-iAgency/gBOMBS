@@ -1,6 +1,6 @@
 import './global.css';
 import React from 'react';
-import { Text, TextInput } from 'react-native';
+import { Text, TextInput, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
@@ -25,7 +25,8 @@ function patchDefaultFont(Component: any) {
   Component.render = function (...args: any[]) {
     const el = oldRender.apply(this, args);
     return React.cloneElement(el, {
-      style: [{ fontFamily: 'Poppins_400Regular' }, el.props.style],
+      // The web render may already be a DOM element, which needs an object.
+      style: StyleSheet.flatten([{ fontFamily: 'Poppins_400Regular' }, el.props.style]),
     });
   };
   Component.__poppinsPatched = true;

@@ -67,7 +67,7 @@ export default function EditPlanModal({
           activeOpacity={1}
           onPress={onClose}
         />
-        <View className="max-h-[82%] rounded-t-3xl bg-surface px-5 pb-8 pt-5">
+        <View style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }} className="max-h-[82%] rounded-t-3xl bg-surface px-5 pb-8 pt-5">
           {/* Header */}
           <View className="mb-4 flex-row items-start justify-between">
             <View className="flex-1 pr-3">
@@ -82,6 +82,8 @@ export default function EditPlanModal({
             </View>
             <TouchableOpacity
               onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close setting picker"
               className="h-9 w-9 items-center justify-center rounded-full bg-surface-card"
             >
               <Ionicons name="close" size={20} color="#A8A29E" />

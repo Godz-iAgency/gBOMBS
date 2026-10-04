@@ -19,11 +19,14 @@
 import { supabase } from './supabase';
 import { loadTodayCheckIn, todayLocalDate } from './dailyCheckIn';
 import { loadCachedPlan } from './mealPlanCache';
-import type { CheckInResult, WeeklyMealPlan } from '@/services/gemini';
+import type { CheckInResult, WeeklyMealPlan, GBombsCategory } from '@/services/gemini';
+import { computeReport, mergeLocalCheckIn, type ScoreRow, type TrendPoint } from './reports';
 
 export interface DashboardData {
   /** Today's check-in (null = not logged yet today). */
   checkIn: CheckInResult | null;
+  /** Saved coverage can exist on another device without the full local log. */
+  todayScore: Pick<CheckInResult, 'score' | 'categoriesHit'> | null;
   /** The cached weekly meal plan (null = none generated yet). */
   plan: WeeklyMealPlan | null;
   /** Consecutive days logged, ending today or yesterday. */
@@ -32,6 +35,7 @@ export interface DashboardData {
   daysLoggedThisWeek: number;
   /** users.trial_ends_at — drives the trial countdown pill. */
   trialEndsAt: string | null;
+  trend: TrendPoint[];
 }
 
 /** YYYY-MM-DD for the day before `iso`, using local calendar math. */
@@ -82,16 +86,16 @@ export function countDaysThisWeek(dates: Set<string>, today: string): number {
 }
 
 /** Recent logged dates from daily_scores (newest first). [] on any failure. */
-async function fetchScoreDates(userId: string): Promise<string[]> {
+async function fetchScoreDates(userId: string): Promise<ScoreRow[]> {
   try {
     const { data, error } = await supabase
       .from('daily_scores')
-      .select('score_date')
+      .select('score_date, gbombs_score, greens_hit, beans_hit, onion_hit, mushroom_hit, berries_hit, seeds_hit')
       .eq('user_id', userId)
       .order('score_date', { ascending: false })
       .limit(60);
     if (error || !data) return [];
-    return data.map((r) => r.score_date);
+    return data;
   } catch {
     return [];
   }
@@ -122,15 +126,23 @@ export async function loadDashboard(userId: string): Promise<DashboardData> {
 
   // Today's local check-in counts even if the daily_scores write hasn't
   // landed (offline) — keeps streak/week numbers honest without a network.
-  const dates = new Set(scoreDates);
+  const dates = new Set(scoreDates.map(row => row.score_date));
   if (checkIn) dates.add(checkIn.scoreDate);
 
   const today = todayLocalDate();
+  const mergedRows = mergeLocalCheckIn(scoreDates, checkIn);
+  const todayRow = mergedRows.find(row => row.score_date === today);
+  const categories: GBombsCategory[] = ['greens', 'beans', 'onion', 'mushroom', 'berries', 'seeds'];
   return {
     checkIn,
+    todayScore: todayRow ? {
+      score: todayRow.gbombs_score,
+      categoriesHit: categories.filter(category => todayRow[`${category}_hit` as keyof ScoreRow]),
+    } : null,
     plan,
     streak: computeDailyStreak(dates, today),
     daysLoggedThisWeek: countDaysThisWeek(dates, today),
     trialEndsAt,
+    trend: computeReport(mergedRows, today, 7).trend,
   };
 }

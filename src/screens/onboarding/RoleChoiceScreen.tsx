@@ -31,6 +31,7 @@ export default function RoleChoiceScreen({ navigation }: Props) {
           below the fold with no way to reach them. flex-grow keeps `mt-auto`
           working (footer pinned to the bottom) when the content DOES fit. */}
       <ScrollView
+        style={{ width: '100%', maxWidth: 640, alignSelf: 'center' }}
         className="flex-1"
         contentContainerClassName="flex-grow px-6"
         showsVerticalScrollIndicator={false}

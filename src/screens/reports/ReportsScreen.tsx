@@ -16,6 +16,7 @@ import {
   type TrendPoint,
   type CategoryCoverage,
 } from '@/lib/reports';
+import { PlantIcon, PLANT_LABELS } from '@/components/PlantGroups';
 import { LETTER_BY_KEY } from '@/utils/gbombsImages';
 
 /**
@@ -66,7 +67,7 @@ export default function ReportsScreen({
       <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
         {/* Header */}
         <View className="flex-row items-center justify-between border-b border-surface-border px-5 pb-3 pt-1">
-          <TouchableOpacity onPress={onClose} className="py-1 pr-3">
+          <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close progress report" style={{ width: 44, height: 44, justifyContent: 'center' }}>
             <Ionicons name="close" size={24} color="#A8A29E" />
           </TouchableOpacity>
           <Text className="text-content text-base font-bold">
@@ -103,7 +104,7 @@ export default function ReportsScreen({
             {/* Summary stats */}
             <View className="-mx-1 flex-row">
               <StatCard value={`${data.avgScore}`} label="Avg score" />
-              <StatCard value={`${data.perfectDays} ⭐`} label="Perfect days" />
+              <StatCard value={`${data.perfectDays}`} label="Perfect days" />
               <StatCard
                 value={`${data.daysLogged}`}
                 label={`of ${data.range} days`}
@@ -158,7 +159,7 @@ function RangeTab({
     >
       <Text
         className="text-xs font-bold"
-        style={{ color: active ? '#fff' : '#A8A29E' }}
+        style={{ color: active ? '#0A0A0A' : '#A8A29E' }}
       >
         {label}
       </Text>
@@ -168,7 +169,7 @@ function RangeTab({
 
 // ---- Trend (vertical bars) ----------------------------------------------
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -254,15 +255,13 @@ function CoverageBar({ c }: { c: CategoryCoverage }) {
     <View className="mb-3.5 flex-row items-center">
       <View
         className="mr-3 h-7 w-7 items-center justify-center rounded-full"
-        style={{ backgroundColor: meta.glow }}
+        style={{ backgroundColor: meta.glow + '18' }}
       >
-        <Text className="text-xs font-bold" style={{ color: '#000' }}>
-          {meta.letter}
-        </Text>
+        <PlantIcon category={c.key} color={meta.glow} size={22} />
       </View>
       <View className="flex-1">
         <View className="mb-1 flex-row items-center justify-between">
-          <Text className="text-content text-xs font-semibold">{meta.word}</Text>
+          <Text className="text-content text-xs font-semibold">{PLANT_LABELS[c.key]}</Text>
           <Text className="text-content-muted text-xs font-semibold">
             {c.pct}%
           </Text>

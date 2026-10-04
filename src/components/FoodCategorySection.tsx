@@ -8,14 +8,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FoodChip from './FoodChip';
-import LetterTile from './LetterTile';
+import { PlantIcon } from './PlantGroups';
 import {
   isBlockedFood,
   REJECTION_MESSAGES,
   normalizeFood,
 } from '@/utils/foodValidation';
 import { validateCustomFood } from '@/services/gemini';
-import { LETTER_BY_KEY } from '@/utils/gbombsImages';
 import type { GBombsCategoryKey } from '@/utils/gbombsPresets';
 
 export type CategoryConfig = {
@@ -124,7 +123,6 @@ export default function FoodCategorySection({
     setInput('');
   }
 
-  const meta = LETTER_BY_KEY[config.key];
 
   return (
     <View
@@ -137,21 +135,7 @@ export default function FoodCategorySection({
       {/* Header */}
       <View className="mb-3 flex-row items-center justify-between">
         <View className="flex-row items-center">
-          {(() => {
-            const isLandscape =
-              config.key === 'berries' || config.key === 'seeds';
-            return (
-              <LetterTile
-                image={meta.image}
-                color={config.color}
-                glow={config.chip}
-                // Berries/Seeds (landscape) stay larger + cover. The portrait
-                // letters shrink 4px and use contain so the whole letter shows.
-                size={isLandscape ? 52 : 36}
-                resizeMode={isLandscape ? 'cover' : 'contain'}
-              />
-            );
-          })()}
+          <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: config.chip + '14', alignItems: 'center', justifyContent: 'center' }}><PlantIcon category={config.key} color={config.chip} size={22} /></View>
           <Text
             className="ml-3 text-base font-extrabold tracking-wide"
             style={{ color: config.chip }}
