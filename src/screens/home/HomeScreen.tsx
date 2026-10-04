@@ -15,6 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { loadDashboard, type DashboardData } from '@/lib/dashboard';
 import { getPlanState, PLAN_BADGE_LABEL } from '@/lib/subscriptionPlan';
 import { PlantGroupTiles } from '@/components/PlantGroups';
+import PlantBenefitModal from '@/components/PlantBenefitModal';
+import type { GBombsCategoryKey } from '@/utils/gbombsPresets';
 import HomeProgressCard from './HomeProgressCard';
 import type { MainTabParamList } from '@/navigation/MainTabNavigator';
 import CheckInScreen from './CheckInScreen';
@@ -95,6 +97,7 @@ export default function HomeScreen() {
   const [booting, setBooting] = useState(true);
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [reportsOpen, setReportsOpen] = useState(false);
+  const [plantBenefit, setPlantBenefit] = useState<GBombsCategoryKey | null>(null);
 
   // Refresh every time the tab gains focus — a check-in logged moments ago or
   // a plan generated on the Meal Plan tab should show here immediately.
@@ -235,7 +238,7 @@ export default function HomeScreen() {
           <Text style={{ color: '#B9CEA9', fontSize: 12, fontWeight: '600', letterSpacing: 1 }}>TODAY’S PLANT GROUPS</Text>
           <Text className="text-content mt-2 text-xl font-bold">{todayScore ? `${todayScore.score} of 6 groups logged` : 'A little variety, every day'}</Text>
           <Text className="text-content-muted mt-2 mb-4 text-sm">{checkIn ? 'Review your meals, coaching and tip for tomorrow.' : todayScore ? 'Your plant groups are saved. Update your meals for fresh coaching.' : 'Log what you ate to see which plant groups you included.'}</Text>
-          <PlantGroupTiles hit={todayScore?.categoriesHit ?? []} logged={!!todayScore} />
+          <PlantGroupTiles hit={todayScore?.categoriesHit ?? []} logged={!!todayScore} onSelect={setPlantBenefit} />
           <TouchableOpacity onPress={() => setCheckInOpen(true)} accessibilityRole="button" activeOpacity={0.85}
             style={{ marginTop: 18, backgroundColor: '#3A6B2A', minHeight: 48, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>{checkIn ? 'Review today’s meals' : todayScore ? 'Update today’s meals' : "Log today's meals"}</Text>
@@ -263,13 +266,15 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('MealPlan')}
           />
           <QuickAction
-            icon="list-outline"
+            icon="cart-outline"
             label="Grocery"
             color="#4A90D9"
             onPress={() => navigation.navigate('Grocery')}
           />
         </View>
       </ScrollView>
+
+      <PlantBenefitModal category={plantBenefit} onClose={() => setPlantBenefit(null)} />
 
       <CheckInScreen
         visible={checkInOpen}

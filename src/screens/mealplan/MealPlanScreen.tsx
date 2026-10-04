@@ -16,16 +16,12 @@ import {
   computeWeeklyScore,
   swapMeal,
   type WeeklyMealPlan,
-  type GBombsCategory,
   type MealSummary,
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
 import { loadCachedPlan, saveCachedPlan } from '@/lib/mealPlanCache';
 import { loadPendingAdjustments, consumeAdjustments } from '@/lib/professional';
-import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
 import RecipeModal from './RecipeModal';
-import PlantCoverageModal from './PlantCoverageModal';
-import { PlantIcon } from '@/components/PlantGroups';
 import GroceryScreen from './GroceryScreen';
 import SwipeableMealCard from './SwipeableMealCard';
 import GeneratingPlanAnimation from './GeneratingPlanAnimation';
@@ -41,25 +37,6 @@ function notify(title: string, message: string) {
 
 const SHORT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-function WeeklyScoreBar({ hit, score, onPress }: { hit: GBombsCategory[]; score: number; onPress: () => void }) {
-  return <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel="See contributing meals" activeOpacity={0.9}
-    style={{ marginBottom: 18, backgroundColor: '#161C12', borderWidth: 1, borderColor: '#35472B', borderRadius: 18, padding: 16 }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Text style={{ color: '#D2DBC9', fontSize: 12, fontWeight: '600' }}>Plant groups in your plan</Text>
-      <Ionicons name="chevron-forward-outline" size={18} color="#A8D38D" />
-    </View>
-    <View style={{ flexDirection: 'row', marginTop: 14, gap: 8 }}>
-      {GBOMBS_LETTERS.map(meta => <View key={meta.key} style={{ width: 28, height: 32, justifyContent: 'center', alignItems: 'center' }}>
-        <PlantIcon category={meta.key} color={hit.includes(meta.key) ? meta.glow : '#656A60'} size={24} />
-      </View>)}
-    </View>
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
-      <Text style={{ color: '#FAFAF9', fontSize: 14, fontWeight: '700' }}>{score} of 6 included</Text>
-      <Text style={{ color: '#A8D38D', fontSize: 11 }}>See contributing meals</Text>
-    </View>
-  </TouchableOpacity>;
-}
-
 export default function MealPlanScreen() {
   const { user, profile } = useAuth();
   const tier = profile?.subscription_tier ?? 'standard';
@@ -71,7 +48,6 @@ export default function MealPlanScreen() {
   const [selectedDay, setSelectedDay] = useState(0);
   const [recipeMeal, setRecipeMeal] = useState<MealSummary | null>(null);
   const [groceryOpen, setGroceryOpen] = useState(false);
-  const [coverageOpen, setCoverageOpen] = useState(false);
   const [swappingId, setSwappingId] = useState<string | null>(null);
 
   // Load any cached plan on mount / user change.
@@ -259,7 +235,7 @@ export default function MealPlanScreen() {
               accessibilityLabel="Open grocery list"
               className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-surface-card"
             >
-              <Ionicons name="list-outline" size={20} color="#5A9A3A" />
+              <Ionicons name="cart-outline" size={20} color="#5A9A3A" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleGenerate}
@@ -271,13 +247,6 @@ export default function MealPlanScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Weekly score */}
-        <WeeklyScoreBar
-          hit={plan.weeklyScore.categoriesHit}
-          score={plan.weeklyScore.score}
-          onPress={() => setCoverageOpen(true)}
-        />
 
         {/* Day tabs — sized to fit all 7 without scrolling on a typical ~360-390px
             phone (screen padding is 20px each side, leaving ~320-350px). At the
@@ -330,12 +299,6 @@ export default function MealPlanScreen() {
         ))}
       </ScrollView>
 
-      <PlantCoverageModal
-        plan={plan}
-        visible={coverageOpen}
-        onClose={() => setCoverageOpen(false)}
-        onSelectMeal={(meal) => { setCoverageOpen(false); setRecipeMeal(meal); }}
-      />
       <RecipeModal
         meal={recipeMeal}
         userId={user?.id ?? ''}

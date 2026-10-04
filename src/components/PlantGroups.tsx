@@ -1,6 +1,8 @@
-import { View, Text, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Platform, StyleSheet, type ViewStyle } from 'react-native';
 import { createElement, type ComponentProps, type ElementType } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { GBOMBS_LETTERS } from '@/utils/gbombsImages';
+import { PLANT_DETAILS } from '@/utils/plantGroupDetails';
 import type { GBombsCategoryKey } from '@/utils/gbombsPresets';
 import NativeSvg, { Path as NativePath, Circle as NativeCircle, Ellipse as NativeEllipse, G as NativeG } from 'react-native-svg';
 
@@ -36,16 +38,40 @@ export function PlantIcon({ category, color = '#A8A29E', size = 24 }: {
   </Svg>;
 }
 
-export function PlantGroupTiles({ hit, logged = false }: { hit: string[]; logged?: boolean }) {
+export function PlantGroupTiles({ hit, logged = false, onSelect }: {
+  hit: string[];
+  logged?: boolean;
+  onSelect?: (category: GBombsCategoryKey) => void;
+}) {
   return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
     {GBOMBS_LETTERS.map(meta => {
       const included = hit.includes(meta.key);
-      return <View key={meta.key} accessibilityLabel={`${PLANT_LABELS[meta.key]}: ${included ? 'included' : logged ? 'not included' : 'not logged'}`}
-        style={{ width: '30%', flexGrow: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12,
-          borderWidth: 1, borderColor: included ? meta.glow + '55' : '#2B3028', backgroundColor: included ? meta.glow + '14' : '#FFFFFF04' }}>
-        <PlantIcon category={meta.key} color={included ? meta.glow : '#979D91'} />
-        <Text style={{ color: included ? '#F5F5F4' : '#B6BAB1', fontSize: 11, fontWeight: '600', marginTop: 7 }}>{PLANT_LABELS[meta.key]}</Text>
-      </View>;
+      const label = `${PLANT_LABELS[meta.key]}: ${included ? 'included' : logged ? 'not included' : 'not logged'}`;
+      const style: ViewStyle = {
+        width: '30%', flexGrow: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12,
+        overflow: onSelect ? 'hidden' : undefined, borderWidth: 1,
+        borderColor: included ? meta.glow + (onSelect ? '88' : '55') : onSelect ? '#3B4235' : '#2B3028',
+        backgroundColor: included ? meta.glow + '14' : '#FFFFFF04',
+      };
+      const content = <>
+        {onSelect && <>
+          <Image source={PLANT_DETAILS[meta.key].image} accessible={false} resizeMode="cover"
+            style={[StyleSheet.absoluteFill, { width: '100%', height: '100%', opacity: logged && !included ? 0.4 : 0.8 }]} />
+          <LinearGradient pointerEvents="none" colors={['#0A120A55', '#080E08D9']}
+            style={StyleSheet.absoluteFill} />
+        </>}
+        <View style={{ zIndex: 1 }}>
+          <PlantIcon category={meta.key} color={included || (onSelect && !logged) ? meta.glow : '#979D91'} />
+        </View>
+        <Text style={{ color: onSelect || included ? '#F5F5F4' : '#B6BAB1', fontSize: 11, fontWeight: '600', marginTop: 7 }}>
+          {PLANT_LABELS[meta.key]}
+        </Text>
+      </>;
+      return onSelect
+        ? <TouchableOpacity key={meta.key} onPress={() => onSelect(meta.key)} activeOpacity={0.8}
+            accessibilityRole="button" accessibilityLabel={`Learn about ${PLANT_LABELS[meta.key]}. ${label}`}
+            accessibilityHint="Opens a short food group benefit" style={style}>{content}</TouchableOpacity>
+        : <View key={meta.key} accessibilityLabel={label} style={style}>{content}</View>;
     })}
   </View>;
 }

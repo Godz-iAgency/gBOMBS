@@ -26,7 +26,7 @@ const ICONS: Record<
   Home: { active: 'home', inactive: 'home-outline' },
   MealPlan: { active: 'calendar', inactive: 'calendar-outline' },
   Coach: { active: 'chatbubble', inactive: 'chatbubble-outline' },
-  Grocery: { active: 'list', inactive: 'list-outline' },
+  Grocery: { active: 'cart', inactive: 'cart-outline' },
   Profile: { active: 'person', inactive: 'person-outline' },
 };
 
