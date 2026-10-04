@@ -20,7 +20,15 @@ export type PlanState = 'trial' | 'standard' | 'premium';
 type PlanProfile = {
   subscription_tier?: string | null;
   subscription_status?: string | null;
+  subscription_id?: string | null;
 } | null | undefined;
+
+/** Matches the server's eligibility rule for creating professional invites. */
+export function hasProfessionalAccess(profile: PlanProfile): boolean {
+  return profile?.subscription_tier === 'wellness_pro' &&
+    !!profile.subscription_id &&
+    ['active', 'trialing'].includes(profile.subscription_status ?? '');
+}
 
 /** Resolve the member's plan state. Trialing wins over tier — a trialing
  *  Premium member still reads as "Free trial" until the trial converts. */

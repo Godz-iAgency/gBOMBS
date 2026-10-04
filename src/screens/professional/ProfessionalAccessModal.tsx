@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasProfessionalAccess } from '@/lib/subscriptionPlan';
 import {
   listMyConnections,
   createInvite,
@@ -23,20 +24,6 @@ import {
 import { shareInvite, inviteDeepLink } from '@/lib/invite';
 import { confirmAsync, notify } from '@/utils/dialog';
 import QRCodeBox from '@/components/QRCodeBox';
-
-/** Premium gate (matches the create_professional_invite RPC's server-side rule). */
-function isPremium(profile: {
-  subscription_tier: string;
-  subscription_status: string;
-  subscription_id: string | null;
-} | null): boolean {
-  return (
-    !!profile &&
-    profile.subscription_tier === 'wellness_pro' &&
-    !!profile.subscription_id &&
-    ['active', 'trialing'].includes(profile.subscription_status)
-  );
-}
 
 /**
  * Professional Access (CLIENT side, Premium).
@@ -54,7 +41,7 @@ export default function ProfessionalAccessModal({
   onClose: () => void;
 }) {
   const { user, profile } = useAuth();
-  const premium = isPremium(profile);
+  const premium = hasProfessionalAccess(profile);
 
   const [connections, setConnections] = useState<ProfessionalConnection[] | null>(
     null
@@ -175,7 +162,7 @@ export default function ProfessionalAccessModal({
           <Text className="text-content text-lg font-extrabold">
             Professional Access
           </Text>
-          <TouchableOpacity onPress={onClose} hitSlop={10}>
+          <TouchableOpacity onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close professional access">
             <Ionicons name="close" size={26} color="#A8A29E" />
           </TouchableOpacity>
         </View>
@@ -302,6 +289,8 @@ function SlotCard({
           <View className="mt-4 w-full flex-row">
             <TouchableOpacity
               onPress={() => onShare(conn)}
+              accessibilityRole="button"
+              accessibilityLabel={`Share ${meta.label} invite`}
               activeOpacity={0.85}
               className="mr-2 flex-1 flex-row items-center justify-center rounded-xl bg-brand-green py-3"
             >
@@ -320,6 +309,8 @@ function SlotCard({
       ) : (
         <TouchableOpacity
           onPress={onGenerate}
+          accessibilityRole="button"
+          accessibilityLabel={`Generate ${meta.label} invite`}
           disabled={!premium || busy}
           activeOpacity={0.85}
           className={`mt-4 flex-row items-center justify-center rounded-xl py-3 ${

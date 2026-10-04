@@ -1,5 +1,5 @@
 import { BRAND_NAME } from '@/utils/brand';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,6 +20,7 @@ import { openBillingPortal } from '@/lib/subscription';
 import { fetchTrialEnd } from '@/lib/dashboard';
 import {
   getPlanState,
+  hasProfessionalAccess,
   PLAN_TITLE,
   PLAN_CTA_LABEL,
 } from '@/lib/subscriptionPlan';
@@ -52,6 +55,7 @@ import ProfessionalAccessModal from '@/screens/professional/ProfessionalAccessMo
 import AcceptInviteModal from '@/screens/professional/AcceptInviteModal';
 import ClientListModal from '@/screens/professional/ClientListModal';
 import { hasActiveClients } from '@/lib/professional';
+import { notify } from '@/utils/dialog';
 
 /** Whole days until `iso` (clamped at 0) — for the trial countdown. */
 function daysUntil(iso: string): number {
@@ -70,6 +74,7 @@ type ModalKind =
   | 'badges'
   | 'reports'
   | 'proAccess'
+  | 'premiumRequired'
   | 'acceptInvite'
   | 'clients'
   | null;
@@ -152,13 +157,28 @@ export default function ProfileScreen() {
   // this to reach their client-facing surface. Defaults to Personal; the toggle
   // that controls it only renders when `isPro` is true.
   const [proMode, setProMode] = useState(false);
+  const [upgradeHighlighted, setUpgradeHighlighted] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const subscriptionY = useRef(0);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const plan = getPlanState(profile);
   // Inviting a chef/trainer is a Premium feature. Match the server rule
   // (create_professional_invite): Premium tier, currently active or trialing.
-  const premium =
-    profile?.subscription_tier === 'wellness_pro' &&
-    ['active', 'trialing'].includes(profile?.subscription_status ?? '');
+  const premium = hasProfessionalAccess(profile);
+  const subscriptionCta = plan === 'trial' && !premium ? 'Upgrade to Premium' : PLAN_CTA_LABEL[plan];
+
+  useEffect(() => () => {
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+  }, []);
+
+  function revealUpgrade() {
+    setModal(null);
+    scrollRef.current?.scrollTo({ y: Math.max(0, subscriptionY.current - 24), animated: true });
+    setUpgradeHighlighted(true);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setUpgradeHighlighted(false), 4000);
+  }
 
   const reload = useCallback(async () => {
     if (!user?.id) return;
@@ -198,7 +218,7 @@ export default function ProfileScreen() {
     try {
       await openBillingPortal();
     } catch (e) {
-      Alert.alert('Could not open billing', (e as Error).message);
+      notify('Could not open billing', (e as Error).message);
     } finally {
       setPortalLoading(false);
     }
@@ -211,14 +231,7 @@ export default function ProfileScreen() {
       setModal('proAccess');
       return;
     }
-    Alert.alert(
-      'Premium feature',
-      `Connecting a Personal Chef or Trainer/Nutritionist is part of ${BRAND_NAME} Premium. Upgrade to invite your professionals.`,
-      [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Upgrade', onPress: handlePortal },
-      ]
-    );
+    setModal('premiumRequired');
   }
 
   // Save handler for the single-select plan modal (diet / goal / cooking / day).
@@ -327,6 +340,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
+        ref={scrollRef}
         style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
@@ -515,6 +529,7 @@ export default function ProfileScreen() {
         <SectionLabel>Subscription</SectionLabel>
         <View
           className="rounded-2xl border p-5"
+          onLayout={event => { subscriptionY.current = event.nativeEvent.layout.y; }}
           style={{ borderColor: '#5A9A3A66', backgroundColor: '#5A9A3A14' }}
         >
           <View className="flex-row items-center justify-between">
@@ -533,15 +548,19 @@ export default function ProfileScreen() {
           </View>
           <TouchableOpacity
             onPress={handlePortal}
+            accessibilityRole="button"
+            accessibilityLabel={subscriptionCta}
             disabled={portalLoading}
             activeOpacity={0.85}
             className="mt-4 rounded-xl bg-brand-green py-3"
+            style={{ borderWidth: 2, borderColor: upgradeHighlighted ? '#E3C46D' : 'transparent',
+              backgroundColor: upgradeHighlighted ? '#4F8337' : '#3A6B2A' }}
           >
             {portalLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text className="text-center text-base font-bold text-white">
-                {PLAN_CTA_LABEL[plan]}
+                {subscriptionCta}
               </Text>
             )}
           </TouchableOpacity>
@@ -557,6 +576,35 @@ export default function ProfileScreen() {
           <Text className="text-content text-base font-semibold">Sign out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={modal === 'premiumRequired'} transparent animationType="fade" onRequestClose={revealUpgrade}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Pressable onPress={revealUpgrade} accessible={false}
+            style={{ position: 'absolute', inset: 0, backgroundColor: '#000000B8' }} />
+          <View accessibilityViewIsModal style={{ width: '100%', maxWidth: 400, padding: 24,
+            borderRadius: 20, backgroundColor: '#161C12', borderWidth: 1, borderColor: '#8A7BD866' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#8A7BD81A',
+                alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="people-outline" size={24} color="#B4A5F0" />
+              </View>
+              <Text accessibilityRole="header" style={{ flex: 1, color: '#FAFAF9', fontSize: 20, fontWeight: '700' }}>Premium required</Text>
+              <TouchableOpacity onPress={revealUpgrade} accessibilityRole="button" accessibilityLabel="Close Premium notice"
+                style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="close-outline" size={24} color="#D6D3D1" />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ color: '#D6D3D1', fontSize: 14, lineHeight: 22, marginTop: 16 }}>
+              Professional Access is included in {BRAND_NAME} Premium. Upgrade to Premium to invite your chef and trainer and give them their own dashboards.
+            </Text>
+            <TouchableOpacity onPress={revealUpgrade} accessibilityRole="button" accessibilityLabel="Show upgrade button"
+              style={{ marginTop: 24, minHeight: 48, borderRadius: 12, backgroundColor: '#3A6B2A',
+                alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>Show upgrade button</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Editors */}
       <EditPlanModal
