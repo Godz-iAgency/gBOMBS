@@ -11,6 +11,7 @@ import {
   Image,
   Modal,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -148,6 +149,7 @@ function ModeToggle({
 
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile } = useAuth();
+  const { width: screenWidth } = useWindowDimensions();
   const [settings, setSettings] = useState<ProfileSettings | null>(null);
   const [modal, setModal] = useState<ModalKind>(null);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -583,24 +585,22 @@ export default function ProfileScreen() {
             style={{ position: 'absolute', inset: 0, backgroundColor: '#000000B8' }} />
           <View accessibilityViewIsModal style={{ width: '100%', maxWidth: 400, padding: 24,
             borderRadius: 20, backgroundColor: '#161C12', borderWidth: 1, borderColor: '#8A7BD866' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#8A7BD81A',
-                alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="people-outline" size={24} color="#B4A5F0" />
-              </View>
-              <Text accessibilityRole="header" style={{ flex: 1, color: '#FAFAF9', fontSize: 20, fontWeight: '700' }}>Premium required</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}
+                style={{ flex: 1, minWidth: 0, color: '#F2D587', fontSize: Math.min(20, (screenWidth - 134) / 10), fontWeight: '800' }}>Premium required</Text>
               <TouchableOpacity onPress={revealUpgrade} accessibilityRole="button" accessibilityLabel="Close Premium notice"
                 style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="close-outline" size={24} color="#D6D3D1" />
               </TouchableOpacity>
             </View>
             <Text style={{ color: '#D6D3D1', fontSize: 14, lineHeight: 22, marginTop: 16 }}>
-              Professional Access is included in {BRAND_NAME} Premium. Upgrade to Premium to invite your chef and trainer and give them their own dashboards.
+              Upgrade to {BRAND_NAME} Premium to connect your chef and trainer. They'll get their own dashboards to support your meal plan.
             </Text>
-            <TouchableOpacity onPress={revealUpgrade} accessibilityRole="button" accessibilityLabel="Show upgrade button"
+            <TouchableOpacity onPress={() => { revealUpgrade(); void handlePortal(); }} disabled={portalLoading}
+              accessibilityRole="button" accessibilityLabel="Upgrade to Premium"
               style={{ marginTop: 24, minHeight: 48, borderRadius: 12, backgroundColor: '#3A6B2A',
                 alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>Show upgrade button</Text>
+              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>Upgrade to Premium</Text>
             </TouchableOpacity>
           </View>
         </View>
