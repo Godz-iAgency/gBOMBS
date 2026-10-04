@@ -29,11 +29,10 @@ import {
   type UserMealContext,
 } from '@/services/gemini';
 import { buildUserMealContext } from '@/lib/mealContext';
-import { fetchRecipeNutrition, NUTRITION_VERSION } from '@/services/usda';
 import { loadCachedRecipe, saveCachedRecipe } from '@/lib/recipeCache';
 import { addChefNote, loadMealNote } from '@/lib/professional';
 import { notify } from '@/utils/dialog';
-import { PlantIcon } from '@/components/PlantGroups';
+import { PlantIcon, PLANT_LABELS } from '@/components/PlantGroups';
 import { GBOMBS_LETTERS, LETTER_BY_KEY } from '@/utils/gbombsImages';
 
 /** Chef-note context for a recipe. The chef (editable) attaches a note to a
@@ -140,106 +139,42 @@ function RecipeLoading() {
 // shows no such gap on the same device.
 const TOP_PAD = Platform.OS === 'web' ? 12 : 44;
 
-/** Full-width gBOMBS score row: all six letters, lit if the recipe hits them. */
+/** All six plant groups, with included groups highlighted and labelled. */
 function ScoreRow({ hit, score }: { hit: GBombsCategory[]; score: number }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 360;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <View style={{ flexDirection: 'row' }}>
+    <View style={styles.plantCard}>
+      <View style={styles.plantHeader}>
+        <Text style={styles.plantTitle}>Plant groups</Text>
+        <Text style={styles.plantCount}>{score} of 6</Text>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: compact ? 'wrap' : 'nowrap', rowGap: 12, marginTop: 12 }}>
         {GBOMBS_LETTERS.map((meta) => {
           const isHit = hit.includes(meta.key as GBombsCategory);
           return (
             <View
               key={meta.key}
-              style={{
-                marginRight: 4,
-                height: 24,
-                width: 24,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 12,
-                borderWidth: 1,
-                backgroundColor: isHit ? meta.glow : 'transparent',
-                borderColor: isHit ? meta.glow : '#2D2D2D',
-              }}
+              accessibilityLabel={`${PLANT_LABELS[meta.key]}: ${isHit ? 'included' : 'not included'}`}
+              style={{ flex: compact ? undefined : 1, width: compact ? '33.333%' : undefined,
+                minWidth: 0, alignItems: 'center' }}
             >
-              <PlantIcon category={meta.key} size={18} color={isHit ? '#0A0A0A' : '#A8A29E'} />
+              <View style={[styles.plantSymbol, {
+                backgroundColor: isHit ? meta.glow + '20' : '#FFFFFF04',
+                borderColor: isHit ? meta.glow + '99' : '#343A30',
+              }]}>
+                <PlantIcon category={meta.key} size={26} color={isHit ? meta.glow : '#747A6F'} />
+              </View>
+              <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}
+                style={[styles.plantLabel, { fontSize: compact || width >= 600 ? 11 : 9,
+                  color: isHit ? '#F5F5F0' : '#959D8F' }]}>
+                {PLANT_LABELS[meta.key]}
+              </Text>
             </View>
           );
         })}
       </View>
-      <Text style={{ color: '#F5F5F0', marginLeft: 8, fontSize: 14, fontWeight: 'bold' }}>
-        {score}/6
-      </Text>
-    </View>
-  );
-}
-
-/** One macro stat (number + label) in the nutrition panel. A right-edge
- *  divider separates it from the next stat — omitted on the last one. */
-function MacroStat({
-  value,
-  label,
-  isLast,
-  fontScale,
-}: {
-  value: string;
-  label: string;
-  isLast?: boolean;
-  fontScale: number;
-}) {
-  return (
-    <View style={[styles.macroStat, !isLast && styles.macroStatDivider]}>
-      <Text style={[styles.macroValue, { fontSize: 19 * fontScale }]}>
-        {value}
-      </Text>
-      <Text style={[styles.macroLabel, { fontSize: 11 * fontScale }]}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-/**
- * Per-serving nutrition panel. Renders the USDA-estimated macros once they've
- * streamed in, a compact loading line while they're being fetched, and nothing
- * at all if the estimate came back empty (best-effort — never a hard error).
- */
-function NutritionPanel({
-  nutrition,
-  loading,
-  fontScale,
-}: {
-  nutrition: Recipe['nutrition'];
-  loading: boolean;
-  fontScale: number;
-}) {
-  if (!nutrition) {
-    if (!loading) return null;
-    return (
-      <View style={styles.nutritionCard}>
-        <View style={styles.nutritionLoadingRow}>
-          <ActivityIndicator size="small" color="#5A9A3A" />
-          <Text style={styles.nutritionLoadingText}>Estimating nutrition…</Text>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.nutritionCard}>
-      <View style={styles.nutritionHeaderRow}>
-        <Text style={styles.nutritionTitle}>NUTRITION · PER SERVING</Text>
-        <View style={styles.nutritionPill}>
-          <Text style={styles.nutritionEstimate}>Estimated · USDA</Text>
-        </View>
-      </View>
-      <View style={styles.macroRow}>
-        <MacroStat value={`${nutrition.calories}`} label="cal" fontScale={fontScale} />
-        <MacroStat value={`${nutrition.protein}g`} label="protein" fontScale={fontScale} />
-        <MacroStat value={`${nutrition.carbs}g`} label="carbs" fontScale={fontScale} />
-        <MacroStat value={`${nutrition.fat}g`} label="fat" fontScale={fontScale} />
-        <MacroStat value={`${nutrition.fiber}g`} label="fiber" isLast fontScale={fontScale} />
-      </View>
+      <Text style={styles.plantHint}>Highlighted groups are included in this recipe.</Text>
     </View>
   );
 }
@@ -321,10 +256,9 @@ export default function RecipeModal({
 }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
-  const [nutritionLoading, setNutritionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Body text sized for a phone reads a bit small stretched across a tablet's
-  // extra width — a modest bump keeps ingredients/steps/nutrition comfortably
+  // extra width — a modest bump keeps ingredients and steps comfortably
   // readable there without a full responsive-typography rewrite.
   const { width: windowWidth } = useWindowDimensions();
   const fontScale = windowWidth >= 600 ? 1.15 : 1;
@@ -375,38 +309,6 @@ export default function RecipeModal({
       load();
     }
   }, [meal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Second phase: once the recipe exists (fresh or cached) but has no
-  // CURRENT-version nutrition yet, estimate it via USDA and merge it in, then
-  // persist so it's computed once per meal. The version check (not just
-  // presence) matters because recipeCache.ts never expires entries — without
-  // it, a recipe cached before a USDA-estimator bugfix would show the old,
-  // wrong numbers forever instead of getting recomputed. Best-effort — a null
-  // result just leaves the panel empty.
-  useEffect(() => {
-    if (
-      !recipe ||
-      recipe.nutrition?.nutritionVersion === NUTRITION_VERSION ||
-      !userId ||
-      !meal
-    )
-      return;
-    let active = true;
-    setNutritionLoading(true);
-    fetchRecipeNutrition(recipe.ingredients, recipe.servings)
-      .then((n) => {
-        if (!active || !n) return;
-        const withNutrition = { ...recipe, nutrition: n };
-        setRecipe(withNutrition);
-        saveCachedRecipe(userId, meal.id, withNutrition);
-      })
-      .finally(() => {
-        if (active) setNutritionLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [recipe?.id, recipe?.nutrition, userId, meal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load the chef note for this meal whenever it changes (if notes are enabled).
   useEffect(() => {
@@ -519,7 +421,7 @@ export default function RecipeModal({
               </View>
             ) : null}
 
-            {/* gBOMBS score row */}
+            {/* Recipe plant-group coverage */}
             <View style={{ marginTop: 16 }}>
               <ScoreRow
                 hit={recipe.gbombs.categoriesHit}
@@ -536,13 +438,6 @@ export default function RecipeModal({
                   : `⏱  ${recipe.prepMinutes} min prep · ${recipe.cookMinutes} min cook · ${recipe.servings} servings`}
               </Text>
             </View>
-
-            {/* Per-serving nutrition (USDA estimate, streams in after load) */}
-            <NutritionPanel
-              nutrition={recipe.nutrition}
-              loading={nutritionLoading}
-              fontScale={fontScale}
-            />
 
             {/* Ingredients */}
             <Text style={styles.sectionHeader}>Ingredients</Text>
@@ -770,73 +665,49 @@ const styles = StyleSheet.create({
     color: '#A8A29E',
     fontSize: 12,
   },
-  nutritionCard: {
-    marginTop: 20,
+  plantCard: {
     borderRadius: 16,
     backgroundColor: '#141A12',
     borderWidth: 1,
-    borderColor: '#2A3A22',
-    paddingVertical: 18,
-    paddingHorizontal: 16,
+    borderColor: '#35472B',
+    padding: 12,
   },
-  nutritionHeaderRow: {
+  plantHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 18,
   },
-  nutritionTitle: {
-    color: '#7FBF5A',
+  plantTitle: {
+    color: '#D2DBC9',
     fontSize: 12,
-    fontWeight: 'bold',
-    letterSpacing: 1,
+    fontWeight: '600',
   },
-  nutritionPill: {
-    borderRadius: 999,
-    backgroundColor: '#0F140D',
-    borderWidth: 1,
-    borderColor: '#2A3A22',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  nutritionEstimate: {
-    color: '#8FA88A',
-    fontSize: 10,
+  plantCount: {
+    color: '#FAFAF9',
+    fontSize: 14,
     fontWeight: '700',
   },
-  macroRow: {
-    flexDirection: 'row',
-  },
-  macroStat: {
-    flex: 1,
+  plantSymbol: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  macroStatDivider: {
-    borderRightWidth: 1,
-    borderRightColor: '#2A3A22',
+  plantLabel: {
+    width: '100%',
+    marginTop: 6,
+    textAlign: 'center',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '600',
   },
-  macroValue: {
-    color: '#F5F5F0',
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  macroLabel: {
-    color: '#8FA88A',
-    fontSize: 11,
-    marginTop: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  nutritionLoadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  nutritionLoadingText: {
-    color: '#A8A29E',
-    fontSize: 13,
-    marginLeft: 10,
+  plantHint: {
+    color: '#9BA593',
+    fontSize: 10,
+    lineHeight: 14,
+    marginTop: 10,
   },
   sectionHeader: {
     color: '#F5F5F0',
