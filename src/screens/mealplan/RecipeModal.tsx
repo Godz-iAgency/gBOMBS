@@ -142,31 +142,36 @@ const TOP_PAD = Platform.OS === 'web' ? 12 : 44;
 /** All six plant groups, with included groups highlighted and labelled. */
 function ScoreRow({ hit, score }: { hit: GBombsCategory[]; score: number }) {
   const { width } = useWindowDimensions();
-  const compact = width < 360;
+  const [cardWidth, setCardWidth] = useState(0);
+  const horizontalPadding = width < 360 ? 6 : 12;
+  const groupWidth = Math.max(0, (cardWidth || width - 40) - horizontalPadding * 2 - 2) / 6;
+  const symbolSize = Math.min(36, groupWidth * 0.85);
+  const labelSize = Math.min(11, groupWidth / 6);
   return (
-    <View style={styles.plantCard}>
+    <View onLayout={event => setCardWidth(event.nativeEvent.layout.width)}
+      style={[styles.plantCard, { paddingHorizontal: horizontalPadding }]}>
       <View style={styles.plantHeader}>
         <Text style={styles.plantTitle}>Plant groups</Text>
         <Text style={styles.plantCount}>{score} of 6</Text>
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: compact ? 'wrap' : 'nowrap', rowGap: 12, marginTop: 12 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'nowrap', marginTop: 12 }}>
         {GBOMBS_LETTERS.map((meta) => {
           const isHit = hit.includes(meta.key as GBombsCategory);
           return (
             <View
               key={meta.key}
               accessibilityLabel={`${PLANT_LABELS[meta.key]}: ${isHit ? 'included' : 'not included'}`}
-              style={{ flex: compact ? undefined : 1, width: compact ? '33.333%' : undefined,
-                minWidth: 0, alignItems: 'center' }}
+              style={{ flex: 1, minWidth: 0, alignItems: 'center' }}
             >
               <View style={[styles.plantSymbol, {
+                width: symbolSize, height: symbolSize,
                 backgroundColor: isHit ? meta.glow + '20' : '#FFFFFF04',
                 borderColor: isHit ? meta.glow + '99' : '#343A30',
               }]}>
-                <PlantIcon category={meta.key} size={26} color={isHit ? meta.glow : '#747A6F'} />
+                <PlantIcon category={meta.key} size={symbolSize * 26 / 36} color={isHit ? meta.glow : '#747A6F'} />
               </View>
-              <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.75}
-                style={[styles.plantLabel, { fontSize: compact || width >= 600 ? 11 : 9,
+              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}
+                style={[styles.plantLabel, { fontSize: labelSize, lineHeight: labelSize * 1.4,
                   color: isHit ? '#F5F5F0' : '#959D8F' }]}>
                 {PLANT_LABELS[meta.key]}
               </Text>
