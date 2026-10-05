@@ -22,6 +22,7 @@ import type { MainTabParamList } from '@/navigation/MainTabNavigator';
 import CheckInScreen from './CheckInScreen';
 import ReportsScreen from '@/screens/reports/ReportsScreen';
 import ProfessionalUpdatesCard from './ProfessionalUpdatesCard';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 type Nav = BottomTabNavigationProp<MainTabParamList>;
 
@@ -66,21 +67,23 @@ function QuickAction({
   label,
   color,
   onPress,
+  tablet = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   color: string;
   onPress: () => void;
+  tablet?: boolean;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
       className="mx-1 flex-1 items-center rounded-2xl border py-4"
-      style={{ borderColor: color + '66', backgroundColor: color + '14' }}
+      style={{ borderColor: color + '66', backgroundColor: color + '14', ...(tablet ? { minHeight: 96, paddingVertical: 20 } : {}) }}
     >
-      <Ionicons name={icon} size={22} color={color} />
-      <Text className="text-content mt-2 text-xs font-semibold">{label}</Text>
+      <Ionicons name={icon} size={tablet ? 28 : 22} color={color} />
+      <Text className="text-content mt-2 text-xs font-semibold" style={tablet ? { fontSize: 14 } : undefined}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -88,6 +91,10 @@ function QuickAction({
 export default function HomeScreen() {
   const { user, profile } = useAuth();
   const navigation = useNavigation<Nav>();
+  const { tablet, landscape, height } = useTabletLayout();
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const tabletTileHeight = Math.max(96, Math.min(180, Math.round((viewportHeight || height) * (landscape ? 0.14 : 0.11))));
+  const tabletChartHeight = Math.max(110, Math.min(220, Math.round((viewportHeight || height) * (landscape ? 0.24 : 0.11))));
   const tier = profile?.subscription_tier ?? 'standard';
   const planState = getPlanState(profile);
   const planBadge = PLAN_BADGE_LABEL[planState];
@@ -145,8 +152,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
-        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        style={{ width: '100%', maxWidth: tablet ? undefined : 760, alignSelf: 'center' }}
+        contentContainerStyle={tablet ? { padding: 16, paddingBottom: 24, flexGrow: 1 } : { padding: 20, paddingBottom: 40 }}
+        onLayout={tablet ? (event) => setViewportHeight(event.nativeEvent.layout.height) : undefined}
         showsVerticalScrollIndicator={false}
       >
         {/* Greeting + plan badge (badge taps through to Profile) */}
@@ -156,13 +164,13 @@ export default function HomeScreen() {
               <>
                 <Text
                   className="text-content font-extrabold"
-                  style={{ fontSize: 20 }}
+                  style={{ fontSize: tablet ? 24 : 20 }}
                 >
                   {greeting()},
                 </Text>
                 <Text
                   className="text-content -mt-1"
-                  style={{ fontFamily: 'Caveat_700Bold', fontSize: 34 }}
+                  style={{ fontFamily: 'Caveat_700Bold', fontSize: tablet ? 42 : 34 }}
                 >
                   {firstName}
                 </Text>
@@ -170,7 +178,7 @@ export default function HomeScreen() {
             ) : (
               <Text
                 className="text-content font-extrabold"
-                style={{ fontSize: 20 }}
+                style={{ fontSize: tablet ? 24 : 20 }}
               >
                 {greeting()}
               </Text>
@@ -234,18 +242,23 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <View className="mt-6 rounded-2xl border p-5" style={{ borderColor: '#3C4D32', backgroundColor: '#11190E' }}>
+        <View style={tablet ? { flexGrow: 1, flexDirection: landscape ? 'row' : 'column', gap: landscape ? 20 : 0, marginTop: landscape ? 24 : 0 } : undefined}>
+        <View className="mt-6 rounded-2xl border p-5" style={{ borderColor: '#3C4D32', backgroundColor: '#11190E', ...(tablet ? { padding: 24, flexGrow: 1, flexBasis: landscape ? 0 : undefined, marginTop: landscape ? 0 : 24 } : {}) }}>
           <Text style={{ color: '#B9CEA9', fontSize: 12, fontWeight: '600', letterSpacing: 1 }}>TODAY’S PLANT GROUPS</Text>
-          <Text className="text-content mt-2 text-xl font-bold">{todayScore ? `${todayScore.score} of 6 groups logged` : 'A little variety, every day'}</Text>
+          <Text className="text-content mt-2 text-xl font-bold" style={tablet ? { fontSize: 24 } : undefined}>{todayScore ? `${todayScore.score} of 6 groups logged` : 'A little variety, every day'}</Text>
           <Text className="text-content-muted mt-2 mb-4 text-sm">{checkIn ? 'Review your meals, coaching and tip for tomorrow.' : todayScore ? 'Your plant groups are saved. Update your meals for fresh coaching.' : 'Log what you ate to see which plant groups you included.'}</Text>
-          <PlantGroupTiles hit={todayScore?.categoriesHit ?? []} logged={!!todayScore} onSelect={setPlantBenefit} />
+          <View style={tablet ? { marginBottom: 18 } : undefined}>
+            <PlantGroupTiles hit={todayScore?.categoriesHit ?? []} logged={!!todayScore} onSelect={setPlantBenefit} large={tablet} tileHeight={tablet ? tabletTileHeight : undefined} />
+          </View>
           <TouchableOpacity onPress={() => setCheckInOpen(true)} accessibilityRole="button" activeOpacity={0.85}
-            style={{ marginTop: 18, backgroundColor: '#3A6B2A', minHeight: 48, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            style={{ marginTop: tablet ? 'auto' : 18, paddingTop: tablet ? 12 : undefined, paddingBottom: tablet ? 12 : undefined, backgroundColor: '#3A6B2A', minHeight: tablet ? 56 : 48, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '700' }}>{checkIn ? 'Review today’s meals' : todayScore ? 'Update today’s meals' : "Log today's meals"}</Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-        <HomeProgressCard trend={data?.trend ?? []} streak={streak} weekDays={weekDays} onPress={() => setReportsOpen(true)} />
+        <HomeProgressCard trend={data?.trend ?? []} streak={streak} weekDays={weekDays} onPress={() => setReportsOpen(true)} tablet={tablet} chartHeight={tablet ? tabletChartHeight : 70}
+          style={tablet ? { flexGrow: 1, flexBasis: landscape ? 0 : undefined, marginTop: landscape ? 0 : 16 } : undefined} />
+        </View>
 
         {/* Professional Updates — chef/trainer changes, with 48h Undo
             (renders nothing when there are none) */}
@@ -258,18 +271,21 @@ export default function HomeScreen() {
             label="Check in"
             color="#5A9A3A"
             onPress={() => setCheckInOpen(true)}
+            tablet={tablet}
           />
           <QuickAction
             icon="calendar-outline"
             label="Meal plan"
             color="#D4A84E"
             onPress={() => navigation.navigate('MealPlan')}
+            tablet={tablet}
           />
           <QuickAction
             icon="cart-outline"
             label="Grocery"
             color="#4A90D9"
             onPress={() => navigation.navigate('Grocery')}
+            tablet={tablet}
           />
         </View>
       </ScrollView>

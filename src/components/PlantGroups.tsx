@@ -38,18 +38,20 @@ export function PlantIcon({ category, color = '#A8A29E', size = 24 }: {
   </Svg>;
 }
 
-export function PlantGroupTiles({ hit, logged = false, onSelect }: {
+export function PlantGroupTiles({ hit, logged = false, onSelect, tileHeight, large = false }: {
   hit: string[];
   logged?: boolean;
   onSelect?: (category: GBombsCategoryKey) => void;
+  tileHeight?: number;
+  large?: boolean;
 }) {
-  return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+  return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: large ? 12 : 8 }}>
     {GBOMBS_LETTERS.map(meta => {
       const included = hit.includes(meta.key);
       const label = `${PLANT_LABELS[meta.key]}: ${included ? 'included' : logged ? 'not included' : 'not logged'}`;
       const style: ViewStyle = {
         width: '30%', flexGrow: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12,
-        minHeight: onSelect ? 70 : undefined, justifyContent: onSelect ? 'center' : undefined,
+        minHeight: onSelect ? tileHeight ?? 70 : undefined, justifyContent: onSelect ? 'center' : undefined,
         overflow: onSelect ? 'hidden' : undefined, borderWidth: 1,
         borderColor: included ? meta.glow + (onSelect ? '88' : '55') : onSelect ? '#3B4235' : '#2B3028',
         backgroundColor: included ? meta.glow + '14' : '#FFFFFF04',
@@ -63,8 +65,8 @@ export function PlantGroupTiles({ hit, logged = false, onSelect }: {
         </>}
         {onSelect ? (
           <View style={{ zIndex: 1, backgroundColor: '#061006B3', borderRadius: 7,
-            paddingHorizontal: 4, paddingVertical: 5, maxWidth: '100%' }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700', textAlign: 'center' }}>
+            paddingHorizontal: large ? 10 : 4, paddingVertical: large ? 8 : 5, maxWidth: '100%' }}>
+            <Text style={{ color: '#FFFFFF', fontSize: large ? 14 : 11, fontWeight: '700', textAlign: 'center' }}>
               {PLANT_LABELS[meta.key]}
             </Text>
           </View>

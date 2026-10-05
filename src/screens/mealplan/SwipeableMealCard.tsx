@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Image,
+  type ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,7 +31,7 @@ const ACTIONS_TOTAL = ACTION_WIDTH * 2;
 const OPEN_THRESHOLD = ACTIONS_TOTAL * 0.4;
 
 /** Row of small colored letter dots for the gBOMBS a meal hits. */
-function CategoryDots({ cats }: { cats: GBombsCategory[] }) {
+function CategoryDots({ cats, tablet = false }: { cats: GBombsCategory[]; tablet?: boolean }) {
   if (cats.length === 0) {
     return <Text style={styles.dash}>None</Text>;
   }
@@ -39,7 +40,7 @@ function CategoryDots({ cats }: { cats: GBombsCategory[] }) {
       {cats.map((c) => {
         const meta = LETTER_BY_KEY[c];
         return (
-          <View key={c} style={[styles.dot, { backgroundColor: meta.glow }]}>
+          <View key={c} style={[styles.dot, { backgroundColor: meta.glow }, tablet ? { width: 24, height: 24, borderRadius: 12, marginLeft: 6 } : undefined]}>
             <Text style={styles.dotText}>{meta.letter}</Text>
           </View>
         );
@@ -62,12 +63,18 @@ export default function SwipeableMealCard({
   onPress,
   onSwap,
   onDelete,
+  tablet = false,
+  minHeight,
+  style,
 }: {
   meal: MealSummary;
   swapping?: boolean;
   onPress: () => void;
   onSwap: () => void;
   onDelete: () => void;
+  tablet?: boolean;
+  minHeight?: number;
+  style?: ViewStyle;
 }) {
   const translateX = useRef(new Animated.Value(0)).current;
   const openRef = useRef(false);
@@ -117,7 +124,7 @@ export default function SwipeableMealCard({
   };
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, style]}>
       {/* Actions revealed behind the card */}
       <View style={styles.actions}>
         <TouchableOpacity
@@ -146,7 +153,7 @@ export default function SwipeableMealCard({
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={handlePress}
-          style={styles.card}
+          style={[styles.card, tablet ? { minHeight, padding: 24 } : undefined]}
         >
           <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <Image
@@ -168,18 +175,18 @@ export default function SwipeableMealCard({
             {SLOT_LABEL[meal.slot] ?? meal.slot.toUpperCase()}
           </Text>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{meal.name}</Text>
+            <Text style={[styles.title, tablet ? { fontSize: 22 } : undefined]}>{meal.name}</Text>
             <Ionicons name="chevron-forward" size={18} color="#D2D9C7" />
           </View>
           {meal.description ? (
-            <Text style={styles.desc}>{meal.description}</Text>
+            <Text style={[styles.desc, tablet ? { fontSize: 15, lineHeight: 23 } : undefined]}>{meal.description}</Text>
           ) : null}
-          <View style={styles.metaRow}>
+          <View style={[styles.metaRow, tablet ? { marginTop: 'auto', paddingTop: 16 } : undefined]}>
             <View style={styles.timeRow}>
               <Ionicons name="time-outline" size={14} color="#C6D2BC" />
               <Text style={styles.time}>{meal.prepMinutes} min</Text>
             </View>
-            <CategoryDots cats={meal.gbombs} />
+            <CategoryDots cats={meal.gbombs} tablet={tablet} />
           </View>
         </TouchableOpacity>
       </Animated.View>

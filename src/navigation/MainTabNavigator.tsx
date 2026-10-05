@@ -7,6 +7,7 @@ import MealPlanScreen from '@/screens/mealplan/MealPlanScreen';
 import CoachScreen from '@/screens/coach/CoachScreen';
 import GroceryScreen from '@/screens/grocery/GroceryScreen';
 import ProfileScreen from '@/screens/profile/ProfileScreen';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -32,6 +33,7 @@ const ICONS: Record<
 
 export default function MainTabNavigator() {
   const insets = useSafeAreaInsets();
+  const { tablet } = useTabletLayout();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -43,7 +45,7 @@ export default function MainTabNavigator() {
           borderTopColor: '#2D2D2D',
           borderTopWidth: 1,
           width: '100%',
-          maxWidth: 760,
+          maxWidth: tablet ? undefined : 760,
           alignSelf: 'center',
           height: 68 + insets.bottom,
           paddingTop: 5,

@@ -25,6 +25,7 @@ import RecipeModal from './RecipeModal';
 import GroceryScreen from './GroceryScreen';
 import SwipeableMealCard from './SwipeableMealCard';
 import GeneratingPlanAnimation from './GeneratingPlanAnimation';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 /** Cross-platform alert — react-native-web's Alert is a no-op, so fall back. */
 function notify(title: string, message: string) {
@@ -39,6 +40,9 @@ const SHORT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export default function MealPlanScreen() {
   const { user, profile } = useAuth();
+  const { tablet, landscape, height } = useTabletLayout();
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const tier = profile?.subscription_tier ?? 'standard';
 
   const [plan, setPlan] = useState<WeeklyMealPlan | null>(null);
@@ -217,14 +221,18 @@ export default function MealPlanScreen() {
 
   // ---- Loaded plan ----
   const day = plan.days[selectedDay] ?? plan.days[0];
+  const tabletRows = Math.max(1, Math.ceil(day.meals.length / (landscape ? 2 : 1)));
+  const tabletCardHeight = Math.max(168, Math.min(300, Math.floor(((viewportHeight || height - 68) - (headerHeight || 160) - 40 - (tabletRows - 1) * 16) / tabletRows)));
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
-        style={{ width: '100%', maxWidth: 760, alignSelf: 'center' }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        style={{ width: '100%', maxWidth: tablet ? undefined : 760, alignSelf: 'center' }}
+        contentContainerStyle={tablet ? { padding: 16, paddingBottom: 24, flexGrow: 1 } : { padding: 20, paddingBottom: 40 }}
+        onLayout={tablet ? (event) => setViewportHeight(event.nativeEvent.layout.height) : undefined}
         showsVerticalScrollIndicator={false}
       >
+        <View onLayout={tablet ? (event) => setHeaderHeight(event.nativeEvent.layout.height) : undefined}>
         {/* Header */}
         <View className="mb-4 flex-row items-center justify-between">
           <Text className="text-content text-3xl font-extrabold">Your Week</Text>
@@ -259,7 +267,7 @@ export default function MealPlanScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="mb-4 -mx-1"
-          contentContainerStyle={{ paddingLeft: 4, paddingRight: 12 }}
+          contentContainerStyle={{ paddingLeft: 4, paddingRight: tablet ? 4 : 12, ...(tablet ? { flexGrow: 1 } : {}) }}
         >
           {plan.days.map((d, i) => {
             const isActive = i === selectedDay;
@@ -270,11 +278,12 @@ export default function MealPlanScreen() {
                 className="mr-1 rounded-full px-1.5 py-1.5"
                 style={{
                   backgroundColor: isActive ? '#5A9A3A' : '#161616',
+                  ...(tablet ? { flex: 1, minHeight: 44, justifyContent: 'center', alignItems: 'center', marginRight: i === plan.days.length - 1 ? 0 : 8 } : {}),
                 }}
               >
                 <Text
                   className="text-xs font-bold"
-                  style={{ color: isActive ? '#000' : '#A8A29E' }}
+                  style={{ color: isActive ? '#000' : '#A8A29E', ...(tablet ? { fontSize: 14 } : {}) }}
                 >
                   {SHORT_DAYS[i] ?? d.label}
                 </Text>
@@ -287,6 +296,8 @@ export default function MealPlanScreen() {
         <Text className="text-content-muted mb-3 text-sm font-semibold">
           {day.label}
         </Text>
+        </View>
+        <View style={tablet ? { flexDirection: landscape ? 'row' : 'column', flexWrap: landscape ? 'wrap' : 'nowrap', gap: 16 } : undefined}>
         {day.meals.map((m) => (
           <SwipeableMealCard
             key={m.id}
@@ -295,8 +306,12 @@ export default function MealPlanScreen() {
             onPress={() => setRecipeMeal(m)}
             onSwap={() => handleSwapMeal(m)}
             onDelete={() => handleDeleteMeal(m.id)}
+            tablet={tablet}
+            minHeight={tablet ? tabletCardHeight : undefined}
+            style={tablet ? { width: landscape ? '48%' : '100%', flexGrow: landscape ? 1 : undefined, marginBottom: 0 } : undefined}
           />
         ))}
+        </View>
       </ScrollView>
 
       <RecipeModal

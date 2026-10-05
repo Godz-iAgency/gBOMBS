@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '@/navigation/AuthStack';
+import { useTabletLayout } from '@/hooks/useTabletLayout';
 
 const introSource = require('../../../assets/images/brand/sixplants-landing.mp4');
 
@@ -29,14 +30,13 @@ export default function LandingScreen({ navigation }: Props) {
     p.muted = true;
   });
 
-  // Fit the whole video (never crop — the wordmark spans nearly the full
-  // width), pinned to the TOP of the screen. Phones taller than 9:16 get the
-  // leftover space below the video, behind the buttons, so there is never a gap
-  // above it. Desktop/tablet get a phone-width column on the dark page.
+  // Phones retain the approved, uncropped 9:16 frame. Portrait tablets use
+  // the whole screen; landscape keeps the wordmark intact on a green backdrop.
   const { width: winW, height: winH } = useWindowDimensions();
+  const { tablet, landscape } = useTabletLayout();
   const scale = Math.min(winW / VIDEO_W, winH / VIDEO_H);
-  const frameW = Math.round(VIDEO_W * scale);
-  const videoH = Math.round(VIDEO_H * scale);
+  const frameW = tablet ? winW : Math.round(VIDEO_W * scale);
+  const videoH = tablet ? winH : Math.round(VIDEO_H * scale);
   const belowH = Math.max(0, winH - videoH);
 
   // Start playback after the view is mounted (web autoplay needs the
@@ -49,7 +49,7 @@ export default function LandingScreen({ navigation }: Props) {
     <View className="flex-1 bg-surface">
       <View
         className="flex-1 self-center overflow-hidden"
-        style={{ width: frameW }}
+        style={{ width: frameW, backgroundColor: tablet ? BOTTOM_EDGE : undefined }}
       >
         {/* Fills the space below the video on phones taller than 9:16. */}
         {belowH > 0 && (
@@ -71,8 +71,8 @@ export default function LandingScreen({ navigation }: Props) {
             width/height, which beats inset-based sizing. */}
         <VideoView
           player={player}
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: videoH }}
-          contentFit="contain"
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: videoH, backgroundColor: tablet ? BOTTOM_EDGE : undefined }}
+          contentFit={tablet && !landscape ? 'cover' : 'contain'}
           nativeControls={false}
         />
 
@@ -90,7 +90,7 @@ export default function LandingScreen({ navigation }: Props) {
           <View />
 
           {/* Actions — bottom zone */}
-          <View className="px-6 pb-10">
+          <View className="px-6 pb-10" style={tablet ? { width: '100%', maxWidth: landscape ? 560 : undefined, alignSelf: 'center', paddingHorizontal: 24, paddingBottom: 24 } : undefined}>
             {/* Primary — new users */}
             <TouchableOpacity
               onPress={() => navigation.navigate('SignUp')}
