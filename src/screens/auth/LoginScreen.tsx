@@ -90,6 +90,30 @@ export default function LoginScreen({ navigation }: Props) {
 
           <Text className="text-content mb-6 text-2xl font-bold">Welcome back</Text>
 
+          {/* Google is the first sign-in option. */}
+          <TouchableOpacity
+            onPress={handleGoogle}
+            disabled={googleLoading}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+            activeOpacity={0.85}
+            className="rounded-xl bg-brand-green py-4"
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-center text-base font-bold text-white">
+                Continue with Google
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <View className="my-6 flex-row items-center">
+            <View className="h-px flex-1 bg-surface-border" />
+            <Text className="mx-3 text-xs text-content-muted">OR</Text>
+            <View className="h-px flex-1 bg-surface-border" />
+          </View>
+
           {/* Email */}
           <Text className="text-content-muted mb-2 text-sm font-medium">Email</Text>
           <TextInput
@@ -118,37 +142,16 @@ export default function LoginScreen({ navigation }: Props) {
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with email"
             activeOpacity={0.85}
-            className="rounded-xl bg-brand-green py-4 active:opacity-90"
+            className="rounded-xl border border-brand-green bg-surface-card py-4 active:opacity-90"
           >
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text className="text-center text-base font-bold text-white">
                 Sign in
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View className="my-6 flex-row items-center">
-            <View className="h-px flex-1 bg-surface-border" />
-            <Text className="mx-3 text-xs text-content-muted">OR</Text>
-            <View className="h-px flex-1 bg-surface-border" />
-          </View>
-
-          {/* Google */}
-          <TouchableOpacity
-            onPress={handleGoogle}
-            disabled={googleLoading}
-            activeOpacity={0.85}
-            className="rounded-xl border border-brand-green bg-surface-card py-4"
-          >
-            {googleLoading ? (
-              <ActivityIndicator color="#6FBF4A" />
-            ) : (
-              <Text className="text-center text-base font-semibold text-content">
-                Continue with Google
               </Text>
             )}
           </TouchableOpacity>
